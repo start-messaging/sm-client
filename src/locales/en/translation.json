@@ -1,0 +1,77 @@
+{
+  "common": {
+    "appName": "Messaging Platform",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Create one",
+      "success": "Signed in"
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Get started in seconds",
+      "fullName": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "success": "Account created — check your email for the code"
+    },
+    "verifyOtp": {
+      "title": "Verify your email",
+      "subtitle": "Enter the 6-digit code we sent to {{email}}",
+      "code": "Verification code",
+      "submit": "Verify",
+      "success": "Email verified"
+    },
+    "logout": "Log out"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 8 characters",
+    "codeLength": "The code must be 6 digits"
+  },
+  "shell": {
+    "dashboard": "Dashboard",
+    "members": "Team",
+    "noWorkspace": "No workspace yet",
+    "createWorkspace": "Create workspace",
+    "switchWorkspace": "Switch workspace"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}",
+    "placeholder": "Your workspace overview will appear here."
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "network": "Could not reach the server. Check your connection.",
+    "unknown": "An unexpected error occurred.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "EMAIL_NOT_VERIFIED": "Please verify your email first.",
+    "EMAIL_TAKEN": "That email is already registered.",
+    "INVALID_OTP": "That code is incorrect.",
+    "OTP_LOCKED": "Too many attempts. Please try again later.",
+    "WORKSPACE_LIMIT_REACHED": "You've reached the workspace limit for this service.",
+    "NOT_A_MEMBER": "You are not a member of that workspace.",
+    "VALIDATION_ERROR": "Please check the form and try again."
+  }
+}
