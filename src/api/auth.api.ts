@@ -4,9 +4,13 @@ import type {
   AuthResult,
   LoginBody,
   MeResult,
+  ResendOtpBody,
+  ResendOtpResult,
+  SetMobileBody,
+  SetMobileResult,
   SignupBody,
   SignupResult,
-  SwitchWorkspaceResult,
+  UserView,
   VerifyOtpBody,
 } from '@/types/api';
 
@@ -18,16 +22,18 @@ export const authApi = {
   verifyOtp: (body: VerifyOtpBody) =>
     apiPost<AuthResult>(endpoints.auth.verifyOtp, body),
 
+  resendOtp: (body: ResendOtpBody) =>
+    apiPost<ResendOtpResult>(endpoints.auth.resendOtp, body),
+
+  setMobile: (body: SetMobileBody) =>
+    apiPost<SetMobileResult>(endpoints.auth.setMobile, body),
+
+  verifyMobileOtp: (body: VerifyOtpBody) =>
+    apiPost<UserView>(endpoints.auth.verifyMobileOtp, body),
+
   login: (body: LoginBody) => apiPost<AuthResult>(endpoints.auth.login, body),
 
   me: () => apiGet<MeResult>(endpoints.auth.me),
 
-  switchWorkspace: (workspaceId: string) =>
-    apiPost<SwitchWorkspaceResult>(endpoints.auth.switchWorkspace, {
-      workspaceId,
-    }),
-
   logout: () => apiPost<void>(endpoints.auth.logout),
-
-  logoutAll: () => apiPost<void>(endpoints.auth.logoutAll),
 };

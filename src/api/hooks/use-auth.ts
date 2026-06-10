@@ -3,12 +3,12 @@ import { authApi } from '@/api/auth.api';
 import { queryKeys } from '@/api/query-keys';
 import { STALE } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/auth.store';
-import type { AuthResult } from '@/types/api';
+import type { AuthResult, UserView } from '@/types/api';
 
 /**
- * GET /auth/me — the source of truth for "who am I + which workspaces". Enabled
- * only when authenticated. On success the app layout syncs the active context
- * back into the store so a reload re-hydrates the active workspace/role.
+ * GET /auth/me — the source of truth for "who am I". Enabled only when
+ * authenticated. The app layout syncs the profile back into the store so a
+ * reload keeps `mobileVerified` (and the onboarding gate) fresh.
  */
 export function useMe() {
   const isAuthed = useAuthStore((s) => s.isAuthenticated());
@@ -21,13 +21,12 @@ export function useMe() {
 }
 
 /**
- * Refetch identity- and user-scoped data after a fresh sign-in, WITHOUT dropping
- * user-independent reference data (the public services catalogue). A blanket
- * invalidateQueries() would needlessly refetch that on every auth flow.
+ * Refetch identity-scoped data after a fresh sign-in, WITHOUT dropping
+ * user-independent reference data (e.g. the countries picker list).
  */
 function invalidateUserScoped(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
-  void qc.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
+  void qc.invalidateQueries({ queryKey: queryKeys.services.all() });
 }
 
 export function useLogin() {
@@ -47,6 +46,14 @@ export function useSignup() {
   return useMutation({ mutationFn: authApi.signup });
 }
 
+/**
+ * Resend the signup email code (token-keyed, no password). Bare mutation —
+ * callers own the wizard-storage update and countdown side effects.
+ */
+export function useResendOtp() {
+  return useMutation({ mutationFn: authApi.resendOtp });
+}
+
 export function useVerifyOtp() {
   const setSession = useAuthStore((s) => s.setSession);
   const qc = useQueryClient();
@@ -59,31 +66,20 @@ export function useVerifyOtp() {
   });
 }
 
-/**
- * Switch active workspace. The backend returns only a fresh access token (with
- * the new workspace + role baked in).
- *
- * Cache-isolation guarantee (order matters): set the token, then **await** a
- * full cache reset BEFORE flipping the store to the new workspace. The other
- * order would open a window where the store says "workspace B" while the cache
- * still holds workspace A's data — which a render in that window would leak.
- */
-export function useSwitchWorkspace() {
+/** Step 3: stage the mobile number → SMS OTP sent. Returns the token. */
+export function useSetMobile() {
+  return useMutation({ mutationFn: authApi.setMobile });
+}
+
+/** Step 4: verify the SMS code. Updates the stored user (unlocks the app). */
+export function useVerifyMobileOtp() {
+  const setUser = useAuthStore((s) => s.setUser);
   const qc = useQueryClient();
-  const setAccessToken = useAuthStore((s) => s.setAccessToken);
-  const setActiveContext = useAuthStore((s) => s.setActiveContext);
   return useMutation({
-    mutationFn: (input: {
-      workspaceId: string;
-      role: AuthResult['activeWorkspaceRole'];
-    }) => authApi.switchWorkspace(input.workspaceId),
-    onSuccess: async (result, input) => {
-      setAccessToken(result.accessToken);
-      await qc.resetQueries();
-      setActiveContext({
-        activeWorkspaceId: input.workspaceId,
-        activeWorkspaceRole: input.role,
-      });
+    mutationFn: authApi.verifyMobileOtp,
+    onSuccess: (user: UserView) => {
+      setUser(user);
+      invalidateUserScoped(qc);
     },
   });
 }

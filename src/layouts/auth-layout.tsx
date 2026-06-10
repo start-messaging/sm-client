@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { WhatsAppFab } from '@/components/shared/whatsapp-fab';
 
 /**
  * Layout for the public auth pages (login / signup / verify-otp): a centered
@@ -22,6 +23,7 @@ export function AuthLayout() {
       <main className="flex flex-1 items-center justify-center p-4">
         <Outlet />
       </main>
+      <WhatsAppFab />
     </div>
   );
 }

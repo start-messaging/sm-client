@@ -1,12 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { storageKey } from '@/config/app';
-import type {
-  AuthResult,
-  MeResult,
-  UserView,
-  WorkspaceRole,
-} from '@/types/api';
+import { clearWizardStores } from '@/lib/wizard-storage';
+import type { AuthResult, UserView, WorkspaceRole } from '@/types/api';
 
 /**
  * Client-side session state — the small slice of *client* state that does NOT
@@ -37,12 +33,13 @@ interface AuthState {
   setAccessToken: (token: string) => void;
   /** Replace both tokens (after a rotating refresh). */
   setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
-  /** Update active workspace + role (+ user) from /me or switch-workspace. */
-  setActiveContext: (
-    ctx: Pick<MeResult, 'activeWorkspaceId' | 'activeWorkspaceRole'> & {
-      user?: UserView;
-    },
-  ) => void;
+  /** Refresh the user profile (from /me or a mobile-verification step). */
+  setUser: (user: UserView) => void;
+  /** Update active workspace + role (workspace slice; unused until then). */
+  setActiveContext: (ctx: {
+    activeWorkspaceId: string | null;
+    activeWorkspaceRole: WorkspaceRole | null;
+  }) => void;
   /** Clear everything (logout / hard auth failure). */
   clear: () => void;
 }
@@ -63,8 +60,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: r.accessToken,
           refreshToken: r.refreshToken,
           user: r.user,
-          activeWorkspaceId: r.activeWorkspaceId,
-          activeWorkspaceRole: r.activeWorkspaceRole,
+          // No workspace context until the workspace slice lands.
+          activeWorkspaceId: null,
+          activeWorkspaceRole: null,
         }),
 
       setAccessToken: (token) => set({ accessToken: token }),
@@ -72,21 +70,27 @@ export const useAuthStore = create<AuthState>()(
       setTokens: ({ accessToken, refreshToken }) =>
         set({ accessToken, refreshToken }),
 
+      setUser: (user) => set({ user }),
+
       setActiveContext: (ctx) =>
-        set((s) => ({
+        set({
           activeWorkspaceId: ctx.activeWorkspaceId,
           activeWorkspaceRole: ctx.activeWorkspaceRole,
-          user: ctx.user ?? s.user,
-        })),
+        }),
 
-      clear: () =>
+      clear: () => {
+        // In-flight wizard state dies with the session — the next person on
+        // this tab must never resume (or resend to) a previous user's
+        // destination.
+        clearWizardStores();
         set({
           accessToken: null,
           refreshToken: null,
           user: null,
           activeWorkspaceId: null,
           activeWorkspaceRole: null,
-        }),
+        });
+      },
     }),
     {
       name: storageKey('auth'),

@@ -9,30 +9,26 @@ import { Separator } from '@/components/ui/separator';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { WhatsAppFab } from '@/components/shared/whatsapp-fab';
 import { useMe } from '@/api/hooks/use-auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 /**
  * Authenticated layout (the app shell). Uses shadcn's SidebarProvider so the nav
  * is responsive: a fixed sidebar on desktop, a slide-in sheet on mobile (toggled
- * by SidebarTrigger in the header). Also rehydrates the active workspace/role
- * from /me after a reload, and bounces to /login if that session is dead. The
- * RequireAuth guard wraps this.
+ * by SidebarTrigger in the header). Also re-syncs the user profile from /me
+ * after a reload (keeps `mobileVerified` fresh for the onboarding gate), and
+ * bounces to /login if that session is dead. RequireAuth+RequireOnboarded wrap
+ * this.
  */
 export function AppLayout() {
   const navigate = useNavigate();
   const me = useMe();
-  const setActiveContext = useAuthStore((s) => s.setActiveContext);
+  const setUser = useAuthStore((s) => s.setUser);
 
   useEffect(() => {
-    if (me.data) {
-      setActiveContext({
-        activeWorkspaceId: me.data.activeWorkspaceId,
-        activeWorkspaceRole: me.data.activeWorkspaceRole,
-        user: me.data.user,
-      });
-    }
-  }, [me.data, setActiveContext]);
+    if (me.data) setUser(me.data);
+  }, [me.data, setUser]);
 
   useEffect(() => {
     if (me.isError && !useAuthStore.getState().isAuthenticated()) {
@@ -56,6 +52,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </SidebarInset>
+      <WhatsAppFab />
     </SidebarProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -12,20 +12,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { WorkspaceSwitcher } from '@/components/layout/workspace-switcher';
 import { UserMenu } from '@/components/layout/user-menu';
 import { APP_NAME } from '@/config/app';
 
+// The workspace switcher + members nav return with the workspace slice.
 const NAV = [
   { to: '/', labelKey: 'shell.dashboard', icon: LayoutDashboard, end: true },
-  { to: '/members', labelKey: 'shell.members', icon: Users, end: false },
 ] as const;
 
 /**
  * The customer app sidebar. Uses shadcn's Sidebar primitives so it's responsive:
  * a fixed rail on desktop, a slide-in sheet drawer on mobile (toggled by the
- * <SidebarTrigger/> in the layout header). Holds the workspace switcher up top,
- * the nav, and the user menu in the footer.
+ * <SidebarTrigger/> in the layout header). Nav + the user menu in the footer.
  */
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -35,9 +33,6 @@ export function AppSidebar() {
       <SidebarHeader className="gap-2">
         <div className="flex h-10 items-center px-2 font-semibold">
           {t('common.appName')}
-        </div>
-        <div className="px-2">
-          <WorkspaceSwitcher />
         </div>
       </SidebarHeader>
 

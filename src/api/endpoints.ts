@@ -13,25 +13,20 @@ export const endpoints = {
   auth: {
     signup: v1('/auth/signup'),
     verifyOtp: v1('/auth/verify-otp'),
+    resendOtp: v1('/auth/resend-otp'),
+    setMobile: v1('/auth/mobile'),
+    verifyMobileOtp: v1('/auth/verify-mobile-otp'),
     login: v1('/auth/login'),
     refresh: v1('/auth/refresh'),
     me: v1('/auth/me'),
-    switchWorkspace: v1('/auth/switch-workspace'),
     logout: v1('/auth/logout'),
-    logoutAll: v1('/auth/logout-all'),
-  },
-  workspaces: {
-    list: v1('/workspaces'),
-    current: v1('/workspaces/current'),
-    create: v1('/workspaces'),
-  },
-  members: {
-    list: v1('/members'),
-    invite: v1('/members/invite'),
-    role: (memberId: string) => v1(`/members/${memberId}/role`),
-    byId: (memberId: string) => v1(`/members/${memberId}`),
   },
   services: {
+    // Services available in the authenticated user's country.
     list: v1('/services'),
+  },
+  countries: {
+    // Active countries for the onboarding phone picker.
+    list: v1('/countries'),
   },
 } as const;

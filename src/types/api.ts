@@ -58,19 +58,10 @@ export const UserStatus = {
 } as const;
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
-export const ServiceKey = {
-  WHATSAPP: 'whatsapp',
-  SMS: 'sms',
-  INSTAGRAM: 'instagram',
-  RCS: 'rcs',
-  EMAIL: 'email',
-} as const;
-export type ServiceKey = (typeof ServiceKey)[keyof typeof ServiceKey];
-
 export const ServiceStatus = {
   ACTIVE: 'active',
+  BETA: 'beta',
   COMING_SOON: 'coming_soon',
-  DEPRECATED: 'deprecated',
 } as const;
 export type ServiceStatus = (typeof ServiceStatus)[keyof typeof ServiceStatus];
 
@@ -88,7 +79,11 @@ export interface UserView {
   email: string;
   fullName: string | null;
   emailVerified: boolean;
+  mobileE164: string | null;
+  /** False until the SMS OTP step completes — gates the app (RequireOnboarded). */
+  mobileVerified: boolean;
   status: UserStatus;
+  /** Derived server-side from the verified mobile number. */
   countryCode: string | null;
 }
 
@@ -97,14 +92,55 @@ export interface AuthResult {
   accessToken: string;
   refreshToken: string;
   user: UserView;
-  activeWorkspaceId: string | null;
-  activeWorkspaceRole: WorkspaceRole | null;
 }
 
-/** Returned by signup (identity only). `devOtp` only present outside production. */
-export interface SignupResult {
+/**
+ * Returned wherever the server sends (or re-uses) an OTP: signup, set-mobile,
+ * resend-otp, and inside the USER_NOT_VERIFIED login recovery details.
+ * `devCode` only outside production AND only when a code was freshly sent.
+ */
+export interface OtpIssueResult {
   verificationToken: string;
-  devOtp?: string;
+  /** Seconds until the code expires — drives the wizard-resume storage TTL. */
+  expiresInSec: number;
+  /** Seconds to wait before offering resend (seeds the countdown). */
+  resendCooldownSec: number;
+  devCode?: string;
+}
+
+/** Returned by signup (identity only). */
+export type SignupResult = OtpIssueResult;
+
+/** Returned by POST /auth/resend-otp. */
+export type ResendOtpResult = OtpIssueResult;
+
+/** `details` payload of a 403 USER_NOT_VERIFIED login error. */
+export interface UserNotVerifiedDetails extends OtpIssueResult {
+  email: string;
+}
+
+export function isUserNotVerifiedDetails(
+  d: unknown,
+): d is UserNotVerifiedDetails {
+  return (
+    typeof d === 'object' &&
+    d !== null &&
+    typeof (d as UserNotVerifiedDetails).email === 'string' &&
+    typeof (d as UserNotVerifiedDetails).verificationToken === 'string'
+  );
+}
+
+/** `details` payload of a 429 OTP_COOLDOWN error. */
+export interface OtpCooldownDetails {
+  retryAfterSec: number;
+}
+
+export function isOtpCooldownDetails(d: unknown): d is OtpCooldownDetails {
+  return (
+    typeof d === 'object' &&
+    d !== null &&
+    typeof (d as OtpCooldownDetails).retryAfterSec === 'number'
+  );
 }
 
 /** Returned by refresh — rotating refresh token, so BOTH come back. */
@@ -113,27 +149,11 @@ export interface RefreshResult {
   refreshToken: string;
 }
 
-/** A workspace membership as returned inside /auth/me (drives the switcher). */
-export interface MeWorkspace {
-  id: string;
-  name: string;
-  slug: string;
-  role: WorkspaceRole;
-  status: MemberStatus;
-}
+/** Returned by GET /auth/me — the user profile itself. */
+export type MeResult = UserView;
 
-/** Returned by GET /auth/me. */
-export interface MeResult {
-  user: UserView;
-  activeWorkspaceId: string | null;
-  activeWorkspaceRole: WorkspaceRole | null;
-  workspaces: MeWorkspace[];
-}
-
-/** Returned by POST /auth/switch-workspace — only a fresh access token. */
-export interface SwitchWorkspaceResult {
-  accessToken: string;
-}
+/** Returned by POST /auth/mobile (step 3) — same contract as signup. */
+export type SetMobileResult = SignupResult;
 
 /* --------------------------- workspaces --------------------------- */
 
@@ -159,15 +179,6 @@ export interface CurrentWorkspace {
   role: WorkspaceRole | null;
 }
 
-export interface CreatedWorkspace {
-  id: string;
-  name: string;
-  slug: string;
-  countryCode: string;
-  defaultCurrency: string;
-  service: { key: ServiceKey; status: string };
-}
-
 /* ----------------------------- members ----------------------------- */
 
 export interface Member {
@@ -182,12 +193,29 @@ export interface Member {
 
 /* ----------------------------- services ----------------------------- */
 
-export interface Service {
-  id: string;
-  key: ServiceKey;
-  displayName: string;
+export interface PublicServiceCategory {
+  key: string;
+  label: string;
+  hint: string | null;
+}
+
+/** A service available in the user's country (GET /v1/services). */
+export interface PublicService {
+  key: string;
+  name: string;
+  short: string;
   description: string | null;
   status: ServiceStatus;
+  categories: PublicServiceCategory[];
+}
+
+/* ----------------------------- countries ----------------------------- */
+
+/** Lean country row for the onboarding phone picker (GET /v1/countries). */
+export interface PublicCountry {
+  code: string;
+  name: string;
+  dialCode: string;
 }
 
 /* --------------------------- request bodies --------------------------- */
@@ -195,9 +223,8 @@ export interface Service {
 export interface SignupBody {
   email: string;
   password: string;
-  fullName?: string;
-  mobileE164?: string;
-  countryCode?: string;
+  /** Required by the server DTO (MinLength 1). */
+  fullName: string;
 }
 
 export interface LoginBody {
@@ -210,10 +237,12 @@ export interface VerifyOtpBody {
   code: string;
 }
 
-export interface CreateWorkspaceBody {
-  name: string;
-  countryCode: string;
-  serviceKey: ServiceKey;
+export interface SetMobileBody {
+  mobileE164: string;
+}
+
+export interface ResendOtpBody {
+  verificationToken: string;
 }
 
 export interface InviteMemberBody {

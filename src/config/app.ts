@@ -15,3 +15,12 @@ export const APP_ID = 'sm-client';
 
 /** Build a namespaced localStorage key, e.g. storageKey('theme') → 'sm-client-theme'. */
 export const storageKey = (name: string) => `${APP_ID}-${name}`;
+
+/**
+ * Support contact on WhatsApp — digits only, international format (what
+ * wa.me links expect). Override per environment with VITE_SUPPORT_WHATSAPP;
+ * this is the dev/default number.
+ */
+export const SUPPORT_WHATSAPP: string =
+  (import.meta.env.VITE_SUPPORT_WHATSAPP as string | undefined) ??
+  '919034036898';

@@ -1,8 +1,8 @@
 import { apiGet } from '@/lib/http';
 import { endpoints } from '@/api/endpoints';
-import type { Service } from '@/types/api';
+import type { PublicService } from '@/types/api';
 
 export const servicesApi = {
-  /** Public catalogue (ACTIVE services only) — powers onboarding. */
-  listActive: () => apiGet<Service[]>(endpoints.services.list),
+  /** Services available (priced) in the authenticated user's country. */
+  listAvailable: () => apiGet<PublicService[]>(endpoints.services.list),
 };

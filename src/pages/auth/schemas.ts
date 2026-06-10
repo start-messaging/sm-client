@@ -15,16 +15,23 @@ export const loginSchema = z.object({
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export const signupSchema = z.object({
-  fullName: z.string().trim().max(120).optional(),
+  // Server SignupDto requires fullName (MinLength 1) and caps password at 72
+  // (Argon2 input limit) — mirror both so failures are field-level, not toasts.
+  fullName: z
+    .string()
+    .trim()
+    .min(1, 'validation.fullNameRequired')
+    .max(120, 'validation.fullNameMax'),
   email: z
     .string()
     .min(1, 'validation.emailRequired')
     .email('validation.emailInvalid'),
-  password: z.string().min(8, 'validation.passwordMin').max(128),
+  password: z
+    .string()
+    .min(8, 'validation.passwordMin')
+    .max(72, 'validation.passwordMax'),
 });
 export type SignupValues = z.infer<typeof signupSchema>;
 
-export const verifyOtpSchema = z.object({
-  code: z.string().regex(/^\d{6}$/, 'validation.codeLength'),
-});
-export type VerifyOtpValues = z.infer<typeof verifyOtpSchema>;
+// The 6-digit OTP schema lives inside components/shared/otp-card.tsx — the
+// form is intrinsic to that shared step component.

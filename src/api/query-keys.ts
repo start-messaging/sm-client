@@ -13,6 +13,13 @@ export const queryKeys = {
   },
   services: {
     all: () => ['services'] as const,
+    // Country-scoped: a different country is a different result set, and a
+    // user whose country changes never sees another country's stale list.
+    byCountry: (countryCode: string) => ['services', countryCode] as const,
+  },
+  countries: {
+    // Active-only picker options (onboarding mobile step).
+    options: () => ['countries', 'options'] as const,
   },
   workspaces: {
     // The user's full workspace list — user-scoped, not workspace-scoped.

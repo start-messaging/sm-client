@@ -22,15 +22,49 @@ keyboard handling, focus management, dark-mode tokens, and consistency for free.
 
 ### Installed now (import from `@/components/ui/<name>`)
 
-`avatar` · `badge` · `button` · `card` · `checkbox` · `dialog` ·
-`dropdown-menu` · `field` · `input` · `label` · `select` · `separator` · `sheet` ·
-`sidebar` · `skeleton` · `slider` · `sonner` (Toaster) · `spinner` · `table` ·
-`tabs` · `tooltip`
+`avatar` · `badge` · `button` · `card` · `checkbox` · `command` · `dialog` ·
+`dropdown-menu` · `field` · `input` · `input-otp` · `label` · `popover` ·
+`select` · `separator` · `sheet` · `sidebar` · `skeleton` · `slider` ·
+`sonner` (Toaster) · `spinner` · `table` · `tabs` · `tooltip`
 
 The app shell uses the **`sidebar`** block (responsive: fixed rail on desktop,
 slide-in sheet on mobile via `SidebarTrigger`) — see `layouts/app-layout.tsx` +
 `components/layout/app-sidebar.tsx`. Don't hand-roll a `<aside hidden md:flex>`
 shell; use `SidebarProvider`/`Sidebar`/`SidebarInset`.
+
+### Registration wizard + onboarding gate (this app's auth flow)
+
+Registration is a **4-step wizard**: guest `/signup` holds steps 1–2 (details →
+email OTP; there is no `/verify-otp` route). Email verification issues the
+session, then steps 3–4 run on the **authenticated** `/onboarding/mobile` route
+(country `command`+`popover` Combobox + national number, validated with
+`libphonenumber-js/min` in `pages/onboarding/schemas.ts`; server re-validates
+with `/max` and derives the country). `app/guards/require-onboarded.tsx` sits
+between `RequireAuth` and `AppLayout`: any session with `user.mobileVerified ===
+false` is funnelled to `/onboarding/mobile`. The shared step indicator is
+`components/shared/onboarding-stepper.tsx`. The home (`pages/dashboard/`) shows
+the services available in the user's country (`useAvailableServices`) with a
+stubbed "Start a workspace" CTA — the workspace slice replaces the stub. The
+pre-reset workspace UI (switcher, members) was deleted, not hidden; rebuild it
+from the real API contract when workspaces land.
+
+**The wizard is resumable — keep it that way.** In-flight OTP state
+({destination, verificationToken} ONLY — **never persist passwords**) lives in
+per-tab sessionStorage via `lib/wizard-storage.ts` (`signupWizardStore` /
+`mobileWizardStore`, TTL = the server's `expiresInSec`), so a reload restores
+step 2/4 (email masked via `lib/mask.ts`) instead of dead-ending. The OTP entry
+step is ONE shared component — `components/shared/otp-card.tsx` (6-digit
+`input-otp` form + resend button with a countdown from `hooks/use-countdown`,
+always seeded from server values: `resendCooldownSec` on success, the 429's
+`details.retryAfterSec`). Email resend hits `POST /auth/resend-otp`
+(token-keyed); mobile resend re-POSTs `/auth/mobile` with the same number.
+Login with an unverified email gets `USER_NOT_VERIFIED` + recovery `details`
+(token et al.) → the login page writes `signupWizardStore` and routes to
+`/signup`, which resumes at step 2. Re-POSTing signup with an unverified email
+is NOT an error (server resumes the registration); `EMAIL_TAKEN` only means a
+verified account exists. Cross-tab races resolve via server codes
+(`EMAIL_ALREADY_VERIFIED` → go log in; `MOBILE_ALREADY_VERIFIED` → refetch
+`/auth/me` and `setUser`), never via storage events.
 
 ### Available to add on demand (`npx shadcn@latest add <name>`)
 

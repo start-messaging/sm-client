@@ -16,6 +16,9 @@ import {
 } from '@/components/ui/card';
 import { useLogin } from '@/api/hooks/use-auth';
 import { toast } from '@/lib/toast';
+import { signupWizardStore } from '@/lib/wizard-storage';
+import { isUserNotVerifiedDetails } from '@/types/api';
+import { isApiError } from '@/types/error';
 import { loginSchema, type LoginValues } from './schemas';
 
 export function LoginPage() {
@@ -37,7 +40,30 @@ export function LoginPage() {
         // Honour ?redirect= set by the auth guard; default to the dashboard.
         void navigate(params.get('redirect') || '/', { replace: true });
       },
-      onError: (err) => toast.error(err),
+      onError: (err) => {
+        // Correct password but unverified email: the server already sent (or
+        // re-used) a code and handed us the token — resume the signup wizard
+        // at the verify step instead of dead-ending.
+        if (
+          isApiError(err) &&
+          err.code === 'USER_NOT_VERIFIED' &&
+          isUserNotVerifiedDetails(err.details)
+        ) {
+          const d = err.details;
+          signupWizardStore.save(
+            {
+              destination: d.email,
+              verificationToken: d.verificationToken,
+              resendAvailableAt: Date.now() + d.resendCooldownSec * 1000,
+            },
+            d.expiresInSec * 1000,
+          );
+          toast.info(t('auth.login.unverified'));
+          void navigate('/signup', { replace: true });
+          return;
+        }
+        toast.error(err);
+      },
     });
   };
 

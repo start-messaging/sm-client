@@ -11,6 +11,11 @@
     "themeDark": "Dark",
     "themeSystem": "System"
   },
+  "support": {
+    "nudge": "Don't be shy — ask your doubt!",
+    "cta": "Chat with us on WhatsApp",
+    "prefill": "Hi! I have a question about {{appName}}."
+  },
   "auth": {
     "login": {
       "title": "Welcome back",
@@ -20,7 +25,8 @@
       "submit": "Sign in",
       "noAccount": "Don't have an account?",
       "signupLink": "Create one",
-      "success": "Signed in"
+      "success": "Signed in",
+      "unverified": "Your email isn't verified yet. We've sent you a code — enter it to continue."
     },
     "signup": {
       "title": "Create your account",
@@ -38,40 +44,96 @@
       "subtitle": "Enter the 6-digit code we sent to {{email}}",
       "code": "Verification code",
       "submit": "Verify",
-      "success": "Email verified"
+      "success": "Email verified",
+      "changeEmail": "Use a different email",
+      "resumed": "Welcome back — finish verifying your email."
     },
     "logout": "Log out"
+  },
+  "otp": {
+    "resend": "Resend code",
+    "resendIn": "Resend code in {{seconds}}s",
+    "resent": "We sent you a new code"
+  },
+  "onboarding": {
+    "steps": {
+      "basicInfo": "Account",
+      "verifyEmail": "Email",
+      "mobile": "Mobile",
+      "verifyMobile": "Verify"
+    },
+    "mobile": {
+      "title": "Add your mobile number",
+      "subtitle": "We'll text you a verification code. Your country is set from this number.",
+      "country": "Country",
+      "countryPlaceholder": "Select your country",
+      "searchCountry": "Search country…",
+      "noCountry": "No country found.",
+      "number": "Mobile number",
+      "help": "Your number, without the country code.",
+      "submit": "Send code",
+      "success": "Code sent by SMS",
+      "changeNumber": "Use a different number"
+    },
+    "verifyMobile": {
+      "title": "Verify your mobile",
+      "subtitle": "enter the 6-digit code we texted you",
+      "submit": "Verify",
+      "success": "Mobile verified — welcome!"
+    }
   },
   "validation": {
     "emailRequired": "Email is required",
     "emailInvalid": "Enter a valid email",
     "passwordRequired": "Password is required",
     "passwordMin": "Password must be at least 8 characters",
-    "codeLength": "The code must be 6 digits"
+    "codeLength": "The code must be 6 digits",
+    "countryRequired": "Select your country",
+    "mobileRequired": "Mobile number is required",
+    "mobileInvalid": "Enter a valid mobile number for the selected country",
+    "fullNameRequired": "Please enter your name",
+    "fullNameMax": "Name is too long (max 120 characters)",
+    "passwordMax": "Password is too long (max 72 characters)"
   },
   "shell": {
-    "dashboard": "Dashboard",
-    "members": "Team",
-    "noWorkspace": "No workspace yet",
-    "createWorkspace": "Create workspace",
-    "switchWorkspace": "Switch workspace"
+    "dashboard": "Home",
+    "noWorkspace": "No workspace yet"
   },
   "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome, {{name}}",
-    "placeholder": "Your workspace overview will appear here."
+    "title": "Home",
+    "welcome": "Welcome, {{name}}"
+  },
+  "home": {
+    "chooseService": "Choose a service to start your first workspace.",
+    "startWorkspace": "Start a workspace",
+    "workspaceComingSoon": "Workspace creation is coming soon.",
+    "badge": {
+      "beta": "Beta"
+    },
+    "empty": {
+      "title": "No services in your country yet",
+      "body": "We're not live in your country yet — check back soon."
+    }
   },
   "errors": {
     "title": "Something went wrong",
     "network": "Could not reach the server. Check your connection.",
     "unknown": "An unexpected error occurred.",
     "INVALID_CREDENTIALS": "Incorrect email or password.",
-    "EMAIL_NOT_VERIFIED": "Please verify your email first.",
+    "USER_NOT_VERIFIED": "Please verify your email first.",
+    "ACCOUNT_SUSPENDED": "This account is suspended.",
     "EMAIL_TAKEN": "That email is already registered.",
-    "INVALID_OTP": "That code is incorrect.",
+    "OTP_INVALID": "That code is incorrect.",
+    "OTP_EXPIRED": "That code has expired — request a new one.",
     "OTP_LOCKED": "Too many attempts. Please try again later.",
-    "WORKSPACE_LIMIT_REACHED": "You've reached the workspace limit for this service.",
-    "NOT_A_MEMBER": "You are not a member of that workspace.",
-    "VALIDATION_ERROR": "Please check the form and try again."
+    "MOBILE_INVALID": "That doesn't look like a valid mobile number.",
+    "MOBILE_COUNTRY_UNRESOLVED": "We couldn't determine the country for this number.",
+    "COUNTRY_NOT_SUPPORTED": "We're not available in that country yet.",
+    "MOBILE_TAKEN": "That mobile number is already in use.",
+    "MOBILE_ALREADY_VERIFIED": "Your mobile number is already verified.",
+    "COUNTRY_NOT_SET": "Verify your mobile number first.",
+    "VALIDATION_ERROR": "Please check the form and try again.",
+    "OTP_COOLDOWN": "Please wait a moment before requesting another code.",
+    "EMAIL_ALREADY_VERIFIED": "This email is already verified — just sign in."
   }
 }
