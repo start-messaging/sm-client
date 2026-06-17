@@ -22,11 +22,12 @@ export const queryKeys = {
     options: () => ['countries', 'options'] as const,
   },
   workspaces: {
-    // The user's full workspace list — user-scoped, not workspace-scoped.
+    // Prefix for everything workspace-related (invalidate after create).
     all: () => ['workspaces'] as const,
-    // The active workspace's detail — scoped by workspaceId so each caches independently.
-    current: (workspaceId: string) =>
-      ['workspaces', workspaceId, 'current'] as const,
+    // The user's full workspace list — user-scoped, not workspace-scoped.
+    mine: () => ['workspaces', 'mine'] as const,
+    // One workspace's shell context, keyed by the URL slug.
+    bySlug: (slug: string) => ['workspaces', 'slug', slug] as const,
   },
   members: {
     all: (workspaceId: string) => ['members', workspaceId] as const,

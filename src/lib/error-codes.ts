@@ -1,0 +1,90 @@
+/**
+ * The set of API error codes the server can return — the client half of the
+ * single source of truth. Mirrors the server's `src/common/errors/error-codes.ts`
+ * and is kept BYTE-IDENTICAL with the other SPA (sm-client / sm-admin).
+ *
+ * The server types every thrown code against its copy of this union, and this
+ * app's `error-codes.guard.ts` asserts the i18n `errors.*` catalogue is a subset
+ * of it — so a translation key can't drift away from a real code without a
+ * compile error. Branch on a code with `error.code === ERROR_CODES.X` to get
+ * autocomplete + typo-checking.
+ *
+ * Invariant: every value === its key (the code string is the wire value).
+ */
+export const ERROR_CODES = {
+  // Generic / framework. VALIDATION_ERROR + INTERNAL_ERROR are emitted by the
+  // exceptions filter; UNAUTHORIZED / FORBIDDEN / NOT_FOUND are its HttpStatus
+  // fallbacks for guard / unknown-route failures that carry no explicit code.
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+
+  // Auth / identity / session
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  SESSION_INVALID: 'SESSION_INVALID',
+  ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
+  EMAIL_TAKEN: 'EMAIL_TAKEN',
+  EMAIL_ALREADY_VERIFIED: 'EMAIL_ALREADY_VERIFIED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  USER_NOT_VERIFIED: 'USER_NOT_VERIFIED',
+  INVITE_INVALID: 'INVITE_INVALID',
+  PARTNER_NOT_VERIFIED: 'PARTNER_NOT_VERIFIED',
+
+  // Mobile / OTP
+  MOBILE_TAKEN: 'MOBILE_TAKEN',
+  MOBILE_INVALID: 'MOBILE_INVALID',
+  MOBILE_ALREADY_VERIFIED: 'MOBILE_ALREADY_VERIFIED',
+  MOBILE_COUNTRY_UNRESOLVED: 'MOBILE_COUNTRY_UNRESOLVED',
+  OTP_INVALID: 'OTP_INVALID',
+  OTP_EXPIRED: 'OTP_EXPIRED',
+  OTP_LOCKED: 'OTP_LOCKED',
+  OTP_COOLDOWN: 'OTP_COOLDOWN',
+
+  // Countries / currencies
+  COUNTRY_EXISTS: 'COUNTRY_EXISTS',
+  COUNTRY_INACTIVE: 'COUNTRY_INACTIVE',
+  COUNTRY_NOT_FOUND: 'COUNTRY_NOT_FOUND',
+  COUNTRY_NOT_SET: 'COUNTRY_NOT_SET',
+  COUNTRY_NOT_SUPPORTED: 'COUNTRY_NOT_SUPPORTED',
+  CURRENCY_EXISTS: 'CURRENCY_EXISTS',
+  CURRENCY_INACTIVE: 'CURRENCY_INACTIVE',
+  CURRENCY_NOT_FOUND: 'CURRENCY_NOT_FOUND',
+
+  // Services / categories / rates
+  SERVICE_EXISTS: 'SERVICE_EXISTS',
+  SERVICE_NOT_FOUND: 'SERVICE_NOT_FOUND',
+  SERVICE_NOT_AVAILABLE: 'SERVICE_NOT_AVAILABLE',
+  SERVICE_HAS_NO_CATEGORIES: 'SERVICE_HAS_NO_CATEGORIES',
+  SERVICE_CATEGORY_EXISTS: 'SERVICE_CATEGORY_EXISTS',
+  SERVICE_CATEGORY_NOT_FOUND: 'SERVICE_CATEGORY_NOT_FOUND',
+  RATE_NOT_FOUND: 'RATE_NOT_FOUND',
+  RATE_COUNTRY_EXISTS: 'RATE_COUNTRY_EXISTS',
+  RATE_COUNTRY_NOT_FOUND: 'RATE_COUNTRY_NOT_FOUND',
+  RATE_CURRENCY_MISMATCH: 'RATE_CURRENCY_MISMATCH',
+
+  // Plans
+  PLAN_EXISTS: 'PLAN_EXISTS',
+  PLAN_NOT_FOUND: 'PLAN_NOT_FOUND',
+  PLAN_NOT_CONFIGURED: 'PLAN_NOT_CONFIGURED',
+  PLAN_FREE_PROTECTED: 'PLAN_FREE_PROTECTED',
+  PLAN_LIMIT_REACHED: 'PLAN_LIMIT_REACHED',
+
+  // Workspaces
+  WORKSPACE_NOT_FOUND: 'WORKSPACE_NOT_FOUND',
+  WORKSPACE_ROLE_FORBIDDEN: 'WORKSPACE_ROLE_FORBIDDEN',
+
+  // Staff (admin console)
+  STAFF_NOT_FOUND: 'STAFF_NOT_FOUND',
+  STAFF_EMAIL_TAKEN: 'STAFF_EMAIL_TAKEN',
+  STAFF_SELF_ACTION: 'STAFF_SELF_ACTION',
+  STAFF_LAST_SUPER_ADMIN: 'STAFF_LAST_SUPER_ADMIN',
+
+  // Mail delivery
+  MAIL_NOT_CONFIGURED: 'MAIL_NOT_CONFIGURED',
+  MAIL_SEND_FAILED: 'MAIL_SEND_FAILED',
+} as const;
+
+/** Every error code the API can emit. Derived from `ERROR_CODES` — never widen to `string`. */
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

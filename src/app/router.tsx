@@ -3,19 +3,27 @@ import { RequireAuth } from '@/app/guards/require-auth';
 import { RequireGuest } from '@/app/guards/require-guest';
 import { RequireOnboarded } from '@/app/guards/require-onboarded';
 import { AuthLayout } from '@/layouts/auth-layout';
-import { AppLayout } from '@/layouts/app-layout';
+import { HubLayout } from '@/layouts/hub-layout';
+import { WorkspaceLayout } from '@/layouts/workspace-layout';
 import { LoginPage } from '@/pages/auth/login-page';
 import { SignupPage } from '@/pages/auth/signup-page';
 import { OnboardingMobilePage } from '@/pages/onboarding/onboarding-mobile-page';
-import { DashboardPage } from '@/pages/dashboard/dashboard-page';
+import { HomeRedirect } from '@/pages/home-redirect';
+import { CreateWorkspacePage } from '@/pages/services/create-workspace-page';
+import { ServicesGalleryPage } from '@/pages/services/services-gallery-page';
+import { WorkspaceCatchAll } from '@/pages/workspace/workspace-catch-all';
+import { WorkspaceDashboardPage } from '@/pages/workspace/workspace-dashboard-page';
 
 /**
  * The single, declarative route config (React Router library mode). Branches:
  *   - public (RequireGuest → AuthLayout): /login, /signup (wizard steps 1–2)
  *   - authed, pre-onboarding (RequireAuth → AuthLayout): /onboarding/mobile
  *     (wizard steps 3–4; the page self-redirects home once verified)
- *   - app (RequireAuth → RequireOnboarded → AppLayout): / — an authenticated
- *     user without a verified mobile is bounced back to /onboarding/mobile.
+ *   - hub (RequireAuth → RequireOnboarded → HubLayout): /services (gallery),
+ *     /services/:serviceKey/new (creation wizard) — choosing a context
+ *   - workspace (… → WorkspaceLayout): /w/:slug/* — working inside one; the
+ *     sidebar scopes to the workspace's service
+ *   - `/` is pure redirect: last active workspace, else first, else /services.
  * Guards are layout routes that render <Outlet/> or redirect.
  */
 export const router = createBrowserRouter([
@@ -43,9 +51,25 @@ export const router = createBrowserRouter([
       {
         element: <RequireOnboarded />,
         children: [
+          { index: true, element: <HomeRedirect /> },
           {
-            element: <AppLayout />,
-            children: [{ index: true, element: <DashboardPage /> }],
+            element: <HubLayout />,
+            children: [
+              { path: '/services', element: <ServicesGalleryPage /> },
+              {
+                path: '/services/:serviceKey/new',
+                element: <CreateWorkspacePage />,
+              },
+            ],
+          },
+          {
+            path: '/w/:slug',
+            element: <WorkspaceLayout />,
+            children: [
+              { index: true, element: <WorkspaceDashboardPage /> },
+              // Unknown module segments fall back to the workspace dashboard.
+              { path: '*', element: <WorkspaceCatchAll /> },
+            ],
           },
         ],
       },

@@ -93,7 +93,9 @@
     "mobileInvalid": "Enter a valid mobile number for the selected country",
     "fullNameRequired": "Please enter your name",
     "fullNameMax": "Name is too long (max 120 characters)",
-    "passwordMax": "Password is too long (max 72 characters)"
+    "passwordMax": "Password is too long (max 72 characters)",
+    "workspaceNameMin": "Name must be at least 2 characters",
+    "workspaceNameMax": "Name is too long (max 120 characters)"
   },
   "shell": {
     "dashboard": "Home",
@@ -108,11 +110,76 @@
     "startWorkspace": "Start a workspace",
     "workspaceComingSoon": "Workspace creation is coming soon.",
     "badge": {
-      "beta": "Beta"
+      "beta": "Beta",
+      "comingSoon": "Coming soon"
     },
     "empty": {
       "title": "No services in your country yet",
       "body": "We're not live in your country yet — check back soon."
+    },
+    "open": "Open",
+    "newWorkspace": "New workspace",
+    "betaHint": "Early access — fully usable, still being polished.",
+    "workspaceCount_one": "{{count}} workspace",
+    "workspaceCount_other": "{{count}} workspaces",
+    "comingSoonCard": "We're building this for you — it'll be available right here soon."
+  },
+  "launcher": {
+    "aria": "Your services",
+    "allServices": "View all services"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "inbox": "Inbox",
+    "campaigns": "Campaigns",
+    "templates": "Templates",
+    "contacts": "Contacts",
+    "senderIds": "Sender IDs",
+    "members": "Members",
+    "billing": "Billing",
+    "settings": "Settings",
+    "workspaceGroup": "Workspace",
+    "comingSoon": "Coming soon — this module is on the way."
+  },
+  "createWorkspace": {
+    "back": "All services",
+    "title": "Start a {{service}} workspace",
+    "subtitle": "Your country, currency and free plan are set automatically — just name it.",
+    "nameLabel": "Workspace name",
+    "nameHint": "Usually your business or brand name. You can rename it later.",
+    "namePlaceholder": "Acme Traders",
+    "slugPreview": "Your workspace address:",
+    "submit": "Create workspace",
+    "success": "{{name}} is ready!",
+    "limitReached": "The free plan includes one workspace per service. Paid plans with more workspaces are coming soon."
+  },
+  "workspace": {
+    "planLabel": "{{plan}} plan",
+    "switcherLabel": "Your workspaces",
+    "newWorkspace": "New workspace",
+    "facts": {
+      "service": "Service",
+      "country": "Country",
+      "currency": "Currency",
+      "role": "Your role"
+    },
+    "modulesSoon": {
+      "title": "Your tools are on the way",
+      "hint": "Inbox, campaigns and more unlock as we roll out each module.",
+      "body": "Connect-and-send arrives with the next updates — this workspace is ready and waiting."
+    },
+    "plan": {
+      "title": "Your plan",
+      "hint": "Features and limits come from your plan — they update instantly when your plan changes.",
+      "features": "Features",
+      "limits": "Limits",
+      "noFeatures": "Nothing listed — features unlock with paid plans.",
+      "noLimits": "No caps on this plan.",
+      "unlimited": "Unlimited",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "upgrade": "Upgrade",
+      "upgradeSoon": "Plan upgrades arrive with billing — soon you'll switch plans right here."
     }
   },
   "errors": {
@@ -134,6 +201,34 @@
     "COUNTRY_NOT_SET": "Verify your mobile number first.",
     "VALIDATION_ERROR": "Please check the form and try again.",
     "OTP_COOLDOWN": "Please wait a moment before requesting another code.",
-    "EMAIL_ALREADY_VERIFIED": "This email is already verified — just sign in."
+    "EMAIL_ALREADY_VERIFIED": "This email is already verified — just sign in.",
+    "PLAN_LIMIT_REACHED": "Free plan limit reached — one workspace per service for now.",
+    "SERVICE_NOT_AVAILABLE": "This service is not available in your country yet.",
+    "WORKSPACE_NOT_FOUND": "We couldn't find that workspace.",
+    "PLAN_NOT_CONFIGURED": "This service isn’t accepting new workspaces right now. Please try again later."
+  },
+  "plan": {
+    "keys": {
+      "max_workspaces_per_service": "Workspaces per service",
+      "max_members": "Team members",
+      "max_agents": "Agents",
+      "history_retention_days": "History retention (days)",
+      "max_contacts": "Contacts",
+      "wa_campaigns": "WhatsApp campaigns",
+      "campaign_analytics": "Campaign analytics",
+      "agent_inbox": "Agent inbox",
+      "api_access": "API access",
+      "support_level": "Support level"
+    },
+    "values": {
+      "email_bh": "Email (business hours)"
+    }
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "MANAGER": "Manager",
+    "AGENT": "Agent",
+    "VIEWER": "Viewer"
   }
 }

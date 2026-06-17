@@ -24,6 +24,14 @@ export const endpoints = {
   services: {
     // Services available in the authenticated user's country.
     list: v1('/services'),
+    // Service-first creation: a workspace is born under a service.
+    createWorkspace: (serviceKey: string) =>
+      v1(`/services/${serviceKey}/workspaces`),
+  },
+  workspaces: {
+    // Every workspace the caller belongs to.
+    mine: v1('/workspaces'),
+    bySlug: (slug: string) => v1(`/workspaces/${slug}`),
   },
   countries: {
     // Active countries for the onboarding phone picker.

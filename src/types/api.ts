@@ -157,26 +157,39 @@ export type SetMobileResult = SignupResult;
 
 /* --------------------------- workspaces --------------------------- */
 
+/** One row of GET /v1/workspaces — feeds the launcher, gallery and switcher. */
 export interface WorkspaceSummary {
   id: string;
   name: string;
   slug: string;
+  /** The service this workspace was created under (one per workspace). */
+  serviceKey: string;
   countryCode: string;
   defaultCurrency: string;
+  planCode: string;
   role: WorkspaceRole;
   status: string;
-  isActive: boolean;
 }
 
-export interface CurrentWorkspace {
-  id: string;
-  name: string;
-  slug: string;
-  countryCode: string;
-  defaultCurrency: string;
+/**
+ * Plan entitlements are OPEN key-value sets: the server can add keys at any
+ * time (seed/admin edit, no deploy) and the client gates UI off whatever
+ * arrives. Absent feature = off; absent/null limit = unlimited. Read them
+ * through lib/plan.ts, never inline — and remember client checks are UX only;
+ * the server enforces.
+ */
+export type PlanFeatures = Record<string, boolean | string>;
+export type PlanLimits = Record<string, number | null>;
+
+/** GET /v1/workspaces/:slug — the workspace shell's context. */
+export interface CurrentWorkspace extends WorkspaceSummary {
   timezone: string | null;
-  status: string;
-  role: WorkspaceRole | null;
+  planFeatures: PlanFeatures;
+  planLimits: PlanLimits;
+}
+
+export interface CreateWorkspaceBody {
+  name: string;
 }
 
 /* ----------------------------- members ----------------------------- */

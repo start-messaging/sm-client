@@ -22,6 +22,8 @@ interface AuthState {
   refreshToken: string | null;
   user: UserView | null;
   activeWorkspaceId: string | null;
+  /** Persisted so `/` can return the user to their last workspace. */
+  activeWorkspaceSlug: string | null;
   activeWorkspaceRole: WorkspaceRole | null;
 
   /** True once we have a refresh token — i.e. there is a session to restore. */
@@ -35,11 +37,14 @@ interface AuthState {
   setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   /** Refresh the user profile (from /me or a mobile-verification step). */
   setUser: (user: UserView) => void;
-  /** Update active workspace + role (workspace slice; unused until then). */
+  /** Remember the workspace the user is currently inside (set by the shell). */
   setActiveContext: (ctx: {
-    activeWorkspaceId: string | null;
-    activeWorkspaceRole: WorkspaceRole | null;
+    id: string;
+    slug: string;
+    role: WorkspaceRole;
   }) => void;
+  /** Forget the remembered workspace (it 404'd: deleted / membership revoked). */
+  clearActiveContext: () => void;
   /** Clear everything (logout / hard auth failure). */
   clear: () => void;
 }
@@ -51,6 +56,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       user: null,
       activeWorkspaceId: null,
+      activeWorkspaceSlug: null,
       activeWorkspaceRole: null,
 
       isAuthenticated: () => !!get().refreshToken,
@@ -60,8 +66,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: r.accessToken,
           refreshToken: r.refreshToken,
           user: r.user,
-          // No workspace context until the workspace slice lands.
+          // A fresh sign-in starts neutral; entering a workspace sets context.
           activeWorkspaceId: null,
+          activeWorkspaceSlug: null,
           activeWorkspaceRole: null,
         }),
 
@@ -74,8 +81,16 @@ export const useAuthStore = create<AuthState>()(
 
       setActiveContext: (ctx) =>
         set({
-          activeWorkspaceId: ctx.activeWorkspaceId,
-          activeWorkspaceRole: ctx.activeWorkspaceRole,
+          activeWorkspaceId: ctx.id,
+          activeWorkspaceSlug: ctx.slug,
+          activeWorkspaceRole: ctx.role,
+        }),
+
+      clearActiveContext: () =>
+        set({
+          activeWorkspaceId: null,
+          activeWorkspaceSlug: null,
+          activeWorkspaceRole: null,
         }),
 
       clear: () => {
@@ -88,6 +103,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           user: null,
           activeWorkspaceId: null,
+          activeWorkspaceSlug: null,
           activeWorkspaceRole: null,
         });
       },
@@ -99,6 +115,7 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: s.refreshToken,
         user: s.user,
         activeWorkspaceId: s.activeWorkspaceId,
+        activeWorkspaceSlug: s.activeWorkspaceSlug,
         activeWorkspaceRole: s.activeWorkspaceRole,
       }),
     },

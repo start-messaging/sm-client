@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -134,7 +134,6 @@ function MobileStep({
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<MobileValues>({
@@ -148,7 +147,7 @@ function MobileStep({
   // The prefilled country comes from the phone number; if it isn't among the
   // active picker options (deactivated since, or a shared-calling-code
   // sibling), drop it so the user picks an offered country explicitly.
-  const selectedCountry = watch('country');
+  const selectedCountry = useWatch({ control, name: 'country' });
   useEffect(() => {
     if (!countries || !selectedCountry) return;
     if (!countries.some((c) => c.code === selectedCountry)) {

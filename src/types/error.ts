@@ -1,11 +1,18 @@
+import type { ErrorCode } from '@/lib/error-codes';
+
 /**
  * Normalized error every API call rejects with. The axios layer converts axios
  * errors / backend error envelopes / network failures into this single shape so
  * UI code has exactly one thing to handle.
  */
 export class ApiError extends Error {
-  /** Backend error code, e.g. 'INVALID_CREDENTIALS'. 'NETWORK'/'UNKNOWN' for transport failures. */
-  readonly code: string;
+  /**
+   * Backend error code, e.g. `INVALID_CREDENTIALS`. Typed as the `ErrorCode`
+   * union so `error.code === ERROR_CODES.X` autocompletes and typos are caught;
+   * `& {}` keeps it open to transport-layer codes the client mints itself
+   * (`NETWORK` / `TIMEOUT` / `UNKNOWN` / `HTTP_ERROR` / `NO_SESSION`).
+   */
+  readonly code: ErrorCode | (string & {});
   /** HTTP status (0 when the request never reached the server). */
   readonly status: number;
   /** Validation details etc. (backend `error.details`). */
@@ -14,7 +21,7 @@ export class ApiError extends Error {
   readonly requestId?: string;
 
   constructor(params: {
-    code: string;
+    code: ErrorCode | (string & {});
     message: string;
     status: number;
     details?: unknown;

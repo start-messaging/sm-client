@@ -23,14 +23,46 @@ keyboard handling, focus management, dark-mode tokens, and consistency for free.
 ### Installed now (import from `@/components/ui/<name>`)
 
 `avatar` · `badge` · `button` · `card` · `checkbox` · `command` · `dialog` ·
-`dropdown-menu` · `field` · `input` · `input-otp` · `label` · `popover` ·
-`select` · `separator` · `sheet` · `sidebar` · `skeleton` · `slider` ·
-`sonner` (Toaster) · `spinner` · `table` · `tabs` · `tooltip`
+`dropdown-menu` · `field` · `hover-card` · `input` · `input-otp` · `label` ·
+`popover` · `select` · `separator` · `sheet` · `sidebar` · `skeleton` ·
+`slider` · `sonner` (Toaster) · `spinner` · `switch` · `table` · `tabs` ·
+`tooltip`
 
-The app shell uses the **`sidebar`** block (responsive: fixed rail on desktop,
-slide-in sheet on mobile via `SidebarTrigger`) — see `layouts/app-layout.tsx` +
-`components/layout/app-sidebar.tsx`. Don't hand-roll a `<aside hidden md:flex>`
-shell; use `SidebarProvider`/`Sidebar`/`SidebarInset`.
+### The service-first shell (routes, layouts, nav)
+
+The app has TWO authed shells. **HubLayout** (`layouts/hub-layout.tsx`, no
+sidebar) hosts `/services` (the gallery) and `/services/:key/new` (minimal
+create wizard — name only; country/currency/plan are server-locked).
+**WorkspaceLayout** (`layouts/workspace-layout.tsx`) hosts `/w/:slug/*`: it
+resolves the slug via `useWorkspace`, remembers it (`setActiveContext` → the
+persisted store feeds the `/` redirect in `pages/home-redirect.tsx`: last
+workspace → first → gallery), bounces 404s back to `/services`, and passes the
+workspace to pages via Outlet context (`hooks/use-current-workspace.ts`).
+
+**The sidebar is service-scoped and registry-driven**: `config/service-nav.ts`
+maps service key → modules (plus `COMMON_NAV`). Adding a service = one registry
+entry; modules not yet built are `comingSoon: true` and render disabled with an
+InfoTip — never add dead routes. The **9-dot launcher**
+(`components/shared/service-launcher.tsx`, in `header-actions.tsx`): hover =
+panel of my services/workspaces, click = `/services`. The sidebar header is the
+same-service workspace switcher. The shell uses the **`sidebar`** block
+(`components/layout/workspace-sidebar.tsx`); don't hand-roll a shell.
+
+**Hints**: `components/shared/info-tip.tsx` is the ONE way to attach
+explanatory hints (ⓘ tooltip); use `rich` (HoverCard) when content needs media
+or links — that mode is reserved for future walkthrough videos.
+
+**Plan gating**: the workspace payload carries `planFeatures`/`planLimits` —
+OPEN key-value sets the server can extend without a deploy. Gate UI through
+`lib/plan.ts` (`hasFeature` / `featureValue` / `planLimit`), never by reading
+the records inline: absent feature = off, absent/null limit = unlimited, and
+client checks are UX only (the server enforces). The one display-only exception
+is `pages/workspace/components/plan-panel.tsx` ("Your plan" card), which renders
+the raw records; entitlement labels resolve via `plan.keys.*` i18n with a
+humanised fallback so keys added by admins still render untranslated.
+**Making a key actionable?** Server enforcement comes FIRST — follow the
+checklist in `sm-server/CLAUDE.md` § "Authorization model" (register the key,
+server check, e2e the direct API call), and only then gate the UI here.
 
 ### Registration wizard + onboarding gate (this app's auth flow)
 

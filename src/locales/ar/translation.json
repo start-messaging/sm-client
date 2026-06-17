@@ -93,7 +93,9 @@
     "mobileInvalid": "أدخل رقم جوال صالحًا للبلد المحدد",
     "fullNameRequired": "يرجى إدخال اسمك",
     "fullNameMax": "الاسم طويل جدًا (الحد الأقصى 120 حرفًا)",
-    "passwordMax": "كلمة المرور طويلة جدًا (الحد الأقصى 72 حرفًا)"
+    "passwordMax": "كلمة المرور طويلة جدًا (الحد الأقصى 72 حرفًا)",
+    "workspaceNameMin": "يجب ألا يقل الاسم عن حرفين",
+    "workspaceNameMax": "الاسم طويل جدًا (الحد الأقصى 120 حرفًا)"
   },
   "shell": {
     "dashboard": "الرئيسية",
@@ -108,11 +110,80 @@
     "startWorkspace": "ابدأ مساحة عمل",
     "workspaceComingSoon": "إنشاء مساحات العمل قادم قريبًا.",
     "badge": {
-      "beta": "تجريبي"
+      "beta": "تجريبي",
+      "comingSoon": "قريبًا"
     },
     "empty": {
       "title": "لا توجد خدمات في بلدك بعد",
       "body": "لسنا متاحين في بلدك بعد — عُد قريبًا."
+    },
+    "open": "فتح",
+    "newWorkspace": "مساحة عمل جديدة",
+    "betaHint": "وصول مبكر — قابل للاستخدام بالكامل وما زال قيد التحسين.",
+    "workspaceCount_one": "مساحة عمل واحدة",
+    "workspaceCount_other": "{{count}} مساحات عمل",
+    "workspaceCount_zero": "لا توجد مساحات عمل",
+    "workspaceCount_two": "مساحتا عمل",
+    "workspaceCount_few": "{{count}} مساحات عمل",
+    "workspaceCount_many": "{{count}} مساحة عمل",
+    "comingSoonCard": "نعمل على توفير هذه الخدمة لك — ستكون متاحة هنا قريبًا."
+  },
+  "launcher": {
+    "aria": "خدماتك",
+    "allServices": "عرض كل الخدمات"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "inbox": "الوارد",
+    "campaigns": "الحملات",
+    "templates": "القوالب",
+    "contacts": "جهات الاتصال",
+    "senderIds": "هويات المرسل",
+    "members": "الأعضاء",
+    "billing": "الفوترة",
+    "settings": "الإعدادات",
+    "workspaceGroup": "مساحة العمل",
+    "comingSoon": "قريبًا — هذه الوحدة في الطريق."
+  },
+  "createWorkspace": {
+    "back": "كل الخدمات",
+    "title": "ابدأ مساحة عمل {{service}}",
+    "subtitle": "يُضبط بلدك وعملتك وخطتك المجانية تلقائيًا — فقط اختر اسمًا.",
+    "nameLabel": "اسم مساحة العمل",
+    "nameHint": "عادةً اسم نشاطك التجاري أو علامتك. يمكن تغييره لاحقًا.",
+    "namePlaceholder": "شركة أكمي",
+    "slugPreview": "عنوان مساحة عملك:",
+    "submit": "إنشاء مساحة العمل",
+    "success": "{{name}} جاهزة!",
+    "limitReached": "تتضمن الخطة المجانية مساحة عمل واحدة لكل خدمة. الخطط المدفوعة بمساحات أكثر قادمة قريبًا."
+  },
+  "workspace": {
+    "planLabel": "خطة {{plan}}",
+    "switcherLabel": "مساحات عملك",
+    "newWorkspace": "مساحة عمل جديدة",
+    "facts": {
+      "service": "الخدمة",
+      "country": "الدولة",
+      "currency": "العملة",
+      "role": "دورك"
+    },
+    "modulesSoon": {
+      "title": "أدواتك في الطريق",
+      "hint": "الوارد والحملات والمزيد تُفتح مع طرح كل وحدة.",
+      "body": "ميزة الإرسال قادمة مع التحديثات المقبلة — مساحة العمل هذه جاهزة."
+    },
+    "plan": {
+      "title": "خطتك",
+      "hint": "الميزات والحدود تأتي من خطتك — وتتحدّث فورًا عند تغيير الخطة.",
+      "features": "الميزات",
+      "limits": "الحدود",
+      "noFeatures": "لا شيء مدرج — تُفتح الميزات مع الخطط المدفوعة.",
+      "noLimits": "لا حدود في هذه الخطة.",
+      "unlimited": "غير محدود",
+      "included": "مشمول",
+      "notIncluded": "غير مشمول",
+      "upgrade": "ترقية",
+      "upgradeSoon": "ترقيات الخطط قادمة مع الفوترة — قريبًا يمكنك تغيير خطتك من هنا."
     }
   },
   "errors": {
@@ -134,6 +205,34 @@
     "COUNTRY_NOT_SET": "تحقق من رقم جوالك أولاً.",
     "VALIDATION_ERROR": "يرجى التحقق من النموذج والمحاولة مرة أخرى.",
     "OTP_COOLDOWN": "يرجى الانتظار قليلًا قبل طلب رمز جديد.",
-    "EMAIL_ALREADY_VERIFIED": "هذا البريد الإلكتروني مؤكد بالفعل — سجّل الدخول فقط."
+    "EMAIL_ALREADY_VERIFIED": "هذا البريد الإلكتروني مؤكد بالفعل — سجّل الدخول فقط.",
+    "PLAN_LIMIT_REACHED": "بلغت حد الخطة المجانية — مساحة عمل واحدة لكل خدمة حاليًا.",
+    "SERVICE_NOT_AVAILABLE": "هذه الخدمة غير متاحة في بلدك بعد.",
+    "WORKSPACE_NOT_FOUND": "لم نعثر على مساحة العمل هذه.",
+    "PLAN_NOT_CONFIGURED": "هذه الخدمة لا تقبل مساحات عمل جديدة حاليًا. يرجى المحاولة لاحقًا."
+  },
+  "plan": {
+    "keys": {
+      "max_workspaces_per_service": "مساحات العمل لكل خدمة",
+      "max_members": "أعضاء الفريق",
+      "max_agents": "الوكلاء",
+      "history_retention_days": "الاحتفاظ بالسجل (أيام)",
+      "max_contacts": "جهات الاتصال",
+      "wa_campaigns": "حملات واتساب",
+      "campaign_analytics": "تحليلات الحملات",
+      "agent_inbox": "صندوق الوكلاء",
+      "api_access": "وصول API",
+      "support_level": "مستوى الدعم"
+    },
+    "values": {
+      "email_bh": "بريد إلكتروني (ساعات العمل)"
+    }
+  },
+  "roles": {
+    "OWNER": "المالك",
+    "ADMIN": "مشرف",
+    "MANAGER": "مدير",
+    "AGENT": "وكيل",
+    "VIEWER": "مشاهد"
   }
 }

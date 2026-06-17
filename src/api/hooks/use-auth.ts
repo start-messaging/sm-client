@@ -21,12 +21,16 @@ export function useMe() {
 }
 
 /**
- * Refetch identity-scoped data after a fresh sign-in, WITHOUT dropping
+ * Refresh identity-scoped data after a fresh sign-in, WITHOUT dropping
  * user-independent reference data (e.g. the countries picker list).
+ * Workspaces are REMOVED (not just invalidated): a different account may sign
+ * in on this tab, and an invalidated query still serves the previous user's
+ * cached list while refetching — the redirect/launcher would briefly act on it.
  */
 function invalidateUserScoped(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
   void qc.invalidateQueries({ queryKey: queryKeys.services.all() });
+  qc.removeQueries({ queryKey: queryKeys.workspaces.all() });
 }
 
 export function useLogin() {
