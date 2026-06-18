@@ -192,6 +192,18 @@ export interface CreateWorkspaceBody {
   name: string;
 }
 
+/**
+ * GET /v1/workspaces/:slug/wallet — the read-only prepaid balance. Money is
+ * integer micros as a STRING (high-magnitude); format via lib/money.formatMoney.
+ * Recharge arrives with the payments slice.
+ */
+export interface WalletBalance {
+  balanceMicros: string;
+  heldMicros: string;
+  currency: string;
+  lowBalanceThresholdMicros: string | null;
+}
+
 /* ----------------------------- members ----------------------------- */
 
 export interface Member {

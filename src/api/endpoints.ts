@@ -32,6 +32,7 @@ export const endpoints = {
     // Every workspace the caller belongs to.
     mine: v1('/workspaces'),
     bySlug: (slug: string) => v1(`/workspaces/${slug}`),
+    walletBySlug: (slug: string) => v1(`/workspaces/${slug}/wallet`),
   },
   countries: {
     // Active countries for the onboarding phone picker.

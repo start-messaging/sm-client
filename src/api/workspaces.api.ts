@@ -3,6 +3,7 @@ import { endpoints } from '@/api/endpoints';
 import type {
   CreateWorkspaceBody,
   CurrentWorkspace,
+  WalletBalance,
   WorkspaceSummary,
 } from '@/types/api';
 
@@ -12,6 +13,9 @@ export const workspacesApi = {
 
   getBySlug: (slug: string) =>
     apiGet<CurrentWorkspace>(endpoints.workspaces.bySlug(slug)),
+
+  walletBySlug: (slug: string) =>
+    apiGet<WalletBalance>(endpoints.workspaces.walletBySlug(slug)),
 
   create: (serviceKey: string, body: CreateWorkspaceBody) =>
     apiPost<WorkspaceSummary>(

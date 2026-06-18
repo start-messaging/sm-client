@@ -26,6 +26,16 @@ export function useWorkspace(slug: string | undefined) {
   });
 }
 
+/** The workspace's read-only wallet balance (the dashboard panel). */
+export function useWorkspaceWallet(slug: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.workspaces.wallet(slug ?? ''),
+    queryFn: () => workspacesApi.walletBySlug(slug!),
+    enabled: !!slug,
+    staleTime: STALE.STANDARD,
+  });
+}
+
 /** Create a workspace under a service; refreshes every workspace-scoped list. */
 export function useCreateWorkspace(serviceKey: string) {
   const qc = useQueryClient();

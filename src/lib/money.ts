@@ -90,3 +90,36 @@ export function formatMargin(margin: number | null): string {
   if (margin === null) return '—';
   return `${Math.round(margin * 100)}%`;
 }
+
+/**
+ * Format micros as a localized currency string — symbol and decimal places are
+ * derived from the ISO 4217 `currency` code via `Intl` (₹1,234.00, ¥1,234, …).
+ * For wallet BALANCES (not sub-cent per-message rates): use the currency's
+ * natural precision. Accepts micros as a string (balances are high-magnitude
+ * and travel as strings) or a number.
+ */
+export function formatMoney(
+  micros: string | number | null,
+  currency: string,
+): string {
+  if (micros === null || micros === '') return '—';
+  const value = Number(micros) / MICROS_PER_UNIT;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(value);
+}
+
+/** The narrow symbol for an ISO 4217 code (₹, $, ¥); falls back to the code. */
+export function currencySymbol(currency: string): string {
+  try {
+    const parts = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'narrowSymbol',
+    }).formatToParts(0);
+    return parts.find((p) => p.type === 'currency')?.value ?? currency;
+  } catch {
+    return currency;
+  }
+}

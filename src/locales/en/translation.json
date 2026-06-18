@@ -180,6 +180,14 @@
       "notIncluded": "Not included",
       "upgrade": "Upgrade",
       "upgradeSoon": "Plan upgrades arrive with billing — soon you'll switch plans right here."
+    },
+    "wallet": {
+      "title": "Wallet",
+      "hint": "Your prepaid balance. Messages are charged from here once sending goes live.",
+      "available": "Available balance",
+      "held": "{{amount}} on hold",
+      "addFunds": "Add funds",
+      "addFundsSoon": "Top-ups arrive with billing."
     }
   },
   "errors": {

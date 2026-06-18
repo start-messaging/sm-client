@@ -28,6 +28,8 @@ export const queryKeys = {
     mine: () => ['workspaces', 'mine'] as const,
     // One workspace's shell context, keyed by the URL slug.
     bySlug: (slug: string) => ['workspaces', 'slug', slug] as const,
+    // The workspace's wallet balance, keyed by slug.
+    wallet: (slug: string) => ['workspaces', 'slug', slug, 'wallet'] as const,
   },
   members: {
     all: (workspaceId: string) => ['members', workspaceId] as const,

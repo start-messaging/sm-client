@@ -10,6 +10,7 @@ import {
 import { InfoTip } from '@/components/shared/info-tip';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { PlanPanel } from './components/plan-panel';
+import { WalletPanel } from './components/wallet-panel';
 
 /**
  * The workspace home. Modules (inbox, campaigns…) are coming-soon in the
@@ -52,7 +53,10 @@ export function WorkspaceDashboardPage() {
         ))}
       </div>
 
-      <PlanPanel workspace={workspace} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <WalletPanel slug={workspace.slug} />
+        <PlanPanel workspace={workspace} />
+      </div>
 
       <Card>
         <CardContent className="flex flex-col items-center gap-1 py-10 text-center">
