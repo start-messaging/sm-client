@@ -33,5 +33,6 @@ export const queryKeys = {
   },
   members: {
     all: (workspaceId: string) => ['members', workspaceId] as const,
+    invitePreview: (token: string) => ['invite-preview', token] as const,
   },
 } as const;

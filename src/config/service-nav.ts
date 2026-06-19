@@ -83,7 +83,6 @@ export const COMMON_NAV: ServiceNavItem[] = [
     segment: 'members',
     labelKey: 'nav.members',
     icon: Users,
-    comingSoon: true,
   },
   {
     segment: 'billing',

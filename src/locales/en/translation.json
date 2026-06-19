@@ -210,10 +210,21 @@
     "VALIDATION_ERROR": "Please check the form and try again.",
     "OTP_COOLDOWN": "Please wait a moment before requesting another code.",
     "EMAIL_ALREADY_VERIFIED": "This email is already verified — just sign in.",
-    "PLAN_LIMIT_REACHED": "Free plan limit reached — one workspace per service for now.",
+    "PLAN_LIMIT_REACHED": "You've reached your plan's limit. Upgrade for more.",
     "SERVICE_NOT_AVAILABLE": "This service is not available in your country yet.",
     "WORKSPACE_NOT_FOUND": "We couldn't find that workspace.",
-    "PLAN_NOT_CONFIGURED": "This service isn’t accepting new workspaces right now. Please try again later."
+    "PLAN_NOT_CONFIGURED": "This service isn’t accepting new workspaces right now. Please try again later.",
+    "ALREADY_MEMBER": "That person is already a member.",
+    "CANNOT_INVITE_OWNER": "You can't invite someone as the owner.",
+    "WORKSPACE_ROLE_FORBIDDEN": "You can only manage members below your own role.",
+    "CANNOT_MODIFY_OWNER": "The workspace owner can't be changed.",
+    "CANNOT_ASSIGN_OWNER": "Ownership can't be assigned.",
+    "MEMBER_SELF_ACTION": "You can't change your own membership here.",
+    "MEMBER_NOT_FOUND": "That member no longer exists.",
+    "INVITE_EMAIL_MISMATCH": "This invitation was sent to a different email.",
+    "INVITE_INVALID": "This invitation is invalid or has expired.",
+    "INVITE_NOT_FOUND": "That invitation no longer exists.",
+    "INVITE_PENDING": "An invitation for that email is already pending."
   },
   "plan": {
     "keys": {
@@ -238,5 +249,55 @@
     "MANAGER": "Manager",
     "AGENT": "Agent",
     "VIEWER": "Viewer"
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "People with access to this workspace.",
+    "subtitleCount": "{{used}} of {{max}} seats used.",
+    "atCap": "Seat limit reached",
+    "actions": "Actions",
+    "changeRole": "Change role",
+    "remove": "Remove",
+    "removeTitle": "Remove member?",
+    "removeBody": "{{name}} will lose access to this workspace.",
+    "removed": "Member removed",
+    "roleUpdated": "Role updated",
+    "pendingTitle": "Pending invitations",
+    "resend": "Resend invite",
+    "resent": "Invitation resent",
+    "revoke": "Revoke invite",
+    "revoked": "Invitation revoked",
+    "cols": {
+      "member": "Member",
+      "email": "Email",
+      "role": "Role"
+    },
+    "invite": {
+      "trigger": "Invite",
+      "title": "Invite a member",
+      "subtitle": "They'll get an email link to join. New to the platform? They can sign up from the link.",
+      "email": "Email",
+      "emailInvalid": "Enter a valid email",
+      "role": "Role",
+      "submit": "Send invite",
+      "sent": "Invitation sent"
+    }
+  },
+  "invite": {
+    "heading": "Join {{workspace}}",
+    "subtitle": "{{inviter}} invited you as {{role}}.",
+    "acceptCta": "Join {{workspace}}",
+    "accepted": "You're in!",
+    "logInAs": "This invitation is for {{email}}. Log in with that account to accept.",
+    "goToLogin": "Go to login",
+    "createAccountFor": "Create your account for {{email}} to join.",
+    "fullName": "Your name",
+    "password": "Choose a password",
+    "nameRequired": "Enter your name",
+    "passwordShort": "At least 8 characters",
+    "joinCta": "Join {{workspace}}",
+    "invalidTitle": "Invitation unavailable",
+    "invalid": "This invitation link is invalid.",
+    "expired": "This invitation has expired. Ask for a new one."
   }
 }

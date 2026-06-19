@@ -216,6 +216,70 @@ export interface Member {
   joinedAt: string | null;
 }
 
+/** A roster member (the list endpoint joins the user). */
+export interface RosterMember {
+  memberId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: WorkspaceRole;
+  status: MemberStatus;
+  invitedBy: string | null;
+  joinedAt: string | null;
+}
+
+/** A pending invitation — an email that may not have an account yet. */
+export interface WorkspaceInvitation {
+  invitationId: string;
+  email: string;
+  role: WorkspaceRole;
+  invitedAt: string;
+  expiresAt: string;
+}
+
+/** GET /v1/workspaces/:slug/members — active members + outstanding invites. */
+export interface MemberRoster {
+  members: RosterMember[];
+  invitations: WorkspaceInvitation[];
+}
+
+export interface UpdateMemberRoleBody {
+  role: WorkspaceRole;
+}
+
+/** Invite response (dev token only outside production). */
+export interface InvitationResult {
+  invitation: WorkspaceInvitation;
+  inviteToken?: string;
+}
+
+/** GET /v1/invitations/:token — drives the accept page's login-vs-signup. */
+export interface InvitePreview {
+  workspaceName: string;
+  inviterName: string;
+  email: string;
+  role: WorkspaceRole;
+  accountExists: boolean;
+  expired: boolean;
+}
+
+export interface AcceptInviteResult {
+  slug: string;
+}
+
+/** Claiming as a brand-new user creates the account + logs in. */
+export interface ClaimInviteBody {
+  fullName: string;
+  password: string;
+}
+
+export interface ClaimInviteResult {
+  accessToken: string;
+  refreshToken: string;
+  user: UserView;
+  slug: string;
+}
+
 /* ----------------------------- services ----------------------------- */
 
 export interface PublicServiceCategory {

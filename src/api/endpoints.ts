@@ -34,6 +34,25 @@ export const endpoints = {
     bySlug: (slug: string) => v1(`/workspaces/${slug}`),
     walletBySlug: (slug: string) => v1(`/workspaces/${slug}/wallet`),
   },
+  members: {
+    list: (slug: string) => v1(`/workspaces/${slug}/members`),
+    invitations: (slug: string) =>
+      v1(`/workspaces/${slug}/members/invitations`),
+    invitation: (slug: string, invId: string) =>
+      v1(`/workspaces/${slug}/members/invitations/${invId}`),
+    resend: (slug: string, invId: string) =>
+      v1(`/workspaces/${slug}/members/invitations/${invId}/resend`),
+    role: (slug: string, memberId: string) =>
+      v1(`/workspaces/${slug}/members/${memberId}/role`),
+    member: (slug: string, memberId: string) =>
+      v1(`/workspaces/${slug}/members/${memberId}`),
+  },
+  // Token-based invite acceptance (outside any workspace context).
+  invitations: {
+    preview: (token: string) => v1(`/invitations/${token}`),
+    accept: (token: string) => v1(`/invitations/${token}/accept`),
+    claim: (token: string) => v1(`/invitations/${token}/claim`),
+  },
   countries: {
     // Active countries for the onboarding phone picker.
     list: v1('/countries'),

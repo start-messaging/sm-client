@@ -9,8 +9,10 @@ import { LoginPage } from '@/pages/auth/login-page';
 import { SignupPage } from '@/pages/auth/signup-page';
 import { OnboardingMobilePage } from '@/pages/onboarding/onboarding-mobile-page';
 import { HomeRedirect } from '@/pages/home-redirect';
+import { AcceptInvitePage } from '@/pages/invite/accept-invite-page';
 import { CreateWorkspacePage } from '@/pages/services/create-workspace-page';
 import { ServicesGalleryPage } from '@/pages/services/services-gallery-page';
+import { MembersPage } from '@/pages/workspace/members-page';
 import { WorkspaceCatchAll } from '@/pages/workspace/workspace-catch-all';
 import { WorkspaceDashboardPage } from '@/pages/workspace/workspace-dashboard-page';
 
@@ -27,6 +29,9 @@ import { WorkspaceDashboardPage } from '@/pages/workspace/workspace-dashboard-pa
  * Guards are layout routes that render <Outlet/> or redirect.
  */
 export const router = createBrowserRouter([
+  // Public invite landing — reachable logged-out (new invitee signs up) AND
+  // logged-in (existing invitee accepts), so it sits outside both guards.
+  { path: '/invite/accept', element: <AcceptInvitePage /> },
   {
     element: <RequireGuest />,
     children: [
@@ -67,6 +72,7 @@ export const router = createBrowserRouter([
             element: <WorkspaceLayout />,
             children: [
               { index: true, element: <WorkspaceDashboardPage /> },
+              { path: 'members', element: <MembersPage /> },
               // Unknown module segments fall back to the workspace dashboard.
               { path: '*', element: <WorkspaceCatchAll /> },
             ],
