@@ -59,7 +59,7 @@ export function WorkspaceLayout() {
 
   if (gone) {
     // Stale link, revoked membership, or deleted workspace — back to the hub.
-    return <Navigate to="/services" replace />;
+    return <Navigate to="/services/whatsapp/new" replace />;
   }
   if (!workspace.data) {
     return (

@@ -57,4 +57,82 @@ export const endpoints = {
     // Active countries for the onboarding phone picker.
     list: v1('/countries'),
   },
+
+  // ── WhatsApp ──────────────────────────────────────────────────────────────
+  whatsapp: {
+    // WABA connection status for a workspace.
+    status: (slug: string) => v1(`/workspaces/${slug}/whatsapp/status`),
+    // Complete Embedded Signup — POST the code returned by the FB SDK.
+    connect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/connect`),
+    registerPhone: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/register-phone`),
+    // Disconnect / revoke WABA.
+    disconnect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/disconnect`),
+  },
+
+  // ── Templates ─────────────────────────────────────────────────────────────
+  templates: {
+    list: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates`),
+    create: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates`),
+    byId: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/templates/${id}`),
+    delete: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/templates/${id}`),
+    // Sync template statuses from Meta.
+    sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates/sync`),
+  },
+
+  // ── Messages / Inbox ──────────────────────────────────────────────────────
+  messages: {
+    // Conversation list (inbox).
+    conversations: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations`),
+    // Create or get a conversation by contactPhone.
+    createConversation: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations`),
+    // Messages within a conversation.
+    list: (slug: string, conversationId: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`),
+    // Send a message (free-form or template).
+    send: (slug: string, conversationId: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`),
+    // SSE live inbox updates (pair with ?access_token= for EventSource).
+    events: (slug: string) => v1(`/workspaces/${slug}/whatsapp/events`),
+  },
+
+  // ── Contacts ──────────────────────────────────────────────────────────────
+  contacts: {
+    list: (slug: string) => v1(`/workspaces/${slug}/contacts`),
+    create: (slug: string) => v1(`/workspaces/${slug}/contacts`),
+    byId: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
+    update: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
+    delete: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
+    import: (slug: string) => v1(`/workspaces/${slug}/contacts/import`),
+  },
+
+  // ── Campaigns ─────────────────────────────────────────────────────────────
+  campaigns: {
+    list: (slug: string) => v1(`/workspaces/${slug}/whatsapp/campaigns`),
+    create: (slug: string) => v1(`/workspaces/${slug}/whatsapp/campaigns`),
+    byId: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}`),
+    update: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}`),
+    delete: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}`),
+    launch: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/launch`),
+    pause: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/pause`),
+  },
+
+  // ── Billing (CRM subscription) ────────────────────────────────────────────
+  billing: {
+    // Current subscription status.
+    subscription: (slug: string) => v1(`/workspaces/${slug}/billing/subscription`),
+    // Create / upgrade via Razorpay checkout.
+    checkout: (slug: string) => v1(`/workspaces/${slug}/billing/checkout`),
+    // Available plans to upgrade to.
+    plans: (slug: string) => v1(`/workspaces/${slug}/billing/plans`),
+  },
 } as const;

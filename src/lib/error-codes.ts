@@ -95,6 +95,18 @@ export const ERROR_CODES = {
   // Mail delivery
   MAIL_NOT_CONFIGURED: 'MAIL_NOT_CONFIGURED',
   MAIL_SEND_FAILED: 'MAIL_SEND_FAILED',
+
+  // WhatsApp / Meta edge cases (Tech Provider path — server returns these stable
+  // codes; the client maps them to educational blockers, never raw Meta JSON).
+  WABA_NOT_CONNECTED: 'WABA_NOT_CONNECTED',
+  WABA_DISCONNECTED: 'WABA_DISCONNECTED',
+  META_PAYMENT_REQUIRED: 'META_PAYMENT_REQUIRED',
+  META_BILLING_ERROR: 'META_BILLING_ERROR',
+  OUTSIDE_CUSTOMER_CARE_WINDOW: 'OUTSIDE_CUSTOMER_CARE_WINDOW',
+  TEMPLATE_NOT_APPROVED: 'TEMPLATE_NOT_APPROVED',
+  PHONE_QUALITY_LIMIT: 'PHONE_QUALITY_LIMIT',
+  PLAN_FEATURE_REQUIRED: 'PLAN_FEATURE_REQUIRED',
+  SUBSCRIPTION_PAST_DUE: 'SUBSCRIPTION_PAST_DUE',
 } as const;
 
 /** Every error code the API can emit. Derived from `ERROR_CODES` — never widen to `string`. */

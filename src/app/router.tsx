@@ -15,6 +15,12 @@ import { ServicesGalleryPage } from '@/pages/services/services-gallery-page';
 import { MembersPage } from '@/pages/workspace/members-page';
 import { WorkspaceCatchAll } from '@/pages/workspace/workspace-catch-all';
 import { WorkspaceDashboardPage } from '@/pages/workspace/workspace-dashboard-page';
+import { ConnectPage } from '@/pages/workspace/connect-page';
+import { InboxPage } from '@/pages/workspace/inbox-page';
+import { TemplatesPage } from '@/pages/workspace/templates-page';
+import { ContactsPage } from '@/pages/workspace/contacts-page';
+import { CampaignsPage } from '@/pages/workspace/campaigns-page';
+import { BillingPage } from '@/pages/workspace/billing-page';
 
 /**
  * The single, declarative route config (React Router library mode). Branches:
@@ -72,7 +78,13 @@ export const router = createBrowserRouter([
             element: <WorkspaceLayout />,
             children: [
               { index: true, element: <WorkspaceDashboardPage /> },
+              { path: 'connect', element: <ConnectPage /> },
+              { path: 'inbox', element: <InboxPage /> },
+              { path: 'templates', element: <TemplatesPage /> },
+              { path: 'contacts', element: <ContactsPage /> },
+              { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'members', element: <MembersPage /> },
+              { path: 'billing', element: <BillingPage /> },
               // Unknown module segments fall back to the workspace dashboard.
               { path: '*', element: <WorkspaceCatchAll /> },
             ],

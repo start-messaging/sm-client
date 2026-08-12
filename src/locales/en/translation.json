@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Messaging Platform",
+    "appName": "Start Messaging WhatsApp",
     "loading": "Loading…",
     "save": "Save",
     "cancel": "Cancel",
@@ -130,6 +130,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "connect": "Connect",
     "inbox": "Inbox",
     "campaigns": "Campaigns",
     "templates": "Templates",
@@ -183,11 +184,260 @@
     },
     "wallet": {
       "title": "Wallet",
-      "hint": "Your prepaid balance. Messages are charged from here once sending goes live.",
+      "hint": "Reserved balance for a future Solution Partner path. WhatsApp conversations are billed by Meta on your WABA; we bill only your CRM subscription.",
       "available": "Available balance",
       "held": "{{amount}} on hold",
       "addFunds": "Add funds",
       "addFundsSoon": "Top-ups arrive with billing."
+    }
+  },
+  "education": {
+    "slot": {
+      "docsLabel": "Read the docs",
+      "videoLabel": "Watch a short video"
+    },
+    "checklist": {
+      "title": "Get set up in 4 steps",
+      "stepDone": "Done",
+      "stepPending": "To do",
+      "stepBlocked": "Blocked"
+    },
+    "steps": {
+      "connect": {
+        "label": "Connect your WhatsApp Business Account",
+        "description": "Use Facebook Login to link your WABA so you can send and receive messages."
+      },
+      "metaPay": {
+        "label": "Add a payment method in WhatsApp Manager",
+        "description": "Meta bills conversation fees directly to your WABA — not to us. Add a card or bank account in Meta's WhatsApp Manager to enable sending."
+      },
+      "firstTemplate": {
+        "label": "Create your first message template",
+        "description": "Approved templates let you start conversations with customers. Templates go through Meta's review (usually minutes to hours)."
+      },
+      "firstSend": {
+        "label": "Send your first message",
+        "description": "Once a template is approved and your Meta payment method is set, you're ready to send."
+      }
+    },
+    "WABA_NOT_CONNECTED": {
+      "title": "Connect your WhatsApp Business Account first",
+      "body": "You'll need to complete the WhatsApp Embedded Signup to link a WABA before you can use this feature.",
+      "cta": "Connect WhatsApp"
+    },
+    "META_PAYMENT_REQUIRED": {
+      "title": "Add a payment method in WhatsApp Manager",
+      "body": "Meta charges conversation fees directly on your WhatsApp Business Account — not through us. You need a valid payment method in Meta's WhatsApp Manager before you can send messages.",
+      "cta": "Open WhatsApp Manager",
+      "note": "This is separate from your Start Messaging CRM subscription."
+    },
+    "META_BILLING_ERROR": {
+      "title": "Meta could not process the conversation charge",
+      "body": "Your WhatsApp Business Account has a billing issue. Update your payment method in Meta's WhatsApp Manager to resume sending.",
+      "cta": "Open WhatsApp Manager",
+      "note": "Meta billing and your CRM subscription are independent — this doesn't affect your account here."
+    },
+    "OUTSIDE_CUSTOMER_CARE_WINDOW": {
+      "title": "Outside the 24-hour messaging window",
+      "body": "WhatsApp only allows free-form replies within 24 hours of a customer's last message. To contact this customer now, send an approved template instead.",
+      "cta": "Pick a template"
+    },
+    "TEMPLATE_NOT_APPROVED": {
+      "title": "Template not approved yet",
+      "body": "This template is pending review or was rejected by Meta. Check the Templates page for the current status and any rejection reasons.",
+      "cta": "View templates"
+    },
+    "PHONE_QUALITY_LIMIT": {
+      "title": "Phone number quality limit reached",
+      "body": "Your WhatsApp number has received too many blocks or reports and has hit a throughput limit. Slow or pause sends while quality recovers — usually within 24–48 hours.",
+      "cta": "Learn more about quality ratings"
+    },
+    "PLAN_FEATURE_REQUIRED": {
+      "title": "Feature not included in your plan",
+      "body": "This feature is available on paid CRM plans. Upgrade your Start Messaging subscription to unlock it.",
+      "cta": "View plans"
+    },
+    "SUBSCRIPTION_PAST_DUE": {
+      "title": "Your CRM subscription is past due",
+      "body": "Some features are locked until your subscription is renewed. Update your payment method on the Billing page to restore access.",
+      "cta": "Go to billing"
+    },
+    "WABA_DISCONNECTED": {
+      "title": "WhatsApp Business Account disconnected",
+      "body": "Your WABA has been disconnected or the access token is no longer valid. Reconnect via Embedded Signup to restore messaging.",
+      "cta": "Reconnect WhatsApp"
+    }
+  },
+  "connect": {
+    "title": "Connect WhatsApp",
+    "subtitle": "Link your WhatsApp Business Account (WABA) to start sending and receiving messages.",
+    "intro": {
+      "title": "How it works",
+      "body": "We use Meta's Embedded Signup to securely connect your Facebook Business and WhatsApp Business Account. You'll be asked to log in with Facebook and choose or create a WABA.",
+      "metaBillingNote": "After connecting, you must add a payment method in Meta's WhatsApp Manager. Meta charges conversation fees directly — separate from your CRM subscription here."
+    },
+    "cta": "Connect with Facebook",
+    "ctaConnected": "Reconnect",
+    "sdkNotReady": "Loading Facebook Login…",
+    "status": {
+      "connected": "Connected",
+      "notConnected": "Not connected"
+    },
+    "connected": {
+      "title": "WhatsApp connected",
+      "body": "Your WABA is linked. Follow the checklist below to complete your setup."
+    },
+    "pin": {
+      "title": "Enter your 2-step verification PIN",
+      "subtitle": "Enter the 6-digit PIN you set for this WhatsApp Business phone number. This is required to complete registration.",
+      "submit": "Confirm PIN",
+      "sessionMissing": "Session info not received from Facebook — please try connecting again.",
+      "pendingTitle": "Phone registration incomplete",
+      "pendingBody": "Your WABA is linked, but the business number still needs its 6-digit Cloud API PIN before you can send messages.",
+      "openCta": "Enter PIN",
+      "registered": "Phone registered — you can send messages now"
+    },
+    "metaPayChecklist": {
+      "title": "Next: add a payment method in WhatsApp Manager",
+      "body": "Meta bills WhatsApp conversation fees on your WABA — not through Start Messaging. You must add a credit card or bank account in Meta's WhatsApp Manager before your first send.",
+      "cta": "Open WhatsApp Manager →",
+      "note": "This is separate from your Start Messaging CRM plan."
+    }
+  },
+  "inbox": {
+    "title": "Inbox",
+    "subtitle": "All your WhatsApp conversations in one place.",
+    "intro": {
+      "title": "Your conversation inbox",
+      "body": "Incoming messages appear here in real time. Within 24 hours of a customer's last message you can reply freely; after that, use an approved template to re-open the conversation."
+    },
+    "empty": {
+      "title": "No conversations yet",
+      "body": "Once customers message you or you send a template, their replies will appear here."
+    },
+    "allConversations": "Conversations",
+    "windowWarning": "24-hour window open",
+    "windowClosed": "Window closed — use a template",
+    "thread": {
+      "selectPrompt": "Select a conversation",
+      "selectHint": "Choose a conversation on the left to view messages and reply.",
+      "empty": "No messages yet — send the first one below."
+    },
+    "composer": {
+      "tabText": "Free text",
+      "tabTemplate": "Template",
+      "textPlaceholder": "Type a message… (Enter to send, Shift+Enter for new line)",
+      "send": "Send",
+      "sendTemplate": "Send template",
+      "pickTemplate": "Pick an approved template…",
+      "noApprovedTemplates": "No approved templates yet. Create and get one approved in Templates first."
+    },
+    "newConversation": {
+      "trigger": "New conversation",
+      "title": "Start a new conversation",
+      "subtitle": "Enter the customer's WhatsApp number to create or open their thread. You'll send a template to start.",
+      "phone": "WhatsApp phone number",
+      "name": "Contact name (optional)",
+      "namePlaceholder": "e.g. Rahul Sharma",
+      "phoneMin": "Enter a valid phone number (at least 7 digits)",
+      "phoneInvalid": "Enter a valid phone number including country code (e.g. +91 98765 43210)",
+      "submit": "Start conversation",
+      "success": "Conversation started"
+    }
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Pre-approved messages for starting or re-opening conversations.",
+    "intro": {
+      "title": "What are message templates?",
+      "body": "Templates are pre-approved message formats required by Meta to initiate conversations or reply after the 24-hour customer care window. They go through Meta's review (typically minutes to a few hours for most categories)."
+    },
+    "empty": {
+      "title": "No templates yet",
+      "body": "Create your first template to start reaching customers."
+    },
+    "createCta": "Create template",
+    "syncCta": "Sync from Meta",
+    "create": {
+      "title": "Create message template",
+      "subtitle": "Templates must be approved by Meta before use. Review takes minutes to a few hours.",
+      "name": "Template name",
+      "nameHint": "Lowercase letters, numbers and underscores only (e.g. order_confirmation).",
+      "nameInvalid": "Only lowercase letters, numbers and underscores are allowed.",
+      "language": "Language",
+      "category": "Category",
+      "body": "Body text",
+      "bodyPlaceholder": "Hello {{1}}, your order {{2}} has been confirmed.",
+      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. Max 1,024 characters.",
+      "bodyRequired": "Body text is required.",
+      "submit": "Submit for review",
+      "success": "Template submitted — pending Meta review."
+    },
+    "status": {
+      "APPROVED": "Approved",
+      "PENDING": "Pending review",
+      "REJECTED": "Rejected",
+      "PAUSED": "Paused",
+      "DISABLED": "Disabled"
+    }
+  },
+  "contacts": {
+    "title": "Contacts",
+    "subtitle": "Your WhatsApp audience.",
+    "intro": {
+      "title": "Manage your contacts",
+      "body": "Import or add phone numbers to build your audience. Contacts must have opted in to receive messages from your business."
+    },
+    "empty": {
+      "title": "No contacts yet",
+      "body": "Import a CSV or add contacts one by one to get started."
+    },
+    "importCta": "Import contacts",
+    "addCta": "Add contact"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "subtitle": "Send template messages to your audience at scale.",
+    "intro": {
+      "title": "Reach your audience",
+      "body": "Campaigns let you send approved templates to lists of opted-in contacts. Conversation fees are billed by Meta on your WABA — not through us."
+    },
+    "empty": {
+      "title": "No campaigns yet",
+      "body": "Create a campaign to send a template to your contact list."
+    },
+    "createCta": "Create campaign",
+    "status": {
+      "DRAFT": "Draft",
+      "SCHEDULED": "Scheduled",
+      "RUNNING": "Running",
+      "COMPLETED": "Completed",
+      "PAUSED": "Paused",
+      "FAILED": "Failed"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "subtitle": "Your Start Messaging CRM subscription.",
+    "intro": {
+      "title": "CRM subscription vs. Meta billing",
+      "body": "Your Start Messaging subscription covers access to the CRM — inbox, templates, campaigns, contacts and team features. WhatsApp conversation fees are billed separately by Meta on your WABA."
+    },
+    "currentPlan": "Current plan",
+    "planCode": "{{plan}} plan",
+    "upgrade": "Upgrade plan",
+    "upgradeSoon": "Plan upgrades with Razorpay billing arrive soon.",
+    "metaBillingNote": "WhatsApp conversation fees go directly to Meta — not to Start Messaging. Manage your WABA payment method in Meta's WhatsApp Manager.",
+    "openMetaManager": "Open WhatsApp Manager",
+    "status": {
+      "active": "Active",
+      "past_due": "Past due",
+      "cancelled": "Cancelled",
+      "trialing": "Trial"
+    },
+    "noSubscription": {
+      "title": "No active subscription",
+      "body": "You're on the free plan. Upgrade to unlock inbox, campaigns, contacts, and more."
     }
   },
   "errors": {
@@ -224,7 +474,16 @@
     "INVITE_EMAIL_MISMATCH": "This invitation was sent to a different email.",
     "INVITE_INVALID": "This invitation is invalid or has expired.",
     "INVITE_NOT_FOUND": "That invitation no longer exists.",
-    "INVITE_PENDING": "An invitation for that email is already pending."
+    "INVITE_PENDING": "An invitation for that email is already pending.",
+    "WABA_NOT_CONNECTED": "Connect your WhatsApp Business Account first.",
+    "WABA_DISCONNECTED": "Your WhatsApp Business Account has been disconnected. Please reconnect.",
+    "META_PAYMENT_REQUIRED": "Add a payment method to your WhatsApp Business Account in Meta's WhatsApp Manager.",
+    "META_BILLING_ERROR": "Meta could not process the charge on your WhatsApp Business Account. Update your payment method in WhatsApp Manager.",
+    "OUTSIDE_CUSTOMER_CARE_WINDOW": "The 24-hour messaging window has closed. Use an approved template to re-open the conversation.",
+    "TEMPLATE_NOT_APPROVED": "This template hasn't been approved by Meta yet. Check the Templates page for status.",
+    "PHONE_QUALITY_LIMIT": "Your phone number has hit a Meta throughput limit. Slow sends until quality recovers.",
+    "PLAN_FEATURE_REQUIRED": "Upgrade your Start Messaging CRM plan to use this feature.",
+    "SUBSCRIPTION_PAST_DUE": "Your CRM subscription is past due. Update your payment on the Billing page."
   },
   "plan": {
     "keys": {

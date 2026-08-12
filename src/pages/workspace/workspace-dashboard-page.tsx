@@ -1,25 +1,100 @@
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { InfoTip } from '@/components/shared/info-tip';
+import { SetupChecklist } from '@/components/education/setup-checklist';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
+import { useWabaStatus } from '@/api/hooks/use-whatsapp';
+import { useTemplates } from '@/api/hooks/use-templates';
 import { PlanPanel } from './components/plan-panel';
 import { WalletPanel } from './components/wallet-panel';
+import type { ChecklistStep } from '@/components/education/setup-checklist';
 
 /**
- * The workspace home. Modules (inbox, campaigns…) are coming-soon in the
- * sidebar; until they land this page anchors the workspace identity: what it
- * is, where it operates, what plan it's on.
+ * The workspace home for WhatsApp CRM. Shows the 4-step setup checklist
+ * (Connect → Meta pay → first template → first send) and workspace facts.
+ * The "modules soon" placeholder is replaced now that all module pages exist.
  */
 export function WorkspaceDashboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const workspace = useCurrentWorkspace();
+
+  const { data: wabaStatus } = useWabaStatus(workspace.slug);
+  const { data: templatesData } = useTemplates(workspace.slug);
+
+  const isConnected = wabaStatus?.status === 'connected';
+  const metaPayReady = wabaStatus?.metaPaymentReady === true;
+  const hasApprovedTemplate =
+    (templatesData?.templates ?? []).some((t) => t.status === 'APPROVED');
+
+  const setupSteps: ChecklistStep[] = [
+    {
+      id: 'connect',
+      label: t('education.steps.connect.label'),
+      description: t('education.steps.connect.description'),
+      status: isConnected ? 'done' : 'pending',
+      cta: isConnected
+        ? undefined
+        : {
+            label: t('connect.cta'),
+            onClick: () => navigate('connect'),
+          },
+    },
+    {
+      id: 'metaPay',
+      label: t('education.steps.metaPay.label'),
+      description: t('education.steps.metaPay.description'),
+      status: !isConnected ? 'blocked' : metaPayReady ? 'done' : 'pending',
+      cta:
+        isConnected && !metaPayReady
+          ? {
+              label: t('education.META_PAYMENT_REQUIRED.cta'),
+              onClick: () =>
+                window.open(
+                  'https://business.facebook.com/billing_hub/accounts',
+                  '_blank',
+                ),
+            }
+          : undefined,
+    },
+    {
+      id: 'firstTemplate',
+      label: t('education.steps.firstTemplate.label'),
+      description: t('education.steps.firstTemplate.description'),
+      status: !isConnected
+        ? 'blocked'
+        : hasApprovedTemplate
+          ? 'done'
+          : 'pending',
+      cta:
+        isConnected && !hasApprovedTemplate
+          ? {
+              label: t('templates.createCta'),
+              onClick: () => navigate('templates'),
+            }
+          : undefined,
+    },
+    {
+      id: 'firstSend',
+      label: t('education.steps.firstSend.label'),
+      description: t('education.steps.firstSend.description'),
+      status:
+        isConnected && metaPayReady && hasApprovedTemplate ? 'pending' : 'blocked',
+      cta:
+        isConnected && metaPayReady && hasApprovedTemplate
+          ? {
+              label: t('inbox.title'),
+              onClick: () => navigate('inbox'),
+            }
+          : undefined,
+    },
+  ];
 
   const facts = [
     { label: t('workspace.facts.service'), value: workspace.serviceKey },
@@ -53,22 +128,13 @@ export function WorkspaceDashboardPage() {
         ))}
       </div>
 
+      {/* Setup checklist — the main onboarding guide for new workspaces */}
+      <SetupChecklist steps={setupSteps} />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <WalletPanel slug={workspace.slug} />
         <PlanPanel workspace={workspace} />
       </div>
-
-      <Card>
-        <CardContent className="flex flex-col items-center gap-1 py-10 text-center">
-          <p className="flex items-center gap-1.5 font-medium">
-            {t('workspace.modulesSoon.title')}
-            <InfoTip content={t('workspace.modulesSoon.hint')} />
-          </p>
-          <p className="text-muted-foreground text-sm">
-            {t('workspace.modulesSoon.body')}
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

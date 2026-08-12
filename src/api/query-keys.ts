@@ -35,4 +35,41 @@ export const queryKeys = {
     all: (workspaceId: string) => ['members', workspaceId] as const,
     invitePreview: (token: string) => ['invite-preview', token] as const,
   },
+
+  // ── WhatsApp ──────────────────────────────────────────────────────────────
+  whatsapp: {
+    // WABA connection status — keyed by slug (changes on connect/disconnect).
+    status: (slug: string) => ['whatsapp', 'status', slug] as const,
+  },
+
+  // ── Templates ─────────────────────────────────────────────────────────────
+  templates: {
+    all: (slug: string) => ['templates', slug] as const,
+    byId: (slug: string, id: string) => ['templates', slug, id] as const,
+  },
+
+  // ── Messages / conversations ───────────────────────────────────────────────
+  messages: {
+    conversations: (slug: string) => ['messages', 'conversations', slug] as const,
+    list: (slug: string, conversationId: string) =>
+      ['messages', 'list', slug, conversationId] as const,
+  },
+
+  // ── Contacts ──────────────────────────────────────────────────────────────
+  contacts: {
+    all: (slug: string) => ['contacts', slug] as const,
+    byId: (slug: string, id: string) => ['contacts', slug, id] as const,
+  },
+
+  // ── Campaigns ─────────────────────────────────────────────────────────────
+  campaigns: {
+    all: (slug: string) => ['campaigns', slug] as const,
+    byId: (slug: string, id: string) => ['campaigns', slug, id] as const,
+  },
+
+  // ── Billing ───────────────────────────────────────────────────────────────
+  billing: {
+    subscription: (slug: string) => ['billing', 'subscription', slug] as const,
+    plans: (slug: string) => ['billing', 'plans', slug] as const,
+  },
 } as const;

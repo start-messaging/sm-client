@@ -1,8 +1,16 @@
 # CLAUDE.md — sm-client
 
-Guidance for Claude Code (and developers) working in this repo. Read this before
+Guidance for Claude Code / Cursor working in this repo. Read this before
 writing UI. For the full architecture (folders, request flow, "add a resource"
 recipe), see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+## Workspace hub (read first)
+
+- Hub: [../.claude/CLAUDE.md](../.claude/CLAUDE.md)
+- WhatsApp plan: [../.claude/plans/whatsapp-deep-build-plan.md](../.claude/plans/whatsapp-deep-build-plan.md)
+- Skills: [../.claude/skills/whatsapp-educational-ux/SKILL.md](../.claude/skills/whatsapp-educational-ux/SKILL.md), [whatsapp-product](../.claude/skills/whatsapp-product/SKILL.md)
+
+**Product:** Customer WhatsApp CRM SPA (`whatsapp.startmessaging.com`). Prefer WhatsApp-only IA (not multi-service gallery). Educational UX + Meta payment-method gates required. Tech Provider: never “add funds to send.” Backend: `sm-server`. Admin: `sm-admin`.
 
 ## Golden rule: always use a shadcn/ui component — never hand-roll raw HTML
 

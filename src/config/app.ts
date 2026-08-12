@@ -9,7 +9,7 @@
  *   derives from it, so stores/i18n stay byte-identical across apps yet never
  *   collide if both ever share an origin.
  */
-export const APP_NAME = 'Messaging Platform';
+export const APP_NAME = 'Start Messaging WhatsApp';
 
 export const APP_ID = 'sm-client';
 

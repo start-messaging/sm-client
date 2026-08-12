@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
-import { Check, ChevronsUpDown, LayoutGrid, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,12 +168,6 @@ function WorkspaceSwitcher({ workspace }: { workspace: CurrentWorkspace }) {
           <Link to={`/services/${workspace.serviceKey}/new`}>
             <Plus className="size-4" />
             {t('workspace.newWorkspace')}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/services">
-            <LayoutGrid className="size-4" />
-            {t('launcher.allServices')}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

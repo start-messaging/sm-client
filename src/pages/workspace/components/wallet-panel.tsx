@@ -1,21 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoTip } from '@/components/shared/info-tip';
 import { useWorkspaceWallet } from '@/api/hooks/use-workspaces';
 import { formatMoney } from '@/lib/money';
 
 /**
- * "Wallet": the workspace's read-only prepaid balance. Recharge is disabled
- * until the payments slice — the server is the authority on the balance, and
- * spend (per-message debits) lands with messaging.
+ * Read-only workspace balance (parked for a future Solution Partner path).
+ * Tech Provider WhatsApp does not charge messages from this wallet — Meta
+ * bills conversations; we bill CRM subscription. No Add-funds CTA.
  */
 export function WalletPanel({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -53,14 +46,6 @@ export function WalletPanel({ slug }: { slug: string }) {
           </div>
         )}
       </CardContent>
-      <CardFooter>
-        <Button variant="outline" disabled>
-          {t('workspace.wallet.addFunds')}
-        </Button>
-        <span className="text-muted-foreground ml-3 text-xs">
-          {t('workspace.wallet.addFundsSoon')}
-        </span>
-      </CardFooter>
     </Card>
   );
 }

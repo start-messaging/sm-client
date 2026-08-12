@@ -5,10 +5,10 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   Megaphone,
-  Send,
   Settings,
   Users,
   Contact,
+  Link2,
 } from 'lucide-react';
 
 export interface ServiceNavItem {
@@ -29,45 +29,22 @@ export interface ServiceNavItem {
 export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
   whatsapp: [
     { segment: '', labelKey: 'nav.dashboard', icon: LayoutDashboard },
-    { segment: 'inbox', labelKey: 'nav.inbox', icon: Inbox, comingSoon: true },
-    {
-      segment: 'campaigns',
-      labelKey: 'nav.campaigns',
-      icon: Megaphone,
-      comingSoon: true,
-    },
+    { segment: 'connect', labelKey: 'nav.connect', icon: Link2 },
+    { segment: 'inbox', labelKey: 'nav.inbox', icon: Inbox },
     {
       segment: 'templates',
       labelKey: 'nav.templates',
       icon: LayoutTemplate,
-      comingSoon: true,
     },
     {
       segment: 'contacts',
       labelKey: 'nav.contacts',
       icon: Contact,
-      comingSoon: true,
     },
-  ],
-  sms: [
-    { segment: '', labelKey: 'nav.dashboard', icon: LayoutDashboard },
     {
       segment: 'campaigns',
       labelKey: 'nav.campaigns',
       icon: Megaphone,
-      comingSoon: true,
-    },
-    {
-      segment: 'sender-ids',
-      labelKey: 'nav.senderIds',
-      icon: Send,
-      comingSoon: true,
-    },
-    {
-      segment: 'contacts',
-      labelKey: 'nav.contacts',
-      icon: Contact,
-      comingSoon: true,
     },
   ],
 };
@@ -88,7 +65,6 @@ export const COMMON_NAV: ServiceNavItem[] = [
     segment: 'billing',
     labelKey: 'nav.billing',
     icon: CreditCard,
-    comingSoon: true,
   },
   {
     segment: 'settings',

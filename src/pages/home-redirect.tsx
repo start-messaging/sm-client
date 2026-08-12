@@ -13,7 +13,10 @@ export function HomeRedirect() {
   const lastSlug = useAuthStore((s) => s.activeWorkspaceSlug);
   const { data: workspaces, isError } = useMyWorkspaces();
 
-  if (isError) return <Navigate to="/services" replace />;
+  // WhatsApp-only host: new users create a WhatsApp workspace, not a gallery.
+  const emptyPath = '/services/whatsapp/new';
+
+  if (isError) return <Navigate to={emptyPath} replace />;
   if (!workspaces) {
     return (
       <div className="grid min-h-screen place-items-center">
@@ -24,5 +27,5 @@ export function HomeRedirect() {
 
   const last = lastSlug && workspaces.find((w) => w.slug === lastSlug);
   const target = last ?? workspaces[0];
-  return <Navigate to={target ? `/w/${target.slug}` : '/services'} replace />;
+  return <Navigate to={target ? `/w/${target.slug}` : emptyPath} replace />;
 }

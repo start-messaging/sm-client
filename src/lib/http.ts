@@ -35,16 +35,21 @@ export const http: AxiosInstance = axios.create({
 });
 
 /* ----------------------- dev-only artificial latency ----------------------- */
-// In dev, pause before every request so loading / skeleton / spinner / disabled
-// states are actually visible against a fast localhost backend. The `env.isDev`
-// guard makes this a no-op in production. Tune or disable via DEV_API_DELAY_MS.
-const DEV_API_DELAY_MS = 1000;
+// Optional: pause before every request so loading states are visible against a
+ // fast localhost backend. Default OFF — inbox polling + forms feel laggy at 1s.
+// Enable with VITE_DEV_API_DELAY_MS=400 (or similar) in sm-client/.env.
+const DEV_API_DELAY_MS = (() => {
+  const raw = import.meta.env.VITE_DEV_API_DELAY_MS as string | undefined;
+  if (!raw) return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+})();
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /* --------------------------- request: auth header --------------------------- */
 
 http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  if (env.isDev) await sleep(DEV_API_DELAY_MS);
+  if (env.isDev && DEV_API_DELAY_MS > 0) await sleep(DEV_API_DELAY_MS);
   const token = authStore.get().accessToken;
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
