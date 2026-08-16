@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +27,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateTemplate } from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
-import type { TemplateCategory } from '@/api/templates.api';
+import type { TemplateCategory, TemplateComponent } from '@/api/templates.api';
+import type { TemplateExample } from '@/lib/template-examples';
 
 // Meta template name: lowercase letters, digits, underscores; 1–512 chars.
 const TEMPLATE_NAME_RE = /^[a-z0-9_]{1,512}$/;
@@ -58,23 +59,51 @@ const CATEGORIES: { value: TemplateCategory; label: string }[] = [
 ];
 
 const schema = z.object({
-  name: z
-    .string()
-    .regex(
-      TEMPLATE_NAME_RE,
-      'templates.create.nameInvalid',
-    ),
+  name: z.string().regex(TEMPLATE_NAME_RE, 'templates.create.nameInvalid'),
   language: z.string().min(2),
   category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
   bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
+  headerText: z.string().max(60).optional(),
+  footerText: z.string().max(60).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
-interface CreateTemplateDialogProps {
-  slug: string;
+export interface CreateTemplateSeed {
+  name: string;
+  language: string;
+  category: TemplateCategory;
+  bodyText: string;
+  headerText?: string;
+  footerText?: string;
 }
 
-export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
+interface CreateTemplateDialogProps {
+  slug: string;
+  /** When set, dialog opens with these values (from example gallery). */
+  seed?: CreateTemplateSeed | null;
+  seedKey?: number;
+  onSeedConsumed?: () => void;
+}
+
+function seedFromExample(example: TemplateExample): CreateTemplateSeed {
+  return {
+    name: example.suggestedName,
+    language: example.language,
+    category: example.category,
+    bodyText: example.components.find((c) => c.type === 'BODY')?.text ?? '',
+    headerText: example.components.find((c) => c.type === 'HEADER')?.text,
+    footerText: example.components.find((c) => c.type === 'FOOTER')?.text,
+  };
+}
+
+export { seedFromExample };
+
+export function CreateTemplateDialog({
+  slug,
+  seed,
+  seedKey = 0,
+  onSeedConsumed,
+}: CreateTemplateDialogProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const createTemplate = useCreateTemplate(slug);
@@ -93,24 +122,53 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
       language: 'en_US',
       category: 'UTILITY',
       bodyText: '',
+      headerText: '',
+      footerText: '',
     },
   });
 
   const language = useWatch({ control, name: 'language' });
   const category = useWatch({ control, name: 'category' });
+  const name = useWatch({ control, name: 'name' });
+  const bodyText = useWatch({ control, name: 'bodyText' });
+  const headerText = useWatch({ control, name: 'headerText' });
+  const footerText = useWatch({ control, name: 'footerText' });
 
-  const onSubmit = (v: FormValues) =>
+  useEffect(() => {
+    if (!seed) return;
+    reset({
+      name: seed.name,
+      language: seed.language,
+      category: seed.category,
+      bodyText: seed.bodyText,
+      headerText: seed.headerText ?? '',
+      footerText: seed.footerText ?? '',
+    });
+    setOpen(true);
+    onSeedConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedKey]);
+
+  const onSubmit = (v: FormValues) => {
+    const components: TemplateComponent[] = [];
+    if (v.headerText?.trim()) {
+      components.push({
+        type: 'HEADER',
+        format: 'TEXT',
+        text: v.headerText.trim(),
+      });
+    }
+    components.push({ type: 'BODY', text: v.bodyText });
+    if (v.footerText?.trim()) {
+      components.push({ type: 'FOOTER', text: v.footerText.trim() });
+    }
+
     createTemplate.mutate(
       {
         name: v.name,
         language: v.language,
         category: v.category,
-        components: [
-          {
-            type: 'BODY',
-            text: v.bodyText,
-          },
-        ],
+        components,
       },
       {
         onSuccess: () => {
@@ -121,6 +179,7 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
         onError: (err) => toast.error(err),
       },
     );
+  };
 
   return (
     <Dialog
@@ -137,14 +196,34 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>{t('templates.create.title')}</DialogTitle>
-            <DialogDescription>{t('templates.create.subtitle')}</DialogDescription>
+            <DialogDescription>
+              {t('templates.create.subtitle')}
+            </DialogDescription>
           </DialogHeader>
 
-          {/* Name */}
+          <div className="bg-muted/40 rounded-md border px-3 py-2 text-xs">
+            <p className="font-medium">{t('templates.create.reviewTitle')}</p>
+            <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5">
+              <li>
+                {t('templates.create.reviewName')}:{' '}
+                <span className="font-mono text-foreground">
+                  {name || '—'}
+                </span>
+              </li>
+              <li>
+                {t('templates.create.reviewCategory')}: {category} · {language}
+              </li>
+              <li>
+                {t('templates.create.reviewBody')}:{' '}
+                {bodyText ? `${bodyText.slice(0, 80)}${bodyText.length > 80 ? '…' : ''}` : '—'}
+              </li>
+            </ul>
+          </div>
+
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="tpl-name">
               {t('templates.create.name')}
@@ -159,13 +238,10 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
               {t('templates.create.nameHint')}
             </p>
             {errors.name && (
-              <FieldError
-                errors={[{ message: t(errors.name.message!) }]}
-              />
+              <FieldError errors={[{ message: t(errors.name.message!) }]} />
             )}
           </div>
 
-          {/* Language + Category side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <FieldLabel htmlFor="tpl-lang">
@@ -212,7 +288,18 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
             </div>
           </div>
 
-          {/* Body text */}
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="tpl-header">
+              {t('templates.create.headerOptional')}
+            </FieldLabel>
+            <Input
+              id="tpl-header"
+              placeholder={t('templates.create.headerPlaceholder')}
+              maxLength={60}
+              {...register('headerText')}
+            />
+          </div>
+
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="tpl-body">
               {t('templates.create.body')}
@@ -233,6 +320,24 @@ export function CreateTemplateDialog({ slug }: CreateTemplateDialogProps) {
               />
             )}
           </div>
+
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="tpl-footer">
+              {t('templates.create.footerOptional')}
+            </FieldLabel>
+            <Input
+              id="tpl-footer"
+              placeholder={t('templates.create.footerPlaceholder')}
+              maxLength={60}
+              {...register('footerText')}
+            />
+          </div>
+
+          {(headerText || footerText) && (
+            <p className="text-muted-foreground text-xs">
+              {t('templates.create.componentsNote')}
+            </p>
+          )}
 
           <DialogFooter>
             <Button

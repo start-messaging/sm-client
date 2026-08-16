@@ -241,6 +241,12 @@
       "body": "Meta आपके WABA पर WhatsApp कन्वर्सेशन शुल्क लेता है — Start Messaging के ज़रिए नहीं। पहली बार भेजने से पहले Meta के WhatsApp Manager में क्रेडिट कार्ड या बैंक खाता जोड़ें।",
       "cta": "WhatsApp Manager खोलें →",
       "note": "यह आपके Start Messaging CRM प्लान से अलग है।"
+    },
+    "sync": {
+      "cta": "Meta से रीफ़्रेश करें",
+      "hint": "कनेक्शन अपडेट आमतौर पर वेबहुक से आते हैं। अगर आपने Meta में नंबर/WABA बदला और स्टेटस गलत लगे तो रीफ़्रेश करें।",
+      "stillConnected": "Meta पर अभी भी कनेक्टेड है",
+      "updated": "Meta से स्टेटस अपडेट हो गया"
     }
   },
   "inbox": {

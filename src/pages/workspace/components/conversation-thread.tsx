@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { Send, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -89,6 +90,20 @@ function TextComposer({
 
 // ── Template composer ───────────────────────────────────────────────────────
 
+/** Extract ordered {{1}}, {{2}}… placeholders from a template BODY component. */
+function bodyPlaceholders(tpl: {
+  components: Array<{ type: string; text?: string }>;
+}): number[] {
+  const body = tpl.components.find((c) => c.type === 'BODY');
+  if (!body?.text) return [];
+  const found = new Set<number>();
+  for (const m of body.text.matchAll(/\{\{(\d+)\}\}/g)) {
+    const n = Number(m[1]);
+    if (Number.isFinite(n) && n > 0) found.add(n);
+  }
+  return [...found].sort((a, b) => a - b);
+}
+
 function TemplateComposer({
   slug,
   conversationId,
@@ -104,21 +119,42 @@ function TemplateComposer({
     (tpl) => tpl.status === 'APPROVED',
   );
 
-  const [selectedName, setSelectedName] = useState('');
-  const [selectedLang, setSelectedLang] = useState('');
+  const [selectedId, setSelectedId] = useState('');
+  const [paramValues, setParamValues] = useState<Record<number, string>>({});
+
+  const selected = approvedTemplates.find((tpl) => tpl.id === selectedId);
+  const placeholders = selected ? bodyPlaceholders(selected) : [];
+
+  function handleSelect(id: string) {
+    setSelectedId(id);
+    setParamValues({});
+  }
 
   function handleSend() {
-    if (!selectedName || !selectedLang) return;
+    if (!selected) return;
+    for (const n of placeholders) {
+      if (!paramValues[n]?.trim()) {
+        toast.error(t('inbox.composer.paramRequired', { n }));
+        return;
+      }
+    }
     send.mutate(
       {
         type: 'template',
-        templateName: selectedName,
-        templateLanguage: selectedLang,
+        templateName: selected.name,
+        templateLanguage: selected.language,
+        ...(placeholders.length
+          ? {
+              parameters: placeholders.map((n) => ({
+                text: paramValues[n]!.trim(),
+              })),
+            }
+          : {}),
       },
       {
         onSuccess: () => {
-          setSelectedName('');
-          setSelectedLang('');
+          setSelectedId('');
+          setParamValues({});
         },
         onError: (err) => toast.error(err),
       },
@@ -133,38 +169,59 @@ function TemplateComposer({
     );
   }
 
+  const canSend =
+    !!selected &&
+    placeholders.every((n) => !!paramValues[n]?.trim()) &&
+    !send.isPending;
+
   return (
-    <div className="border-t p-3 flex items-end gap-2">
-      <Select
-        value={selectedName}
-        onValueChange={(v) => {
-          setSelectedName(v);
-          const tpl = approvedTemplates.find((t) => t.name === v);
-          setSelectedLang(tpl?.language ?? 'en_US');
-        }}
-      >
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder={t('inbox.composer.pickTemplate')} />
-        </SelectTrigger>
-        <SelectContent>
-          {approvedTemplates.map((tpl) => (
-            <SelectItem key={tpl.id} value={tpl.name}>
-              <span className="font-mono text-sm">{tpl.name}</span>
-              <span className="ml-2 text-xs text-muted-foreground">
-                {tpl.language}
-              </span>
-            </SelectItem>
+    <div className="border-t p-3 flex flex-col gap-2">
+      <div className="flex items-end gap-2">
+        <Select value={selectedId} onValueChange={handleSelect}>
+          <SelectTrigger className="flex-1">
+            <SelectValue placeholder={t('inbox.composer.pickTemplate')} />
+          </SelectTrigger>
+          <SelectContent>
+            {approvedTemplates.map((tpl) => (
+              <SelectItem key={tpl.id} value={tpl.id}>
+                <span className="font-mono text-sm">{tpl.name}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {tpl.language}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" disabled={!canSend} onClick={handleSend}>
+          {send.isPending && <Spinner />}
+          {t('inbox.composer.sendTemplate')}
+        </Button>
+      </div>
+
+      {selected && placeholders.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-muted-foreground text-xs">
+            {t('inbox.composer.paramsHint')}
+          </p>
+          {placeholders.map((n) => (
+            <Input
+              key={n}
+              value={paramValues[n] ?? ''}
+              onChange={(e) =>
+                setParamValues((prev) => ({ ...prev, [n]: e.target.value }))
+              }
+              placeholder={t('inbox.composer.paramPlaceholder', { n })}
+              className="h-8 text-sm"
+            />
           ))}
-        </SelectContent>
-      </Select>
-      <Button
-        size="sm"
-        disabled={!selectedName || send.isPending}
-        onClick={handleSend}
-      >
-        {send.isPending && <Spinner />}
-        {t('inbox.composer.sendTemplate')}
-      </Button>
+        </div>
+      )}
+
+      {selected && (
+        <p className="text-muted-foreground text-xs line-clamp-3">
+          {selected.components.find((c) => c.type === 'BODY')?.text ?? ''}
+        </p>
+      )}
     </div>
   );
 }

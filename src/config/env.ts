@@ -22,16 +22,6 @@ const schema = z.object({
   VITE_META_APP_ID: z.string().optional(),
   VITE_META_EMBEDDED_SIGNUP_CONFIG_ID: z.string().optional(),
   VITE_META_GRAPH_VERSION: z.string().default('v20.0'),
-  /**
-   * When "true", launch ES with featureType=only_waba_sharing (skip Meta phone
-   * add/verify screens). Use for local testing; leave unset/false in production
-   * so customers complete the full phone UI. Cloud API register+PIN still runs
-   * in our app via register-phone.
-   */
-  VITE_META_ES_ONLY_WABA_SHARING: z
-    .enum(['true', 'false'])
-    .optional()
-    .default('false'),
 });
 
 const parsed = schema.safeParse(import.meta.env);
@@ -63,7 +53,5 @@ export const env = {
     embeddedSignupConfigId:
       parsed.data.VITE_META_EMBEDDED_SIGNUP_CONFIG_ID ?? null,
     graphVersion: parsed.data.VITE_META_GRAPH_VERSION,
-    /** Skip Meta phone screens in ES; register via our PIN step instead. */
-    esOnlyWabaSharing: parsed.data.VITE_META_ES_ONLY_WABA_SHARING === 'true',
   },
 } as const;

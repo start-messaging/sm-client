@@ -19,6 +19,10 @@ export interface TemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
   text?: string;
   format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  example?: {
+    body_text?: string[][];
+    header_text?: string[];
+  };
 }
 
 export interface WaTemplate {

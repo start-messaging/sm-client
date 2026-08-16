@@ -54,6 +54,10 @@ export const whatsappApi = {
       { pin },
     ),
 
+  /** Pull WABA/phone state from Meta (missed-webhook escape hatch). */
+  sync: (slug: string) =>
+    apiPost<WabaConnectionStatus>(endpoints.whatsapp.sync(slug), {}),
+
   disconnect: (slug: string) =>
     apiPost<void>(endpoints.whatsapp.disconnect(slug), {}),
 };

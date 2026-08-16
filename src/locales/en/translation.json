@@ -302,6 +302,12 @@
       "body": "Meta bills WhatsApp conversation fees on your WABA — not through Start Messaging. You must add a credit card or bank account in Meta's WhatsApp Manager before your first send.",
       "cta": "Open WhatsApp Manager →",
       "note": "This is separate from your Start Messaging CRM plan."
+    },
+    "sync": {
+      "cta": "Refresh from Meta",
+      "hint": "Connection updates normally arrive via webhooks. Use refresh if you changed the number or WABA in Meta and status looks wrong.",
+      "stillConnected": "Still connected on Meta",
+      "updated": "Status updated from Meta"
     }
   },
   "inbox": {
@@ -330,7 +336,10 @@
       "send": "Send",
       "sendTemplate": "Send template",
       "pickTemplate": "Pick an approved template…",
-      "noApprovedTemplates": "No approved templates yet. Create and get one approved in Templates first."
+      "noApprovedTemplates": "No approved templates yet. Create and get one approved in Templates first.",
+      "paramsHint": "Fill the variables Meta requires for this template:",
+      "paramPlaceholder": "Value for {{n}}",
+      "paramRequired": "Enter a value for {{n}} before sending."
     },
     "newConversation": {
       "trigger": "New conversation",
@@ -354,23 +363,53 @@
     },
     "empty": {
       "title": "No templates yet",
-      "body": "Create your first template to start reaching customers."
+      "body": "Start from an example below, or create a blank template. Only Meta-approved templates can be sent outside the 24-hour window."
     },
-    "createCta": "Create template",
+    "examples": {
+      "title": "Start from an example",
+      "subtitle": "Curated Meta-style recipes by category. Apply to customize, then submit to Meta for review — we don’t approve templates.",
+      "tabAll": "All",
+      "tabUtility": "Utility",
+      "tabMarketing": "Marketing",
+      "tabAuth": "Authentication",
+      "apply": "Use example",
+      "footer": "{{count}} starters · not live until you submit to Meta"
+    },
+    "createCta": "Create blank",
     "syncCta": "Sync from Meta",
+    "syncSuccess": "Templates synced from Meta",
+    "deleteCta": "Delete",
+    "deleteTitle": "Delete this template?",
+    "deleteBody": "\"{{name}}\" will be deleted from Meta and removed here. This cannot be undone.",
+    "deleteSuccess": "Template deleted",
+    "table": {
+      "name": "Name",
+      "category": "Category",
+      "language": "Language",
+      "status": "Status"
+    },
     "create": {
       "title": "Create message template",
       "subtitle": "Templates must be approved by Meta before use. Review takes minutes to a few hours.",
+      "reviewTitle": "What Meta will review",
+      "reviewName": "Name",
+      "reviewCategory": "Category / language",
+      "reviewBody": "Body",
       "name": "Template name",
       "nameHint": "Lowercase letters, numbers and underscores only (e.g. order_confirmation).",
       "nameInvalid": "Only lowercase letters, numbers and underscores are allowed.",
       "language": "Language",
       "category": "Category",
+      "headerOptional": "Header (optional)",
+      "headerPlaceholder": "Short title shown above the body",
       "body": "Body text",
       "bodyPlaceholder": "Hello {{1}}, your order {{2}} has been confirmed.",
-      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. Max 1,024 characters.",
+      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. We attach Meta sample values automatically. Max 1,024 characters.",
       "bodyRequired": "Body text is required.",
-      "submit": "Submit for review",
+      "footerOptional": "Footer (optional)",
+      "footerPlaceholder": "e.g. Reply STOP to opt out",
+      "componentsNote": "Header and footer are included in the payload Meta reviews.",
+      "submit": "Submit to Meta",
       "success": "Template submitted — pending Meta review."
     },
     "status": {
@@ -379,6 +418,14 @@
       "REJECTED": "Rejected",
       "PAUSED": "Paused",
       "DISABLED": "Disabled"
+    },
+    "rejection": {
+      "INVALID_FORMAT": "Invalid format — body/header variables need sample values (we now send these automatically). Delete and resubmit.",
+      "NONE": "No reason provided by Meta.",
+      "ABUSIVE_CONTENT": "Rejected for abusive or prohibited content.",
+      "INCORRECT_CATEGORY": "Wrong category — try Utility vs Marketing.",
+      "SCAM": "Flagged as potential scam content.",
+      "INVALID_COMPONENT": "A component (header/body/footer/buttons) is invalid."
     }
   },
   "contacts": {
@@ -481,6 +528,9 @@
     "META_BILLING_ERROR": "Meta could not process the charge on your WhatsApp Business Account. Update your payment method in WhatsApp Manager.",
     "OUTSIDE_CUSTOMER_CARE_WINDOW": "The 24-hour messaging window has closed. Use an approved template to re-open the conversation.",
     "TEMPLATE_NOT_APPROVED": "This template hasn't been approved by Meta yet. Check the Templates page for status.",
+    "TEMPLATE_PENDING_APPROVAL": "This template is still pending Meta review. Wait until it shows Approved.",
+    "TEMPLATE_REJECTED": "Meta rejected this template. Check the rejection reason on the Templates page.",
+    "TEMPLATE_NOT_FOUND": "That template was not found. Sync from Meta or create it first.",
     "PHONE_QUALITY_LIMIT": "Your phone number has hit a Meta throughput limit. Slow sends until quality recovers.",
     "PLAN_FEATURE_REQUIRED": "Upgrade your Start Messaging CRM plan to use this feature.",
     "SUBSCRIPTION_PAST_DUE": "Your CRM subscription is past due. Update your payment on the Billing page."

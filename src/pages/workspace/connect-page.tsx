@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Link2 } from 'lucide-react';
+import { CheckCircle2, Link2, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
-import { useWabaStatus, useConnectWhatsApp, useRegisterPhone } from '@/api/hooks/use-whatsapp';
+import { useWabaStatus, useConnectWhatsApp, useRegisterPhone, useSyncWhatsApp } from '@/api/hooks/use-whatsapp';
 import { env } from '@/config/env';
 import { toast } from '@/lib/toast';
 import type { ConnectWhatsAppBody } from '@/api/whatsapp.api';
@@ -51,8 +51,7 @@ declare global {
 
 interface EsSessionInfo {
   wabaId: string;
-  /** Present on full ES; may be missing with only_waba_sharing. */
-  phoneNumberId?: string;
+  phoneNumberId: string;
 }
 
 function useFbSdk(): boolean {
@@ -100,14 +99,8 @@ function useEsSessionCapture() {
       const d = e.data.data as Record<string, unknown> | undefined;
       const wabaId = d?.waba_id;
       const phoneNumberId = d?.phone_number_id;
-      // Full ES and only_waba_sharing (FINISH_ONLY_WABA) both may include these.
-      if (typeof wabaId === 'string') {
-        ref.current = {
-          wabaId,
-          ...(typeof phoneNumberId === 'string'
-            ? { phoneNumberId }
-            : {}),
-        };
+      if (typeof wabaId === 'string' && typeof phoneNumberId === 'string') {
+        ref.current = { wabaId, phoneNumberId };
       }
     }
     window.addEventListener('message', onMessage);
@@ -131,8 +124,8 @@ function launchEmbeddedSignup(): Promise<string | null> {
         override_default_response_type: true,
         extras: {
           setup: {},
-          // Local/dev: skip Meta phone add/verify. Prod: leave flag false for full ES.
-          featureType: env.meta.esOnlyWabaSharing ? 'only_waba_sharing' : '',
+          featureType: '',
+          // Match Embedded Signup Builder "Session Info Version" (v3 payload).
           sessionInfoVersion: '3',
         },
       },
@@ -207,6 +200,7 @@ export function ConnectPage() {
   const { data: wabaStatus, isLoading } = useWabaStatus(ws.slug);
   const connectWaba = useConnectWhatsApp(ws.slug);
   const registerPhone = useRegisterPhone(ws.slug);
+  const syncWaba = useSyncWhatsApp(ws.slug);
   const fbReady = useFbSdk();
   const sessionRef = useEsSessionCapture();
 
@@ -242,9 +236,8 @@ export function ConnectPage() {
       const session = sessionRef.current;
       const body: ConnectWhatsAppBody = {
         code,
-        ...(session?.wabaId ? { wabaId: session.wabaId } : {}),
-        ...(session?.phoneNumberId
-          ? { phoneNumberId: session.phoneNumberId }
+        ...(session
+          ? { wabaId: session.wabaId, phoneNumberId: session.phoneNumberId }
           : {}),
       };
 
@@ -259,6 +252,19 @@ export function ConnectPage() {
       onSuccess: () => {
         toast.success(t('connect.pin.registered'));
         setPinOpen(false);
+      },
+      onError: (err) => toast.error(err),
+    });
+  }
+
+  function handleSync() {
+    syncWaba.mutate(undefined, {
+      onSuccess: (status) => {
+        toast.success(
+          status.status === 'connected'
+            ? t('connect.sync.stillConnected')
+            : t('connect.sync.updated'),
+        );
       },
       onError: (err) => toast.error(err),
     });
@@ -284,15 +290,6 @@ export function ConnectPage() {
         }
         docsUrl="https://developers.facebook.com/docs/whatsapp/embedded-signup"
       />
-
-      {env.meta.esOnlyWabaSharing && (
-        <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs">
-          Dev mode: Embedded Signup uses{' '}
-          <code className="text-foreground">only_waba_sharing</code> (skips Meta
-          phone screens). After Facebook finishes, enter your 6-digit Cloud API
-          PIN here to register the number.
-        </p>
-      )}
 
       {/* Connection status card */}
       <Card>
@@ -343,19 +340,37 @@ export function ConnectPage() {
             </div>
           )}
 
-          {env.meta.appId ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {env.meta.appId ? (
+              <Button
+                onClick={() => void handleConnect()}
+                disabled={launching || connectWaba.isPending || !fbReady}
+                className="w-fit"
+              >
+                {(launching || connectWaba.isPending) && <Spinner />}
+                <Link2 className="mr-2 size-4" />
+                {isConnected ? t('connect.ctaConnected') : t('connect.cta')}
+              </Button>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {t('connect.sdkNotReady')}
+              </p>
+            )}
             <Button
-              onClick={() => void handleConnect()}
-              disabled={launching || connectWaba.isPending || !fbReady}
+              type="button"
+              variant="outline"
+              size="default"
               className="w-fit"
+              disabled={syncWaba.isPending || isLoading}
+              onClick={handleSync}
             >
-              {(launching || connectWaba.isPending) && <Spinner />}
-              <Link2 className="mr-2 size-4" />
-              {isConnected ? t('connect.ctaConnected') : t('connect.cta')}
+              <RefreshCw
+                className={`mr-1.5 size-3.5 ${syncWaba.isPending ? 'animate-spin' : ''}`}
+              />
+              {t('connect.sync.cta')}
             </Button>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t('connect.sdkNotReady')}</p>
-          )}
+          </div>
+          <p className="text-muted-foreground text-xs">{t('connect.sync.hint')}</p>
         </CardContent>
       </Card>
 

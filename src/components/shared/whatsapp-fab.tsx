@@ -15,6 +15,9 @@ function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
 /** How long the nudge bubble stays before collapsing to the icon alone. */
 const NUDGE_VISIBLE_MS = 6000;
 
+/** Flip to true when support chat should show again. */
+const WHATSAPP_FAB_ENABLED = false;
+
 /**
  * Floating "ask us on WhatsApp" button, pinned to the bottom corner of every
  * layout. The speech bubble shows on arrival then collapses so it stops eating
@@ -25,6 +28,13 @@ const NUDGE_VISIBLE_MS = 6000;
  * right in LTR and mirrors for RTL.
  */
 export function WhatsAppFab() {
+  // Disabled for now — set WHATSAPP_FAB_ENABLED true to restore.
+  if (!WHATSAPP_FAB_ENABLED) return null;
+
+  return <WhatsAppFabActive />;
+}
+
+function WhatsAppFabActive() {
   const { t } = useTranslation();
   const [nudging, setNudging] = useState(true);
   const href = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(

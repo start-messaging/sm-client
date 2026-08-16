@@ -35,6 +35,17 @@ export function useRegisterPhone(slug: string) {
   });
 }
 
+/** Pull connection status from Meta Graph (manual refresh). */
+export function useSyncWhatsApp(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => whatsappApi.sync(slug),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.whatsapp.status(slug), data);
+    },
+  });
+}
+
 /** Disconnect the WABA from this workspace. */
 export function useDisconnectWhatsApp(slug: string) {
   const qc = useQueryClient();

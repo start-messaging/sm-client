@@ -66,6 +66,8 @@ export const endpoints = {
     connect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/connect`),
     registerPhone: (slug: string) =>
       v1(`/workspaces/${slug}/whatsapp/register-phone`),
+    // Pull connection state from Meta (manual refresh).
+    sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/sync`),
     // Disconnect / revoke WABA.
     disconnect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/disconnect`),
   },
