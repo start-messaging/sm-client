@@ -161,7 +161,7 @@ export function TemplatesPage() {
         docsUrl="https://developers.facebook.com/docs/whatsapp/message-templates"
       />
 
-      <TemplateExamplesGallery onApply={handleApplyExample} />
+      <TemplateExamplesGallery slug={ws.slug} onApply={handleApplyExample} />
 
       {isLoading && (
         <p className="text-muted-foreground text-sm">{t('common.loading')}</p>

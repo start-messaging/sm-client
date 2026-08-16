@@ -42,6 +42,11 @@ export const queryKeys = {
     status: (slug: string) => ['whatsapp', 'status', slug] as const,
   },
 
+  // ── Template Examples (admin-curated gallery) ─────────────────────────────
+  templateExamples: {
+    list: (slug: string) => ['template-examples', slug] as const,
+  },
+
   // ── Templates ─────────────────────────────────────────────────────────────
   templates: {
     all: (slug: string) => ['templates', slug] as const,

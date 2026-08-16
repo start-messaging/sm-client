@@ -5,8 +5,8 @@ import { z } from 'zod';
  * is missing/malformed rather than discovering it via a broken request later.
  * Only `VITE_`-prefixed vars are exposed to the browser by Vite.
  *
- * Optional analytics / Meta vars: omit them entirely in dev and the features
- * simply don't load — no errors, no noise.
+ * Optional analytics / Meta / Firebase vars: omit them entirely in dev and the
+ * features simply don't load — no errors, no noise.
  */
 const schema = z.object({
   VITE_API_BASE_URL: z.string().url().default('http://localhost:3000'),
@@ -22,6 +22,14 @@ const schema = z.object({
   VITE_META_APP_ID: z.string().optional(),
   VITE_META_EMBEDDED_SIGNUP_CONFIG_ID: z.string().optional(),
   VITE_META_GRAPH_VERSION: z.string().default('v20.0'),
+
+  // Firebase Cloud Messaging (web push) — all-or-nothing optional block.
+  VITE_FIREBASE_API_KEY: z.string().optional(),
+  VITE_FIREBASE_AUTH_DOMAIN: z.string().optional(),
+  VITE_FIREBASE_PROJECT_ID: z.string().optional(),
+  VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
+  VITE_FIREBASE_APP_ID: z.string().optional(),
+  VITE_FIREBASE_VAPID_KEY: z.string().optional(),
 });
 
 const parsed = schema.safeParse(import.meta.env);
@@ -34,24 +42,45 @@ if (!parsed.success) {
   throw new Error('Invalid environment variables — see console.');
 }
 
+const d = parsed.data;
+
+const firebaseConfigured =
+  !!d.VITE_FIREBASE_API_KEY &&
+  !!d.VITE_FIREBASE_PROJECT_ID &&
+  !!d.VITE_FIREBASE_MESSAGING_SENDER_ID &&
+  !!d.VITE_FIREBASE_APP_ID &&
+  !!d.VITE_FIREBASE_VAPID_KEY;
+
 export const env = {
-  apiBaseUrl: parsed.data.VITE_API_BASE_URL.replace(/\/$/, ''),
+  apiBaseUrl: d.VITE_API_BASE_URL.replace(/\/$/, ''),
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD,
 
-  posthog: parsed.data.VITE_POSTHOG_KEY
+  posthog: d.VITE_POSTHOG_KEY
     ? {
-        key: parsed.data.VITE_POSTHOG_KEY,
-        host: parsed.data.VITE_POSTHOG_HOST ?? 'https://app.posthog.com',
+        key: d.VITE_POSTHOG_KEY,
+        host: d.VITE_POSTHOG_HOST ?? 'https://app.posthog.com',
       }
     : null,
 
-  clarityId: parsed.data.VITE_CLARITY_ID ?? null,
+  clarityId: d.VITE_CLARITY_ID ?? null,
 
   meta: {
-    appId: parsed.data.VITE_META_APP_ID ?? null,
-    embeddedSignupConfigId:
-      parsed.data.VITE_META_EMBEDDED_SIGNUP_CONFIG_ID ?? null,
-    graphVersion: parsed.data.VITE_META_GRAPH_VERSION,
+    appId: d.VITE_META_APP_ID ?? null,
+    embeddedSignupConfigId: d.VITE_META_EMBEDDED_SIGNUP_CONFIG_ID ?? null,
+    graphVersion: d.VITE_META_GRAPH_VERSION,
   },
+
+  firebase: firebaseConfigured
+    ? {
+        apiKey: d.VITE_FIREBASE_API_KEY!,
+        authDomain:
+          d.VITE_FIREBASE_AUTH_DOMAIN ??
+          `${d.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+        projectId: d.VITE_FIREBASE_PROJECT_ID!,
+        messagingSenderId: d.VITE_FIREBASE_MESSAGING_SENDER_ID!,
+        appId: d.VITE_FIREBASE_APP_ID!,
+        vapidKey: d.VITE_FIREBASE_VAPID_KEY!,
+      }
+    : null,
 } as const;

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Bell, BellOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useInboxRealtime } from '@/hooks/use-inbox-realtime';
+import { useFcmWebPush } from '@/hooks/use-fcm-web-push';
 import { useConversations } from '@/api/hooks/use-messages';
 import type { WaConversation } from '@/api/messages.api';
 import { ConversationThread } from './components/conversation-thread';
@@ -23,6 +25,15 @@ export function InboxPage() {
   const { connected: sseConnected } = useInboxRealtime(ws.slug);
   const { data, isLoading } = useConversations(ws.slug, { sseConnected });
   const [selectedConv, setSelectedConv] = useState<WaConversation | null>(null);
+  const {
+    permission: notifPermission,
+    registering,
+    tokenRegistered,
+    enable: requestNotifications,
+  } = useFcmWebPush({
+    foregroundTitle: t('inbox.notifications.newMessage'),
+    foregroundBody: t('inbox.notifications.newMessageBody'),
+  });
 
   const conversations = data?.conversations ?? [];
 
@@ -48,8 +59,50 @@ export function InboxPage() {
         className="shrink-0"
       />
 
+      {/* Notification permission / FCM registration */}
+      {notifPermission === 'default' && (
+        <div className="shrink-0 flex items-center gap-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm dark:border-sky-800/40 dark:bg-sky-950/20">
+          <Bell className="size-4 shrink-0 text-sky-600 dark:text-sky-400" />
+          <p className="flex-1 text-sky-800 dark:text-sky-300">
+            {t('inbox.notifications.enableHint')}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0 text-xs"
+            disabled={registering}
+            onClick={() => void requestNotifications()}
+          >
+            {t('inbox.notifications.enableCta')}
+          </Button>
+        </div>
+      )}
+      {notifPermission === 'granted' && !tokenRegistered && (
+        <div className="shrink-0 flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800/40 dark:bg-amber-950/20">
+          <Bell className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="flex-1 text-amber-800 dark:text-amber-300">
+            {t('inbox.notifications.needPushToken')}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0 text-xs"
+            disabled={registering}
+            onClick={() => void requestNotifications()}
+          >
+            {t('inbox.notifications.enableCta')}
+          </Button>
+        </div>
+      )}
+      {notifPermission === 'denied' && (
+        <div className="shrink-0 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <BellOff className="size-3.5 shrink-0" />
+          {t('inbox.notifications.denied')}
+        </div>
+      )}
+
       {/* Split-pane: list + thread */}
-      <div className="flex flex-1 gap-0 rounded-lg border overflow-hidden min-h-[480px]">
+      <div className="flex flex-1 gap-0 rounded-lg border overflow-hidden min-h-120">
         {/* Left: conversation list */}
         <div className="w-72 shrink-0 flex flex-col border-r">
           <div className="px-3 py-2 border-b bg-muted/30 shrink-0">
@@ -114,7 +167,12 @@ export function InboxPage() {
                       )}
                     </div>
                     <p className="text-muted-foreground truncate text-xs mt-0.5">
-                      {conv.lastMessage?.body ?? '—'}
+                      {conv.lastMessage
+                        ? (conv.lastMessage.body
+                            ?? (conv.lastMessage.templateName
+                                ? t('inbox.lastMessageTemplate', { name: conv.lastMessage.templateName })
+                                : '—'))
+                        : '—'}
                     </p>
                     <p
                       className={cn(

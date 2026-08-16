@@ -52,5 +52,7 @@ export const contactsApi = {
     apiPost<{ imported: number; skipped: number }>(
       endpoints.contacts.import(slug),
       formData,
+      // Let the browser set multipart boundary (default json Content-Type breaks uploads).
+      { headers: { 'Content-Type': undefined } },
     ),
 };

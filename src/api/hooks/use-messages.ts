@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   messagesApi,
   type CreateConversationBody,
+  type MessageListResult,
   type SendMessageBody,
+  type WaMessage,
 } from '@/api/messages.api';
 import { queryKeys } from '@/api/query-keys';
 import { STALE } from '@/lib/query-client';
@@ -60,15 +62,70 @@ export function useMessages(
   });
 }
 
-/** Send a message (free-form text or template). */
+/** Send a message (free-form text or template) with optimistic bubble. */
 export function useSendMessage(slug: string, conversationId: string) {
   const qc = useQueryClient();
+  const listKey = queryKeys.messages.list(slug, conversationId);
+
   return useMutation({
     mutationFn: (body: SendMessageBody) =>
       messagesApi.send(slug, conversationId, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.messages.list(slug, conversationId),
+    onMutate: async (body) => {
+      await qc.cancelQueries({ queryKey: listKey });
+      const previous = qc.getQueryData<MessageListResult>(listKey);
+
+      const optimistic: WaMessage = {
+        id: `optimistic-${Date.now()}`,
+        conversationId,
+        direction: 'outbound',
+        status: 'queued',
+        body: body.type === 'text' ? body.text : null,
+        templateName: body.type === 'template' ? body.templateName : null,
+        timestamp: new Date().toISOString(),
+        failureCode: null,
+        failureReason: null,
+      };
+
+      qc.setQueryData<MessageListResult>(listKey, (old) => {
+        const messages = old?.messages ?? [];
+        return {
+          messages: [...messages, optimistic],
+          total: (old?.total ?? 0) + 1,
+        };
+      });
+
+      return { previous, optimisticId: optimistic.id };
+    },
+    onError: (_err, _body, ctx) => {
+      if (ctx?.previous) {
+        qc.setQueryData(listKey, ctx.previous);
+      } else if (ctx?.optimisticId) {
+        qc.setQueryData<MessageListResult>(listKey, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: old.messages.filter((m) => m.id !== ctx.optimisticId),
+            total: Math.max(0, old.total - 1),
+          };
+        });
+      }
+    },
+    onSuccess: (saved, _body, ctx) => {
+      qc.setQueryData<MessageListResult>(listKey, (old) => {
+        if (!old) {
+          return { messages: [saved], total: 1 };
+        }
+        const withoutOptimistic = old.messages.filter(
+          (m) => m.id !== ctx?.optimisticId,
+        );
+        // Avoid duplicate if SSE already inserted the real row.
+        if (withoutOptimistic.some((m) => m.id === saved.id)) {
+          return { ...old, messages: withoutOptimistic };
+        }
+        return {
+          messages: [...withoutOptimistic, saved],
+          total: withoutOptimistic.length + 1,
+        };
       });
       void qc.invalidateQueries({
         queryKey: queryKeys.messages.conversations(slug),

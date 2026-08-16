@@ -72,6 +72,12 @@ export const endpoints = {
     disconnect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/disconnect`),
   },
 
+  // ── Template Examples (admin-curated gallery, published only) ────────────
+  templateExamples: {
+    /** Global published recipes (JWT). Not workspace-scoped on the server. */
+    list: () => v1(`/whatsapp/template-examples`),
+  },
+
   // ── Templates ─────────────────────────────────────────────────────────────
   templates: {
     list: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates`),
@@ -136,5 +142,11 @@ export const endpoints = {
     checkout: (slug: string) => v1(`/workspaces/${slug}/billing/checkout`),
     // Available plans to upgrade to.
     plans: (slug: string) => v1(`/workspaces/${slug}/billing/plans`),
+  },
+
+  // ── FCM web push ──────────────────────────────────────────────────────────
+  push: {
+    fcmWeb: v1('/me/push/fcm-web'),
+    fcmWebStatus: v1('/me/push/fcm-web/status'),
   },
 } as const;

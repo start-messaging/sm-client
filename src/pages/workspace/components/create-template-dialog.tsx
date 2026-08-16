@@ -29,6 +29,7 @@ import { useCreateTemplate } from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
 import type { TemplateCategory, TemplateComponent } from '@/api/templates.api';
 import type { TemplateExample } from '@/lib/template-examples';
+import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 
 // Meta template name: lowercase letters, digits, underscores; 1–512 chars.
 const TEMPLATE_NAME_RE = /^[a-z0-9_]{1,512}$/;
@@ -196,164 +197,183 @@ export function CreateTemplateDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <DialogHeader>
-            <DialogTitle>{t('templates.create.title')}</DialogTitle>
-            <DialogDescription>
-              {t('templates.create.subtitle')}
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-4xl max-h-[92vh] grid-cols-1">
+        <div className="flex max-h-[92vh] flex-col sm:flex-row">
+          {/* ── Left: form ── */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-6"
+          >
+            <DialogHeader>
+              <DialogTitle>{t('templates.create.title')}</DialogTitle>
+              <DialogDescription>
+                {t('templates.create.subtitle')}
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="bg-muted/40 rounded-md border px-3 py-2 text-xs">
-            <p className="font-medium">{t('templates.create.reviewTitle')}</p>
-            <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5">
-              <li>
-                {t('templates.create.reviewName')}:{' '}
-                <span className="font-mono text-foreground">
-                  {name || '—'}
-                </span>
-              </li>
-              <li>
-                {t('templates.create.reviewCategory')}: {category} · {language}
-              </li>
-              <li>
-                {t('templates.create.reviewBody')}:{' '}
-                {bodyText ? `${bodyText.slice(0, 80)}${bodyText.length > 80 ? '…' : ''}` : '—'}
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-name">
-              {t('templates.create.name')}
-            </FieldLabel>
-            <Input
-              id="tpl-name"
-              placeholder="order_confirmation"
-              aria-invalid={!!errors.name}
-              {...register('name')}
-            />
-            <p className="text-muted-foreground text-xs">
-              {t('templates.create.nameHint')}
-            </p>
-            {errors.name && (
-              <FieldError errors={[{ message: t(errors.name.message!) }]} />
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <FieldLabel htmlFor="tpl-lang">
-                {t('templates.create.language')}
-              </FieldLabel>
-              <Select
-                value={language}
-                onValueChange={(v) => setValue('language', v)}
-              >
-                <SelectTrigger id="tpl-lang">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Meta review info panel (educational) */}
+            <div className="bg-muted/40 rounded-md border px-3 py-2 text-xs">
+              <p className="font-medium">{t('templates.create.reviewTitle')}</p>
+              <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5">
+                <li>
+                  {t('templates.create.reviewName')}:{' '}
+                  <span className="font-mono text-foreground">
+                    {name || '—'}
+                  </span>
+                </li>
+                <li>
+                  {t('templates.create.reviewCategory')}: {category} · {language}
+                </li>
+                <li>
+                  {t('templates.create.reviewBody')}:{' '}
+                  {bodyText
+                    ? `${bodyText.slice(0, 80)}${bodyText.length > 80 ? '…' : ''}`
+                    : '—'}
+                </li>
+              </ul>
             </div>
 
             <div className="flex flex-col gap-2">
-              <FieldLabel htmlFor="tpl-category">
-                {t('templates.create.category')}
+              <FieldLabel htmlFor="tpl-name">
+                {t('templates.create.name')}
               </FieldLabel>
-              <Select
-                value={category}
-                onValueChange={(v) =>
-                  setValue('category', v as TemplateCategory)
-                }
-              >
-                <SelectTrigger id="tpl-category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-header">
-              {t('templates.create.headerOptional')}
-            </FieldLabel>
-            <Input
-              id="tpl-header"
-              placeholder={t('templates.create.headerPlaceholder')}
-              maxLength={60}
-              {...register('headerText')}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-body">
-              {t('templates.create.body')}
-            </FieldLabel>
-            <Textarea
-              id="tpl-body"
-              rows={4}
-              placeholder={t('templates.create.bodyPlaceholder')}
-              aria-invalid={!!errors.bodyText}
-              {...register('bodyText')}
-            />
-            <p className="text-muted-foreground text-xs">
-              {t('templates.create.bodyHint')}
-            </p>
-            {errors.bodyText && (
-              <FieldError
-                errors={[{ message: t(errors.bodyText.message!) }]}
+              <Input
+                id="tpl-name"
+                placeholder="order_confirmation"
+                aria-invalid={!!errors.name}
+                {...register('name')}
               />
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.nameHint')}
+              </p>
+              {errors.name && (
+                <FieldError errors={[{ message: t(errors.name.message!) }]} />
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <FieldLabel htmlFor="tpl-lang">
+                  {t('templates.create.language')}
+                </FieldLabel>
+                <Select
+                  value={language}
+                  onValueChange={(v) => setValue('language', v)}
+                >
+                  <SelectTrigger id="tpl-lang">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <FieldLabel htmlFor="tpl-category">
+                  {t('templates.create.category')}
+                </FieldLabel>
+                <Select
+                  value={category}
+                  onValueChange={(v) =>
+                    setValue('category', v as TemplateCategory)
+                  }
+                >
+                  <SelectTrigger id="tpl-category">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <FieldLabel htmlFor="tpl-header">
+                {t('templates.create.headerOptional')}
+              </FieldLabel>
+              <Input
+                id="tpl-header"
+                placeholder={t('templates.create.headerPlaceholder')}
+                maxLength={60}
+                {...register('headerText')}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <FieldLabel htmlFor="tpl-body">
+                {t('templates.create.body')}
+              </FieldLabel>
+              <Textarea
+                id="tpl-body"
+                rows={4}
+                placeholder={t('templates.create.bodyPlaceholder')}
+                aria-invalid={!!errors.bodyText}
+                {...register('bodyText')}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.bodyHint')}
+              </p>
+              {errors.bodyText && (
+                <FieldError
+                  errors={[{ message: t(errors.bodyText.message!) }]}
+                />
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <FieldLabel htmlFor="tpl-footer">
+                {t('templates.create.footerOptional')}
+              </FieldLabel>
+              <Input
+                id="tpl-footer"
+                placeholder={t('templates.create.footerPlaceholder')}
+                maxLength={60}
+                {...register('footerText')}
+              />
+            </div>
+
+            {(headerText || footerText) && (
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.componentsNote')}
+              </p>
             )}
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-footer">
-              {t('templates.create.footerOptional')}
-            </FieldLabel>
-            <Input
-              id="tpl-footer"
-              placeholder={t('templates.create.footerPlaceholder')}
-              maxLength={60}
-              {...register('footerText')}
+            <DialogFooter className="mx-0 mb-0 mt-auto rounded-none border-0 bg-transparent p-0 pt-2 sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={createTemplate.isPending}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={createTemplate.isPending}>
+                {createTemplate.isPending && <Spinner />}
+                {t('templates.create.submit')}
+              </Button>
+            </DialogFooter>
+          </form>
+
+          {/* ── Right: live WhatsApp preview ── */}
+          <aside className="bg-muted/20 hidden w-72 shrink-0 flex-col items-center gap-4 overflow-y-auto border-l px-4 py-6 sm:flex">
+            <WaMessagePreview
+              headerText={headerText}
+              bodyText={bodyText}
+              footerText={footerText}
+              templateName={name}
             />
-          </div>
-
-          {(headerText || footerText) && (
-            <p className="text-muted-foreground text-xs">
-              {t('templates.create.componentsNote')}
-            </p>
-          )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={createTemplate.isPending}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={createTemplate.isPending}>
-              {createTemplate.isPending && <Spinner />}
-              {t('templates.create.submit')}
-            </Button>
-          </DialogFooter>
-        </form>
+          </aside>
+        </div>
       </DialogContent>
     </Dialog>
   );

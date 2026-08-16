@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,10 +17,11 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { MessageDeliveryStatus } from '@/components/inbox/message-delivery-status';
 import { useMessages, useSendMessage } from '@/api/hooks/use-messages';
 import { useTemplates } from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
-import type { WaConversation } from '@/api/messages.api';
+import type { WaConversation, WaMessage } from '@/api/messages.api';
 import { cn } from '@/lib/utils';
 
 // ── 24h window helper ───────────────────────────────────────────────────────
@@ -28,6 +29,15 @@ import { cn } from '@/lib/utils';
 function isWindowOpen(lastInboundAt: string | null): boolean {
   if (!lastInboundAt) return false;
   return Date.now() - new Date(lastInboundAt).getTime() < 24 * 60 * 60 * 1000;
+}
+
+/** Message ids we just sent — toast once if Meta later marks them failed. */
+const recentOutboundIds = new Set<string>();
+const toastedFailureIds = new Set<string>();
+
+function trackOutbound(id: string) {
+  recentOutboundIds.add(id);
+  window.setTimeout(() => recentOutboundIds.delete(id), 120_000);
 }
 
 // ── Text composer ───────────────────────────────────────────────────────────
@@ -55,7 +65,10 @@ function TextComposer({
     send.mutate(
       { type: 'text', text: v.text },
       {
-        onSuccess: () => reset(),
+        onSuccess: (msg) => {
+          trackOutbound(msg.id);
+          reset();
+        },
         onError: (err) => toast.error(err),
       },
     );
@@ -67,7 +80,7 @@ function TextComposer({
     >
       <Textarea
         placeholder={t('inbox.composer.textPlaceholder')}
-        className="min-h-[60px] max-h-[160px] resize-none flex-1"
+        className="min-h-15 max-h-40 resize-none flex-1"
         {...register('text')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
@@ -152,7 +165,9 @@ function TemplateComposer({
           : {}),
       },
       {
-        onSuccess: () => {
+        onSuccess: (msg) => {
+          trackOutbound(msg.id);
+          toast.success(t('inbox.composer.sentTemplate'));
           setSelectedId('');
           setParamValues({});
         },
@@ -226,6 +241,68 @@ function TemplateComposer({
   );
 }
 
+// ── Bubble ──────────────────────────────────────────────────────────────────
+
+function MessageBubble({
+  msg,
+  templateBodyMap,
+}: {
+  msg: WaMessage;
+  templateBodyMap: Record<string, string>;
+}) {
+  const { t } = useTranslation();
+  const outbound = msg.direction === 'outbound';
+  const failed = outbound && msg.status === 'failed';
+
+  // Resolve body: server body > template cache body > fallback label
+  const resolvedBody =
+    msg.body ??
+    (msg.templateName ? (templateBodyMap[msg.templateName] ?? null) : null);
+
+  return (
+    <div
+      className={cn(
+        'max-w-[75%] rounded-xl px-3 py-2 text-sm shadow-sm',
+        outbound
+          ? 'self-end bg-[#dcf8c6] text-gray-800 dark:bg-[#025c4c] dark:text-gray-100'
+          : 'self-start bg-white text-gray-800 dark:bg-[#202c33] dark:text-gray-100',
+        failed && 'bg-red-100 dark:bg-red-900/40',
+      )}
+    >
+      {msg.templateName && (
+        <p className="mb-1 text-xs font-semibold opacity-60">
+          {t('inbox.templateBubble.label', { name: msg.templateName })}
+        </p>
+      )}
+      <p className="whitespace-pre-wrap wrap-break-word">
+        {resolvedBody ??
+          (msg.templateName
+            ? t('inbox.templateBubble.bodyFallback')
+            : '—')}
+      </p>
+      {failed && msg.failureReason && (
+        <p className="mt-1 text-[10px] text-red-600 dark:text-red-400 leading-snug">
+          {msg.failureReason}
+        </p>
+      )}
+      <div className="mt-1 flex items-center justify-end gap-1">
+        <span className="text-[10px] opacity-50">
+          {new Date(msg.timestamp).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+        {outbound && (
+          <MessageDeliveryStatus
+            status={msg.status}
+            failureReason={msg.failureReason}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main thread view ─────────────────────────────────────────────────────────
 
 interface ConversationThreadProps {
@@ -243,25 +320,54 @@ export function ConversationThread({
   const { data, isLoading } = useMessages(slug, conversation.id, {
     sseConnected,
   });
+  const { data: templatesData } = useTemplates(slug);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const windowOpen = isWindowOpen(conversation.lastInboundAt);
   const messages = data?.messages ?? [];
+
+  /** Map templateName → BODY text for inline bubble preview. */
+  const templateBodyMap = useMemo<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    for (const tpl of (templatesData?.templates ?? [])) {
+      const body = tpl.components.find((c) => c.type === 'BODY')?.text;
+      if (body) map[tpl.name] = body;
+    }
+    return map;
+  }, [templatesData]);
 
   // Scroll to bottom on new messages.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  // Toast when a recently sent outbound message fails via webhook.
+  useEffect(() => {
+    for (const msg of messages) {
+      if (
+        msg.direction !== 'outbound' ||
+        msg.status !== 'failed' ||
+        !recentOutboundIds.has(msg.id) ||
+        toastedFailureIds.has(msg.id)
+      ) {
+        continue;
+      }
+      toastedFailureIds.add(msg.id);
+      toast.error(
+        msg.failureReason ?? t('inbox.composer.deliveryFailed'),
+      );
+    }
+  }, [messages, t]);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Thread header */}
-      <div className="border-b px-4 py-3 flex items-center justify-between shrink-0">
+      <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
         <div>
-          <p className="font-semibold text-sm">
+          <p className="text-sm font-semibold">
             {conversation.contactName ?? conversation.contactPhone}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {conversation.contactPhone}
           </p>
         </div>
@@ -274,56 +380,33 @@ export function ConversationThread({
 
       {/* 24h education banner when window closed */}
       {!windowOpen && (
-        <div className="mx-3 mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-800/40 dark:bg-amber-950/20 shrink-0">
+        <div className="mx-3 mt-3 flex shrink-0 items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-800/40 dark:bg-amber-950/20">
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <div>
             <p className="font-medium text-amber-800 dark:text-amber-300">
               {t('education.OUTSIDE_CUSTOMER_CARE_WINDOW.title')}
             </p>
-            <p className="text-muted-foreground text-xs mt-0.5">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               {t('education.OUTSIDE_CUSTOMER_CARE_WINDOW.body')}
             </p>
           </div>
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+      {/* Messages — WhatsApp-style chat background */}
+      <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-4 py-3 bg-[#e5ddd5] dark:bg-[#0d1417]">
         {isLoading && (
           <div className="flex justify-center py-8">
             <Spinner />
           </div>
         )}
         {!isLoading && messages.length === 0 && (
-          <p className="text-muted-foreground text-sm text-center py-8">
+          <p className="text-gray-500 dark:text-gray-400 py-8 text-center text-sm">
             {t('inbox.thread.empty')}
           </p>
         )}
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              'max-w-[75%] rounded-xl px-3 py-2 text-sm',
-              msg.direction === 'outbound'
-                ? 'self-end bg-primary text-primary-foreground'
-                : 'self-start bg-muted text-foreground',
-            )}
-          >
-            {msg.templateName && (
-              <p className="text-xs opacity-70 mb-0.5 font-mono">
-                [{msg.templateName}]
-              </p>
-            )}
-            <p className="whitespace-pre-wrap break-words">
-              {msg.body ?? '—'}
-            </p>
-            <p className="text-[10px] opacity-60 mt-1 text-right">
-              {new Date(msg.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          </div>
+          <MessageBubble key={msg.id} msg={msg} templateBodyMap={templateBodyMap} />
         ))}
         <div ref={messagesEndRef} />
       </div>
@@ -334,10 +417,10 @@ export function ConversationThread({
           <Tabs defaultValue="text">
             <div className="border-t px-3 pt-2">
               <TabsList className="h-7 text-xs">
-                <TabsTrigger value="text" className="text-xs px-2">
+                <TabsTrigger value="text" className="px-2 text-xs">
                   {t('inbox.composer.tabText')}
                 </TabsTrigger>
-                <TabsTrigger value="template" className="text-xs px-2">
+                <TabsTrigger value="template" className="px-2 text-xs">
                   {t('inbox.composer.tabTemplate')}
                 </TabsTrigger>
               </TabsList>

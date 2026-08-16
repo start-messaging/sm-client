@@ -287,7 +287,15 @@
       "phoneMin": "मान्य फ़ोन नंबर दर्ज करें (कम से कम 7 अंक)",
       "phoneInvalid": "देश कोड सहित मान्य फ़ोन नंबर दर्ज करें",
       "submit": "बातचीत शुरू करें",
-      "success": "बातचीत शुरू हो गई"
+      "success": "बातचीत शुरू हो गई",
+      "dialCodeLabel": "देश डायल कोड",
+      "searchCountry": "देश खोजें...",
+      "noCountryFound": "कोई देश नहीं मिला",
+      "nationalNumber": "फ़ोन नंबर",
+      "nationalNumberPlaceholder": "98765 43210",
+      "nationalNumberMin": "कम से कम 4 अंक दर्ज करें",
+      "nationalNumberMax": "नंबर बहुत लंबा है",
+      "nationalNumberDigits": "केवल अंक दर्ज करें"
     }
   },
   "templates": {

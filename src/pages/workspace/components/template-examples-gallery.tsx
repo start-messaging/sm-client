@@ -7,10 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { TemplateCategory } from '@/api/templates.api';
 import {
   TEMPLATE_EXAMPLES,
-  examplesByCategory,
   exampleBodyPreview,
   type TemplateExample,
 } from '@/lib/template-examples';
+import { useTemplateExamples } from '@/api/hooks/use-template-examples';
 
 const CATEGORY_TABS: { value: TemplateCategory | 'ALL'; labelKey: string }[] = [
   { value: 'ALL', labelKey: 'templates.examples.tabAll' },
@@ -19,14 +19,44 @@ const CATEGORY_TABS: { value: TemplateCategory | 'ALL'; labelKey: string }[] = [
   { value: 'AUTHENTICATION', labelKey: 'templates.examples.tabAuth' },
 ];
 
+/**
+ * Filter examples by category. Works on any TemplateExample array, unlike the
+ * standalone `examplesByCategory` helper which operates on the static list.
+ */
+function filterByCategory(
+  examples: TemplateExample[],
+  category: TemplateCategory | 'ALL',
+): TemplateExample[] {
+  if (category === 'ALL') return examples;
+  return examples.filter((e) => e.category === category);
+}
+
 interface TemplateExamplesGalleryProps {
+  /** Workspace slug — used to scope the API request. */
+  slug: string;
   onApply: (example: TemplateExample) => void;
 }
 
 export function TemplateExamplesGallery({
+  slug,
   onApply,
 }: TemplateExamplesGalleryProps) {
   const { t } = useTranslation();
+  const { data: apiExamples, isError } = useTemplateExamples(slug);
+
+  /**
+   * Gallery source selection:
+   *   1. API returned a non-empty array  → use API data (admin-curated, live)
+   *   2. API empty or errored            → fall back to local TEMPLATE_EXAMPLES
+   *
+   * During loading `apiExamples` is undefined → fallback shown immediately so
+   * there is never a blank gallery. Once the query resolves with data the React
+   * Query cache swaps in the API list without a spinner.
+   */
+  const examples: TemplateExample[] =
+    !isError && apiExamples && apiExamples.length > 0
+      ? apiExamples
+      : TEMPLATE_EXAMPLES;
 
   return (
     <Card>
@@ -50,7 +80,7 @@ export function TemplateExamplesGallery({
               <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
                 {t(tab.labelKey)}
                 <span className="text-muted-foreground ml-1.5 tabular-nums">
-                  {examplesByCategory(tab.value).length}
+                  {filterByCategory(examples, tab.value).length}
                 </span>
               </TabsTrigger>
             ))}
@@ -59,7 +89,7 @@ export function TemplateExamplesGallery({
           {CATEGORY_TABS.map((tab) => (
             <TabsContent key={tab.value} value={tab.value} className="mt-0">
               <div className="grid gap-3 sm:grid-cols-2">
-                {examplesByCategory(tab.value).map((example) => (
+                {filterByCategory(examples, tab.value).map((example) => (
                   <ExampleCard
                     key={example.id}
                     example={example}
@@ -72,7 +102,7 @@ export function TemplateExamplesGallery({
         </Tabs>
 
         <p className="text-muted-foreground mt-4 text-xs">
-          {t('templates.examples.footer', { count: TEMPLATE_EXAMPLES.length })}
+          {t('templates.examples.footer', { count: examples.length })}
         </p>
       </CardContent>
     </Card>

@@ -49,7 +49,10 @@ export function useDeleteContact(slug: string) {
 }
 
 export function useImportContacts(slug: string) {
-  return useContactMutation(slug, (formData: FormData) =>
-    contactsApi.import(slug, formData),
-  );
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => contactsApi.import(slug, formData),
+    onSuccess: () =>
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all(slug) }),
+  });
 }

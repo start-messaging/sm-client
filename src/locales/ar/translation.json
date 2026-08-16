@@ -291,7 +291,15 @@
       "phoneMin": "أدخل رقم هاتف صالح (7 أرقام على الأقل)",
       "phoneInvalid": "أدخل رقم هاتف صالحاً مع رمز البلد",
       "submit": "بدء المحادثة",
-      "success": "تم بدء المحادثة"
+      "success": "تم بدء المحادثة",
+      "dialCodeLabel": "رمز اتصال البلد",
+      "searchCountry": "ابحث عن دولة...",
+      "noCountryFound": "لا توجد دولة",
+      "nationalNumber": "رقم الهاتف",
+      "nationalNumberPlaceholder": "98765 43210",
+      "nationalNumberMin": "أدخل 4 أرقام على الأقل",
+      "nationalNumberMax": "الرقم طويل جداً",
+      "nationalNumberDigits": "أرقام فقط"
     }
   },
   "templates": {

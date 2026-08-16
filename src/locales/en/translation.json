@@ -339,8 +339,31 @@
       "noApprovedTemplates": "No approved templates yet. Create and get one approved in Templates first.",
       "paramsHint": "Fill the variables Meta requires for this template:",
       "paramPlaceholder": "Value for {{n}}",
-      "paramRequired": "Enter a value for {{n}} before sending."
+      "paramRequired": "Enter a value for {{n}} before sending.",
+      "sentTemplate": "Template submitted to WhatsApp",
+      "deliveryFailed": "Message failed to deliver. Check the bubble for Meta’s reason."
     },
+    "status": {
+      "queued": "Sending…",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed"
+    },
+    "notifications": {
+      "enableCta": "Enable notifications",
+      "enableHint": "Get notified when new WhatsApp messages arrive — even if this tab is closed (web push).",
+      "needPushToken": "Browser permission is on, but web push is not registered yet (often blocked by untrusted HTTPS). Click to retry after mkcert -install.",
+      "denied": "Notifications are blocked — allow them in your browser settings.",
+      "newMessage": "New WhatsApp message",
+      "newMessageBody": "You have a new message in your inbox.",
+      "enabled": "Push notifications enabled for this browser."
+    },
+    "templateBubble": {
+      "label": "Template: {{name}}",
+      "bodyFallback": "Template message"
+    },
+    "lastMessageTemplate": "Template: {{name}}",
     "newConversation": {
       "trigger": "New conversation",
       "title": "Start a new conversation",
@@ -351,7 +374,15 @@
       "phoneMin": "Enter a valid phone number (at least 7 digits)",
       "phoneInvalid": "Enter a valid phone number including country code (e.g. +91 98765 43210)",
       "submit": "Start conversation",
-      "success": "Conversation started"
+      "success": "Conversation started",
+      "dialCodeLabel": "Country dial code",
+      "searchCountry": "Search country...",
+      "noCountryFound": "No country found",
+      "nationalNumber": "Phone number",
+      "nationalNumberPlaceholder": "98765 43210",
+      "nationalNumberMin": "Enter at least 4 digits",
+      "nationalNumberMax": "Number is too long",
+      "nationalNumberDigits": "Digits only — no spaces or symbols"
     }
   },
   "templates": {
@@ -410,7 +441,14 @@
       "footerPlaceholder": "e.g. Reply STOP to opt out",
       "componentsNote": "Header and footer are included in the payload Meta reviews.",
       "submit": "Submit to Meta",
-      "success": "Template submitted — pending Meta review."
+      "success": "Template submitted — pending Meta review.",
+      "previewLabel": "Preview",
+      "previewNameFallback": "Your template",
+      "previewOnline": "online",
+      "previewBodyEmpty": "Start typing your body text…",
+      "previewEmpty": "Your message will appear here as you type",
+      "previewCaption": "Visual only — variables show sample values",
+      "previewInputHint": "Message"
     },
     "status": {
       "APPROVED": "Approved",
@@ -439,8 +477,50 @@
       "title": "No contacts yet",
       "body": "Import a CSV or add contacts one by one to get started."
     },
-    "importCta": "Import contacts",
-    "addCta": "Add contact"
+    "importCta": "Import CSV",
+    "addCta": "Add contact",
+    "add": {
+      "title": "Add a contact",
+      "subtitle": "Add a WhatsApp number to your audience. Pick the country, then enter the local number.",
+      "phone": "WhatsApp number",
+      "phonePlaceholder": "98765 43210",
+      "phoneHint": "Country dial code is selected separately — enter the local number only.",
+      "phoneRequired": "Enter a phone number.",
+      "phoneInvalid": "Enter a valid phone number.",
+      "nationalNumberMin": "Enter at least 4 digits",
+      "nationalNumberMax": "Number is too long",
+      "nationalNumberDigits": "Digits only — no spaces or symbols",
+      "name": "Contact name (optional)",
+      "namePlaceholder": "e.g. Rahul Sharma",
+      "submit": "Add contact",
+      "success": "Contact added",
+      "duplicate": "A contact with this number already exists."
+    },
+    "import": {
+      "title": "Import contacts",
+      "subtitle": "Upload a CSV to bulk-add contacts to your audience.",
+      "hint": "First column: phone in E.164 format (e.g. +919876543210). Second column: name (optional). Row 1 is treated as a header and skipped.",
+      "dropzone": "Click to choose a .csv file",
+      "noFile": "Choose a CSV file first.",
+      "submit": "Import",
+      "success_one": "Imported {{count}} contact — {{skipped}} skipped.",
+      "success_other": "Imported {{count}} contacts — {{skipped}} skipped.",
+      "skippedHint": "Skipped rows have duplicate numbers or are not valid E.164 numbers.",
+      "errorParsing": "Could not read the file — make sure it is a valid UTF-8 CSV."
+    },
+    "delete": {
+      "title": "Remove contact?",
+      "body": "{{name}} will be removed from your contact list. Existing conversations are not affected.",
+      "cta": "Remove",
+      "success": "Contact removed"
+    },
+    "table": {
+      "name": "Name",
+      "phone": "Phone",
+      "tags": "Tags",
+      "optIn": "Opt-in",
+      "actions": "Actions"
+    }
   },
   "campaigns": {
     "title": "Campaigns",
@@ -532,8 +612,12 @@
     "TEMPLATE_REJECTED": "Meta rejected this template. Check the rejection reason on the Templates page.",
     "TEMPLATE_NOT_FOUND": "That template was not found. Sync from Meta or create it first.",
     "PHONE_QUALITY_LIMIT": "Your phone number has hit a Meta throughput limit. Slow sends until quality recovers.",
+    "PHONE_DAILY_LIMIT_REACHED": "WhatsApp messaging limit reached for this number. Try again later.",
+    "MESSAGE_UNDELIVERABLE": "WhatsApp could not deliver this message to the recipient number.",
     "PLAN_FEATURE_REQUIRED": "Upgrade your Start Messaging CRM plan to use this feature.",
-    "SUBSCRIPTION_PAST_DUE": "Your CRM subscription is past due. Update your payment on the Billing page."
+    "SUBSCRIPTION_PAST_DUE": "Your CRM subscription is past due. Update your payment on the Billing page.",
+    "CONTACT_DUPLICATE": "A contact with this phone number already exists in your workspace.",
+    "CONTACT_NOT_FOUND": "That contact no longer exists."
   },
   "plan": {
     "keys": {

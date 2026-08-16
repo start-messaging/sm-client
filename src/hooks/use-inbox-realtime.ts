@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { env } from '@/config/env';
 import { endpoints } from '@/api/endpoints';
 import { queryKeys } from '@/api/query-keys';
@@ -9,7 +10,26 @@ type InboxSsePayload = {
   type?: string;
   conversationId?: string;
   reason?: string;
+  contactName?: string | null;
+  contactPhone?: string | null;
 };
+
+/**
+ * Local Notification fallback when FCM web client is not configured.
+ * With FCM enabled, pushes come from the service worker / onMessage instead.
+ */
+function fireInboundNotification(
+  title: string,
+  body: string,
+  payload: InboxSsePayload,
+) {
+  if (env.firebase) return;
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission !== 'granted') return;
+  if (!document.hidden) return;
+  const notifBody = payload.contactName ?? payload.contactPhone ?? body;
+  new Notification(title, { body: notifBody, icon: '/favicon.ico' });
+}
 
 /**
  * Subscribe to workspace inbox SSE. On `inbox.updated`, invalidate conversation
@@ -20,6 +40,7 @@ type InboxSsePayload = {
  */
 export function useInboxRealtime(slug: string): { connected: boolean } {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [connected, setConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
   const retryRef = useRef(0);
@@ -83,6 +104,14 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
           /* ignore malformed */
         }
 
+        if (payload.reason === 'inbound') {
+          fireInboundNotification(
+            t('inbox.notifications.newMessage'),
+            t('inbox.notifications.newMessageBody'),
+            payload,
+          );
+        }
+
         void qc.invalidateQueries({
           queryKey: queryKeys.messages.conversations(slug),
         });
@@ -113,6 +142,13 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
           return;
         }
         if (payload.type === 'inbox.updated') {
+          if (payload.reason === 'inbound') {
+            fireInboundNotification(
+              t('inbox.notifications.newMessage'),
+              t('inbox.notifications.newMessageBody'),
+              payload,
+            );
+          }
           void qc.invalidateQueries({
             queryKey: queryKeys.messages.conversations(slug),
           });
@@ -151,7 +187,7 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
       close();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [slug, qc]);
+  }, [slug, qc, t]);
 
   return { connected };
 }

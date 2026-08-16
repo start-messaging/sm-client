@@ -23,6 +23,10 @@ export interface WaMessage {
   timestamp: string;
   /** When this is an outbound template message, the template name used. */
   templateName: string | null;
+  /** Meta error code when status is failed (from Graph or status webhook). */
+  failureCode?: number | null;
+  /** Human-readable Meta failure detail when status is failed. */
+  failureReason?: string | null;
 }
 
 export interface WaConversation {
