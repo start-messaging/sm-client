@@ -419,6 +419,17 @@
       "language": "Language",
       "status": "Status"
     },
+    "recategorized": {
+      "bannerTitle_one": "{{count}} template was recategorized by Meta",
+      "bannerTitle_other": "{{count}} templates were recategorized by Meta",
+      "bannerBody": "Meta can change Utility ↔ Marketing after approval. That changes conversation pricing. You usually have 60 days to review and appeal in Business Support Home. Sync from Meta if a category still looks wrong.",
+      "cta": "Review in Business Support Home",
+      "row": "Meta recategorized this from {{from}} to {{to}}",
+      "pendingTitle_one": "{{count}} template will be recategorized soon",
+      "pendingTitle_other": "{{count}} templates will be recategorized soon",
+      "pendingBody": "Meta scheduled a category change (typically within 24 hours). Sending after the change uses the new category’s pricing.",
+      "pendingRow": "Meta will change this from {{from}} to {{to}}"
+    },
     "create": {
       "title": "Create message template",
       "subtitle": "Templates must be approved by Meta before use. Review takes minutes to a few hours.",

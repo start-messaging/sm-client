@@ -51,7 +51,20 @@ const STATUS_VARIANT: Record<
   DISABLED: 'outline',
 };
 
-/** Auto-sync PENDING templates at most once per workspace per tab (2 min). */
+const META_BUSINESS_SUPPORT_HOME =
+  'https://business.facebook.com/latest/business_support_home';
+
+function wasRecategorized(tpl: WaTemplate): boolean {
+  return Boolean(
+    tpl.submittedCategory && tpl.submittedCategory !== tpl.category,
+  );
+}
+
+function hasPendingCategoryChange(tpl: WaTemplate): boolean {
+  return Boolean(
+    tpl.correctCategory && tpl.correctCategory !== tpl.category,
+  );
+}
 const SYNC_TTL_MS = 2 * 60 * 1000;
 
 function rejectionLabel(
@@ -77,6 +90,8 @@ export function TemplatesPage() {
   const [seedKey, setSeedKey] = useState(0);
 
   const templates = data?.templates ?? [];
+  const recategorized = templates.filter(wasRecategorized);
+  const pendingCategory = templates.filter(hasPendingCategoryChange);
   const hasPending = templates.some((tpl) => tpl.status === 'PENDING');
 
   useEffect(() => {
@@ -161,6 +176,46 @@ export function TemplatesPage() {
         docsUrl="https://developers.facebook.com/docs/whatsapp/message-templates"
       />
 
+      {recategorized.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          <p className="text-sm font-medium">
+            {t('templates.recategorized.bannerTitle', {
+              count: recategorized.length,
+            })}
+          </p>
+          <p className="text-sm opacity-90">
+            {t('templates.recategorized.bannerBody')}
+          </p>
+          <a
+            href={META_BUSINESS_SUPPORT_HOME}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium underline-offset-4 hover:underline"
+          >
+            {t('templates.recategorized.cta')}
+          </a>
+        </div>
+      )}
+
+      {pendingCategory.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          <p className="text-sm font-medium">
+            {t('templates.recategorized.pendingTitle', {
+              count: pendingCategory.length,
+            })}
+          </p>
+          <p className="text-sm opacity-90">
+            {t('templates.recategorized.pendingBody')}
+          </p>
+        </div>
+      )}
+
       <TemplateExamplesGallery slug={ws.slug} onApply={handleApplyExample} />
 
       {isLoading && (
@@ -207,7 +262,25 @@ export function TemplatesPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{tpl.category}</Badge>
+                    <div className="flex flex-col gap-0.5">
+                      <Badge variant="outline">{tpl.category}</Badge>
+                      {wasRecategorized(tpl) && (
+                        <span className="text-amber-800 dark:text-amber-200 text-xs">
+                          {t('templates.recategorized.row', {
+                            from: tpl.submittedCategory,
+                            to: tpl.category,
+                          })}
+                        </span>
+                      )}
+                      {hasPendingCategoryChange(tpl) && (
+                        <span className="text-amber-800 dark:text-amber-200 text-xs">
+                          {t('templates.recategorized.pendingRow', {
+                            from: tpl.category,
+                            to: tpl.correctCategory,
+                          })}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {tpl.language}

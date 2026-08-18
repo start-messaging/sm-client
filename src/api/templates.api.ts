@@ -30,6 +30,10 @@ export interface WaTemplate {
   name: string;
   language: string;
   category: TemplateCategory;
+  /** Category submitted at create time; differs from `category` after Meta recategorizes. */
+  submittedCategory: TemplateCategory | null;
+  /** Impending Meta category when a 24h recategorization is scheduled. */
+  correctCategory: TemplateCategory | null;
   status: TemplateStatus;
   components: TemplateComponent[];
   /** Reason string from Meta when status is REJECTED. */
