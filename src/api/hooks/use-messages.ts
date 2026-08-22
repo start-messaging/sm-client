@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   messagesApi,
+  type ConversationTab,
   type CreateConversationBody,
   type MessageListResult,
+  type MessageMediaType,
+  type PatchConversationBody,
   type SendMessageBody,
   type WaMessage,
 } from '@/api/messages.api';
@@ -30,17 +33,33 @@ function shouldPollInbox(sseConnected: boolean): number | false {
 /** Conversation list (inbox) — SSE primary, light poll as fallback. */
 export function useConversations(
   slug: string,
-  opts?: { sseConnected?: boolean },
+  opts?: { sseConnected?: boolean; tab?: ConversationTab },
 ) {
   const sseConnected = opts?.sseConnected ?? false;
+  const tab = opts?.tab ?? 'all';
   return useQuery({
-    queryKey: queryKeys.messages.conversations(slug),
-    queryFn: () => messagesApi.listConversations(slug),
+    queryKey: queryKeys.messages.conversations(slug, tab),
+    queryFn: () => messagesApi.listConversations(slug, tab),
     enabled: slug.length > 0,
     staleTime: STALE.LIVE,
     refetchInterval: (query) =>
       query.state.status === 'success' ? shouldPollInbox(sseConnected) : false,
     refetchIntervalInBackground: false,
+  });
+}
+
+/** PATCH a conversation (assign, resolve, mark-read, claim). */
+export function usePatchConversation(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: PatchConversationBody }) =>
+      messagesApi.patchConversation(slug, id, body),
+    onSuccess: () => {
+      // Invalidate all tab variants for this workspace's conversation list.
+      void qc.invalidateQueries({
+        queryKey: queryKeys.messages.conversationsAll(slug),
+      });
+    },
   });
 }
 
@@ -128,10 +147,88 @@ export function useSendMessage(slug: string, conversationId: string) {
         };
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.messages.conversations(slug),
+        queryKey: queryKeys.messages.conversationsAll(slug),
       });
     },
   });
+}
+
+/** Upload + send a media file (image / audio / video / document). */
+export function useSendMedia(slug: string, conversationId: string) {
+  const qc = useQueryClient();
+  const listKey = queryKeys.messages.list(slug, conversationId);
+
+  return useMutation({
+    mutationFn: ({ file, caption }: { file: File; caption?: string }) =>
+      messagesApi.sendMedia(slug, conversationId, file, caption),
+    onMutate: async ({ file }) => {
+      await qc.cancelQueries({ queryKey: listKey });
+      const previous = qc.getQueryData<MessageListResult>(listKey);
+
+      const optimistic: WaMessage = {
+        id: `optimistic-media-${Date.now()}`,
+        conversationId,
+        direction: 'outbound',
+        status: 'queued',
+        body: null,
+        templateName: null,
+        timestamp: new Date().toISOString(),
+        failureCode: null,
+        failureReason: null,
+        mediaType: resolveOptimisticMediaType(file.type),
+        mediaUrl: URL.createObjectURL(file),
+        mediaMime: file.type,
+        mediaFilename: file.name,
+      };
+
+      qc.setQueryData<MessageListResult>(listKey, (old) => ({
+        messages: [...(old?.messages ?? []), optimistic],
+        total: (old?.total ?? 0) + 1,
+      }));
+
+      return { previous, optimisticId: optimistic.id };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        qc.setQueryData(listKey, ctx.previous);
+      } else if (ctx?.optimisticId) {
+        qc.setQueryData<MessageListResult>(listKey, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: old.messages.filter((m) => m.id !== ctx.optimisticId),
+            total: Math.max(0, old.total - 1),
+          };
+        });
+      }
+    },
+    onSuccess: (saved, _vars, ctx) => {
+      qc.setQueryData<MessageListResult>(listKey, (old) => {
+        if (!old) return { messages: [saved], total: 1 };
+        const withoutOptimistic = old.messages.filter(
+          (m) => m.id !== ctx?.optimisticId,
+        );
+        if (withoutOptimistic.some((m) => m.id === saved.id)) {
+          return { ...old, messages: withoutOptimistic };
+        }
+        return {
+          messages: [...withoutOptimistic, saved],
+          total: withoutOptimistic.length + 1,
+        };
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.messages.conversationsAll(slug),
+      });
+    },
+  });
+}
+
+function resolveOptimisticMediaType(mime: string): MessageMediaType {
+  const lower = mime.toLowerCase();
+  if (lower.startsWith('image/')) return 'image';
+  if (lower.startsWith('audio/')) return 'audio';
+  if (lower.startsWith('video/')) return 'video';
+  return 'document';
 }
 
 /** Create-or-get a conversation by contactPhone. */
@@ -142,7 +239,7 @@ export function useCreateConversation(slug: string) {
       messagesApi.createConversation(slug, body),
     onSuccess: () => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.messages.conversations(slug),
+        queryKey: queryKeys.messages.conversationsAll(slug),
       });
     },
   });

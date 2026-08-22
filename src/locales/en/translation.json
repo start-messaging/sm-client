@@ -135,6 +135,7 @@
     "campaigns": "Campaigns",
     "templates": "Templates",
     "contacts": "Contacts",
+    "leads": "Leads",
     "senderIds": "Sender IDs",
     "members": "Members",
     "billing": "Billing",
@@ -266,6 +267,11 @@
       "title": "WhatsApp Business Account disconnected",
       "body": "Your WABA has been disconnected or the access token is no longer valid. Reconnect via Embedded Signup to restore messaging.",
       "cta": "Reconnect WhatsApp"
+    },
+    "MESSAGE_WINDOW_CLOSED": {
+      "title": "24-hour messaging window closed",
+      "body": "WhatsApp only allows free-form replies within 24 hours of a customer's last message. Use an approved template to re-open the conversation.",
+      "cta": "Pick a template"
     }
   },
   "connect": {
@@ -319,15 +325,44 @@
     },
     "empty": {
       "title": "No conversations yet",
-      "body": "Once customers message you or you send a template, their replies will appear here."
+      "body": "Once customers message you or you send a template, their replies will appear here.",
+      "mychats": "No chats assigned to you yet. Claim an unassigned conversation from All or Active tabs.",
+      "active": "No active open conversations right now."
     },
     "allConversations": "Conversations",
     "windowWarning": "24-hour window open",
     "windowClosed": "Window closed — use a template",
+    "windowWarningShort": "Window open",
+    "windowClosedShort": "Window closed",
+    "windowClosingShort": "Closing soon",
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "mine": "My Chats"
+    },
+    "search": "Search conversations…",
+    "assignee": "Assignee: {{name}}",
+    "unassigned": "Unassigned",
     "thread": {
       "selectPrompt": "Select a conversation",
       "selectHint": "Choose a conversation on the left to view messages and reply.",
-      "empty": "No messages yet — send the first one below."
+      "empty": "No messages yet — send the first one below.",
+      "resolveBtn": "Resolve",
+      "reopenBtn": "Reopen",
+      "claimBtn": "Claim",
+      "assignTo": "Assign to…",
+      "assignPlaceholder": "Pick a team member",
+      "unassignOption": "Unassign",
+      "resolved": "Resolved",
+      "open": "Open",
+      "resolveSuccess": "Conversation resolved",
+      "reopenSuccess": "Conversation reopened",
+      "claimSuccess": "Conversation claimed",
+      "assignSuccess": "Assigned to {{name}}",
+      "viewerReadOnly": "You can read this conversation but not send messages.",
+      "windowRemaining": "{{h}}h {{m}}m remaining",
+      "windowRemainingLt1h": "Less than 1 hour left — use a template soon",
+      "manageleads": "Manage leads"
     },
     "composer": {
       "tabText": "Free text",
@@ -364,6 +399,26 @@
       "bodyFallback": "Template message"
     },
     "lastMessageTemplate": "Template: {{name}}",
+    "rail": {
+      "title": "Contact",
+      "contact": "Contact info",
+      "noContact": "This chat isn't linked to a CRM contact yet. Tags, notes, and pipeline show here once it is.",
+      "optIn": "WhatsApp opt-in",
+      "optedIn": "Opted in",
+      "notOptedIn": "Not opted in",
+      "tags": "Tags",
+      "noTags": "No tags",
+      "addTag": "Add tag…",
+      "stage": "Pipeline stage",
+      "noStage": "No stage",
+      "followUp": "Follow-up",
+      "noFollowUp": "Not set",
+      "notes": "Notes",
+      "noNotes": "No notes yet",
+      "addNote": "Add a note… (Enter to save)",
+      "saveNote": "Save note",
+      "attributes": "Attributes"
+    },
     "newConversation": {
       "trigger": "New conversation",
       "title": "Start a new conversation",
@@ -529,9 +584,59 @@
       "name": "Name",
       "phone": "Phone",
       "tags": "Tags",
+      "source": "Source",
+      "stage": "Stage",
+      "followUp": "Follow-up",
+      "assignee": "Assignee",
       "optIn": "Opt-in",
       "actions": "Actions"
-    }
+    },
+    "filter": {
+      "allTags": "All tags",
+      "allStages": "All stages",
+      "allAssignees": "All assignees",
+      "overdue": "Overdue",
+      "upcoming": "Due this week",
+      "anyFollowUp": "Any follow-up",
+      "reset": "Clear filters",
+      "resultsOf": "{{count}} of {{total}}"
+    },
+    "source": {
+      "whatsapp": "WhatsApp",
+      "manual": "Manual",
+      "csv": "CSV",
+      "link": "Link"
+    },
+    "export": "Export CSV",
+    "manageLeads": "Manage leads"
+  },
+  "leads": {
+    "title": "Leads",
+    "subtitle": "Your contacts organised by pipeline stage.",
+    "intro": {
+      "title": "Pipeline Kanban",
+      "body": "Move contacts through your sales pipeline by updating their stage. Use the Move to… menu on each card to reassign stages without leaving this view."
+    },
+    "noStage": "No stage",
+    "noStageHint": "Contacts with no pipeline stage assigned.",
+    "empty": {
+      "title": "No contacts here",
+      "body": "Contacts appear in this column when you assign them this stage."
+    },
+    "emptyBoard": {
+      "title": "No pipeline stages yet",
+      "body": "Stages are set up automatically on first use. Go to Contacts and assign a stage to get started.",
+      "cta": "Go to contacts"
+    },
+    "card": {
+      "moveTo": "Move to…",
+      "noAssignee": "Unassigned",
+      "noFollowUp": "No follow-up",
+      "overdue": "Overdue",
+      "followUp": "{{date}}"
+    },
+    "moveSuccess": "Moved to {{stage}}",
+    "moveError": "Could not move contact"
   },
   "campaigns": {
     "title": "Campaigns",
@@ -618,6 +723,7 @@
     "META_PAYMENT_REQUIRED": "Add a payment method to your WhatsApp Business Account in Meta's WhatsApp Manager.",
     "META_BILLING_ERROR": "Meta could not process the charge on your WhatsApp Business Account. Update your payment method in WhatsApp Manager.",
     "OUTSIDE_CUSTOMER_CARE_WINDOW": "The 24-hour messaging window has closed. Use an approved template to re-open the conversation.",
+    "MESSAGE_WINDOW_CLOSED": "The 24-hour messaging window has closed. Use an approved template to re-open the conversation.",
     "TEMPLATE_NOT_APPROVED": "This template hasn't been approved by Meta yet. Check the Templates page for status.",
     "TEMPLATE_PENDING_APPROVAL": "This template is still pending Meta review. Wait until it shows Approved.",
     "TEMPLATE_REJECTED": "Meta rejected this template. Check the rejection reason on the Templates page.",
@@ -628,7 +734,11 @@
     "PLAN_FEATURE_REQUIRED": "Upgrade your Start Messaging CRM plan to use this feature.",
     "SUBSCRIPTION_PAST_DUE": "Your CRM subscription is past due. Update your payment on the Billing page.",
     "CONTACT_DUPLICATE": "A contact with this phone number already exists in your workspace.",
-    "CONTACT_NOT_FOUND": "That contact no longer exists."
+    "CONTACT_NOT_FOUND": "That contact no longer exists.",
+    "MEDIA_TOO_LARGE": "That file is too large for WhatsApp. Try a smaller image, video, or document.",
+    "MEDIA_TYPE_UNSUPPORTED": "That file type cannot be sent on WhatsApp. Use an image, audio, video, or PDF/document.",
+    "MEDIA_STORAGE_NOT_CONFIGURED": "Media storage is not set up for this workspace. Contact Start Messaging support.",
+    "MEDIA_UPLOAD_FAILED": "WhatsApp could not accept this file. Try again, or send a smaller file."
   },
   "plan": {
     "keys": {
@@ -685,6 +795,67 @@
       "role": "Role",
       "submit": "Send invite",
       "sent": "Invitation sent"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage workspace settings and quick replies.",
+    "quickReplies": {
+      "educationTitle": "Quick Replies",
+      "educationBody": "Save canned responses with a shortcut (e.g. /thanks) so agents can insert them instantly in the composer. Quick replies speed up common answers without sacrificing a personal touch. Shortcuts are shared across the workspace — admins manage them here.",
+      "addCta": "Add quick reply",
+      "addTitle": "Add quick reply",
+      "editTitle": "Edit quick reply",
+      "emptyTitle": "No quick replies yet",
+      "emptyBody": "Add shortcuts like /thanks or /info that agents can use in conversations.",
+      "fields": {
+        "title": "Title",
+        "shortcut": "Shortcut",
+        "body": "Message body"
+      },
+      "placeholders": {
+        "title": "e.g. Greeting",
+        "shortcut": "e.g. hi (no slash needed)",
+        "body": "Hi there! How can I help you today?"
+      },
+      "shortcutHint": "Type the shortcut without '/'. Agents type /shortcut in the composer to find it.",
+      "errors": {
+        "titleRequired": "Title is required",
+        "shortcutRequired": "Shortcut is required",
+        "shortcutAlphanumeric": "Use letters, numbers, hyphens or underscores only",
+        "bodyRequired": "Message body is required"
+      },
+      "cols": {
+        "shortcut": "Shortcut",
+        "title": "Title",
+        "body": "Message"
+      },
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete quick reply?",
+      "deleteBody": "The /{{shortcut}} shortcut will be removed for all agents. This cannot be undone.",
+      "created": "Quick reply added",
+      "updated": "Quick reply updated",
+      "deleted": "Quick reply deleted",
+      "loadError": "Could not load quick replies. Please refresh and try again.",
+      "readOnlyNotice": "Only admins and owners can create or edit quick replies. Agents can use them in the composer.",
+      "typeaheadPlaceholder": "Type / to search quick replies…",
+      "typeaheadEmpty": "No matching quick replies",
+      "typeaheadHeading": "Quick replies"
+    },
+    "routing": {
+      "title": "Chat Routing",
+      "subtitle": "Control how new inbound chats are distributed to agents.",
+      "roundRobin": {
+        "label": "Round-robin auto-assign",
+        "hint": "Automatically assigns every new unassigned inbound chat to the next available agent in rotation."
+      },
+      "available": {
+        "label": "Available for new chats",
+        "hint": "When off, you will not receive auto-assigned chats. Conversations already assigned to you are unaffected."
+      },
+      "education": "Meta bills conversations directly to your WABA payment method — Start Messaging charges only your CRM subscription. Turning on round-robin does not change what you are billed."
     }
   },
   "invite": {

@@ -1,29 +1,127 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useInboxRealtime } from '@/hooks/use-inbox-realtime';
 import { useFcmWebPush } from '@/hooks/use-fcm-web-push';
 import { useConversations } from '@/api/hooks/use-messages';
-import type { WaConversation } from '@/api/messages.api';
+import type { ConversationTab, WaConversation } from '@/api/messages.api';
 import { ConversationThread } from './components/conversation-thread';
 import { NewConversationDialog } from './components/new-conversation-dialog';
+import { InboxContactRail } from './components/inbox-contact-rail';
 import { cn } from '@/lib/utils';
 
-function isWindowOpen(lastInboundAt: string | null): boolean {
-  if (!lastInboundAt) return false;
-  return Date.now() - new Date(lastInboundAt).getTime() < 24 * 60 * 60 * 1000;
+function windowMs(lastInboundAt: string | null): number {
+  if (!lastInboundAt) return 0;
+  const elapsed = Date.now() - new Date(lastInboundAt).getTime();
+  return Math.max(0, 24 * 60 * 60 * 1000 - elapsed);
 }
+
+function WindowBadge({ lastInboundAt }: { lastInboundAt: string | null }) {
+  const { t } = useTranslation();
+  const remaining = windowMs(lastInboundAt);
+  const open = remaining > 0;
+  const closingSoon = open && remaining < 60 * 60 * 1000;
+
+  if (!open) {
+    return (
+      <span className="text-[10px] text-muted-foreground">
+        {t('inbox.windowClosedShort')}
+      </span>
+    );
+  }
+  if (closingSoon) {
+    return (
+      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+        {t('inbox.windowClosingShort')}
+      </span>
+    );
+  }
+  return (
+    <span className="text-[10px] text-green-600 dark:text-green-400">
+      {t('inbox.windowWarningShort')}
+    </span>
+  );
+}
+
+// ── Conversation list item ────────────────────────────────────────────────────
+
+function ConvItem({
+  conv,
+  isSelected,
+  onSelect,
+}: {
+  conv: WaConversation;
+  isSelected: boolean;
+  onSelect: (c: WaConversation) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(conv)}
+      className={cn(
+        'w-full text-left flex items-start gap-3 px-3 py-3 border-b transition-colors hover:bg-muted/40',
+        isSelected && 'bg-muted/60',
+      )}
+    >
+      <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-full">
+        <MessageSquare className="text-muted-foreground size-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1">
+          <span className="truncate font-medium text-sm">
+            {conv.contactName ?? conv.contactPhone}
+          </span>
+          {conv.unreadCount > 0 && (
+            <Badge className="rounded-full px-1.5 py-0.5 text-xs tabular-nums shrink-0 h-auto">
+              {conv.unreadCount}
+            </Badge>
+          )}
+        </div>
+        <p className="text-muted-foreground truncate text-xs mt-0.5">
+          {conv.lastMessage
+            ? (conv.lastMessage.body ??
+                (conv.lastMessage.templateName
+                  ? t('inbox.lastMessageTemplate', {
+                      name: conv.lastMessage.templateName,
+                    })
+                  : '—'))
+            : '—'}
+        </p>
+        <div className="flex items-center justify-between gap-1 mt-0.5">
+          <WindowBadge lastInboundAt={conv.lastInboundAt} />
+          {conv.assigneeName && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+              {conv.assigneeName}
+            </span>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 
 export function InboxPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
   const { connected: sseConnected } = useInboxRealtime(ws.slug);
-  const { data, isLoading } = useConversations(ws.slug, { sseConnected });
+  const [activeTab, setActiveTab] = useState<ConversationTab>('all');
+  const [search, setSearch] = useState('');
+  const { data, isLoading } = useConversations(ws.slug, {
+    sseConnected,
+    tab: activeTab,
+  });
   const [selectedConv, setSelectedConv] = useState<WaConversation | null>(null);
   const {
     permission: notifPermission,
@@ -37,10 +135,34 @@ export function InboxPage() {
 
   const conversations = data?.conversations ?? [];
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) =>
+        (c.contactName ?? '').toLowerCase().includes(q) ||
+        c.contactPhone.toLowerCase().includes(q) ||
+        (c.lastMessage?.body ?? '').toLowerCase().includes(q),
+    );
+  }, [conversations, search]);
+
+  // When conversations refresh from SSE/poll, keep the selected conv in sync.
+  const syncedSelected = useMemo(() => {
+    if (!selectedConv) return null;
+    return conversations.find((c) => c.id === selectedConv.id) ?? selectedConv;
+  }, [conversations, selectedConv]);
+
+  const emptyKey =
+    activeTab === 'mine'
+      ? 'inbox.empty.mychats'
+      : activeTab === 'active'
+        ? 'inbox.empty.active'
+        : 'inbox.empty.body';
+
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
       {/* Page header */}
-      <div className="flex items-end justify-between gap-4 shrink-0">
+      <div className="flex shrink-0 items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {t('inbox.title')}
@@ -53,13 +175,15 @@ export function InboxPage() {
         />
       </div>
 
-      <EducationSlot
-        title={t('inbox.intro.title')}
-        body={t('inbox.intro.body')}
-        className="shrink-0"
-      />
+      {!syncedSelected && (
+        <EducationSlot
+          title={t('inbox.intro.title')}
+          body={t('inbox.intro.body')}
+          className="shrink-0"
+        />
+      )}
 
-      {/* Notification permission / FCM registration */}
+      {/* Notification banners */}
       {notifPermission === 'default' && (
         <div className="shrink-0 flex items-center gap-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm dark:border-sky-800/40 dark:bg-sky-950/20">
           <Bell className="size-4 shrink-0 text-sky-600 dark:text-sky-400" />
@@ -101,17 +225,45 @@ export function InboxPage() {
         </div>
       )}
 
-      {/* Split-pane: list + thread */}
-      <div className="flex flex-1 gap-0 rounded-lg border overflow-hidden min-h-120">
-        {/* Left: conversation list */}
-        <div className="w-72 shrink-0 flex flex-col border-r">
-          <div className="px-3 py-2 border-b bg-muted/30 shrink-0">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t('inbox.allConversations')}
-            </p>
+      {/* 3-pane: list | thread | right rail */}
+      <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg border">
+        {/* LEFT — conversation list */}
+        <div className="flex w-72 min-h-0 shrink-0 flex-col border-r">
+          {/* Tabs */}
+          <div className="px-2 pt-2 shrink-0 border-b bg-muted/20">
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => {
+                setActiveTab(v as ConversationTab);
+                setSelectedConv(null);
+              }}
+            >
+              <TabsList className="w-full h-8 text-xs">
+                <TabsTrigger value="all" className="flex-1 text-xs">
+                  {t('inbox.tabs.all')}
+                </TabsTrigger>
+                <TabsTrigger value="active" className="flex-1 text-xs">
+                  {t('inbox.tabs.active')}
+                </TabsTrigger>
+                <TabsTrigger value="mine" className="flex-1 text-xs">
+                  {t('inbox.tabs.mine')}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          {/* Search */}
+          <div className="px-2 py-1.5 shrink-0 border-b">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('inbox.search')}
+              className="h-7 text-xs"
+            />
+          </div>
+
+          {/* List body */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {isLoading && (
               <div className="flex flex-col gap-2 p-3">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -126,79 +278,35 @@ export function InboxPage() {
               </div>
             )}
 
-            {!isLoading && conversations.length === 0 && (
+            {!isLoading && filtered.length === 0 && (
               <div className="flex flex-col items-center gap-3 py-12 px-4 text-center">
                 <MessageSquare className="text-muted-foreground size-8" />
                 <div>
                   <p className="font-medium text-sm">{t('inbox.empty.title')}</p>
                   <p className="text-muted-foreground text-xs mt-0.5">
-                    {t('inbox.empty.body')}
+                    {t(emptyKey)}
                   </p>
                 </div>
               </div>
             )}
 
-            {conversations.map((conv) => {
-              const windowOpen = isWindowOpen(conv.lastInboundAt);
-              const isSelected = selectedConv?.id === conv.id;
-
-              return (
-                <button
-                  key={conv.id}
-                  type="button"
-                  onClick={() => setSelectedConv(conv)}
-                  className={cn(
-                    'w-full text-left flex items-start gap-3 px-3 py-3 border-b transition-colors hover:bg-muted/40',
-                    isSelected && 'bg-muted/60',
-                  )}
-                >
-                  <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-full">
-                    <MessageSquare className="text-muted-foreground size-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="truncate font-medium text-sm">
-                        {conv.contactName ?? conv.contactPhone}
-                      </span>
-                      {conv.unreadCount > 0 && (
-                        <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-xs tabular-nums shrink-0">
-                          {conv.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground truncate text-xs mt-0.5">
-                      {conv.lastMessage
-                        ? (conv.lastMessage.body
-                            ?? (conv.lastMessage.templateName
-                                ? t('inbox.lastMessageTemplate', { name: conv.lastMessage.templateName })
-                                : '—'))
-                        : '—'}
-                    </p>
-                    <p
-                      className={cn(
-                        'text-[10px] mt-0.5',
-                        windowOpen
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-muted-foreground',
-                      )}
-                    >
-                      {windowOpen
-                        ? t('inbox.windowWarning')
-                        : t('inbox.windowClosed')}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+            {filtered.map((conv) => (
+              <ConvItem
+                key={conv.id}
+                conv={conv}
+                isSelected={syncedSelected?.id === conv.id}
+                onSelect={setSelectedConv}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Right: thread panel */}
-        <div className="flex-1 overflow-hidden">
-          {selectedConv ? (
+        {/* MIDDLE — thread */}
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          {syncedSelected ? (
             <ConversationThread
               slug={ws.slug}
-              conversation={selectedConv}
+              conversation={syncedSelected}
               sseConnected={sseConnected}
             />
           ) : (
@@ -215,6 +323,14 @@ export function InboxPage() {
             </Card>
           )}
         </div>
+
+        {/* RIGHT — CRM rail */}
+        {syncedSelected && (
+          <InboxContactRail
+            slug={ws.slug}
+            conversation={syncedSelected}
+          />
+        )}
       </div>
     </div>
   );

@@ -92,9 +92,14 @@ export const endpoints = {
 
   // ── Messages / Inbox ──────────────────────────────────────────────────────
   messages: {
-    // Conversation list (inbox).
-    conversations: (slug: string) =>
-      v1(`/workspaces/${slug}/whatsapp/conversations`),
+    // Conversation list (inbox) with optional tab filter (all|active|mine).
+    conversations: (slug: string, tab?: string) => {
+      const base = v1(`/workspaces/${slug}/whatsapp/conversations`);
+      return tab ? `${base}?tab=${tab}` : base;
+    },
+    // PATCH a conversation (assign, resolve, mark-read, claim).
+    patch: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations/${id}`),
     // Create or get a conversation by contactPhone.
     createConversation: (slug: string) =>
       v1(`/workspaces/${slug}/whatsapp/conversations`),
@@ -104,6 +109,9 @@ export const endpoints = {
     // Send a message (free-form or template).
     send: (slug: string, conversationId: string) =>
       v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`),
+    // Upload and send a media message (multipart/form-data).
+    sendMedia: (slug: string, conversationId: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/media`),
     // SSE live inbox updates (pair with ?access_token= for EventSource).
     events: (slug: string) => v1(`/workspaces/${slug}/whatsapp/events`),
   },
@@ -116,6 +124,14 @@ export const endpoints = {
     update: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
     delete: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
     import: (slug: string) => v1(`/workspaces/${slug}/contacts/import`),
+    notes: (slug: string, contactId: string) =>
+      v1(`/workspaces/${slug}/contacts/${contactId}/notes`),
+  },
+
+  // ── WhatsApp inbox ops (pipeline stages) ──────────────────────────────────
+  whatsappInbox: {
+    pipelineStages: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/pipeline-stages`),
   },
 
   // ── Campaigns ─────────────────────────────────────────────────────────────

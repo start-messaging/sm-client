@@ -3,6 +3,8 @@ import { endpoints } from '@/api/endpoints';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export type ContactSource = 'whatsapp' | 'manual' | 'csv' | 'link';
+
 export interface WaContact {
   id: string;
   name: string | null;
@@ -12,6 +14,12 @@ export interface WaContact {
   optedIn: boolean;
   createdAt: string;
   updatedAt: string;
+  /** CRM fields (Slice 1) */
+  source?: ContactSource;
+  attributes?: Record<string, string>;
+  followUpAt?: string | null;
+  pipelineStageId?: string | null;
+  assignedToUserId?: string | null;
 }
 
 export interface ContactListResult {
@@ -31,6 +39,27 @@ export interface UpdateContactBody {
   email?: string;
   tags?: string[];
   optedIn?: boolean;
+  /** CRM rail fields (Slice 1 additions) */
+  attributes?: Record<string, string>;
+  followUpAt?: string | null;
+  pipelineStageId?: string | null;
+  assignedToUserId?: string | null;
+}
+
+export interface ContactNote {
+  id: string;
+  contactId: string;
+  body: string;
+  authorUserId: string;
+  createdAt: string;
+}
+
+export interface ContactNoteListResult {
+  notes: ContactNote[];
+}
+
+export interface AddNoteBody {
+  body: string;
 }
 
 // ── API calls ──────────────────────────────────────────────────────────────
@@ -38,6 +67,9 @@ export interface UpdateContactBody {
 export const contactsApi = {
   list: (slug: string) =>
     apiGet<ContactListResult>(endpoints.contacts.list(slug)),
+
+  getById: (slug: string, id: string) =>
+    apiGet<WaContact>(endpoints.contacts.byId(slug, id)),
 
   create: (slug: string, body: CreateContactBody) =>
     apiPost<WaContact>(endpoints.contacts.create(slug), body),
@@ -55,4 +87,10 @@ export const contactsApi = {
       // Let the browser set multipart boundary (default json Content-Type breaks uploads).
       { headers: { 'Content-Type': undefined } },
     ),
+
+  listNotes: (slug: string, contactId: string) =>
+    apiGet<ContactNoteListResult>(endpoints.contacts.notes(slug, contactId)),
+
+  addNote: (slug: string, contactId: string, body: AddNoteBody) =>
+    apiPost<ContactNote>(endpoints.contacts.notes(slug, contactId), body),
 };

@@ -19,8 +19,10 @@ import { ConnectPage } from '@/pages/workspace/connect-page';
 import { InboxPage } from '@/pages/workspace/inbox-page';
 import { TemplatesPage } from '@/pages/workspace/templates-page';
 import { ContactsPage } from '@/pages/workspace/contacts-page';
+import { LeadsPage } from '@/pages/workspace/leads-page';
 import { CampaignsPage } from '@/pages/workspace/campaigns-page';
 import { BillingPage } from '@/pages/workspace/billing-page';
+import { SettingsPage } from '@/pages/workspace/settings-page';
 
 /**
  * The single, declarative route config (React Router library mode). Branches:
@@ -82,9 +84,11 @@ export const router = createBrowserRouter([
               { path: 'inbox', element: <InboxPage /> },
               { path: 'templates', element: <TemplatesPage /> },
               { path: 'contacts', element: <ContactsPage /> },
+              { path: 'leads', element: <LeadsPage /> },
               { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
+              { path: 'settings', element: <SettingsPage /> },
               // Unknown module segments fall back to the workspace dashboard.
               { path: '*', element: <WorkspaceCatchAll /> },
             ],

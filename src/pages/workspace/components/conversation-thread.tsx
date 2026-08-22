@@ -3,10 +3,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { Send, AlertCircle } from 'lucide-react';
+import {
+  Send,
+  AlertCircle,
+  CheckCircle2,
+  RotateCcw,
+  UserPlus,
+  Paperclip,
+  FileText,
+  Music,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -17,18 +26,47 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MessageDeliveryStatus } from '@/components/inbox/message-delivery-status';
-import { useMessages, useSendMessage } from '@/api/hooks/use-messages';
+import {
+  useMessages,
+  useSendMessage,
+  useSendMedia,
+  usePatchConversation,
+} from '@/api/hooks/use-messages';
 import { useTemplates } from '@/api/hooks/use-templates';
+import { useMembers } from '@/api/hooks/use-members';
+import { useAuthStore } from '@/stores/auth.store';
 import { toast } from '@/lib/toast';
+import { ROLE_RANK } from '@/types/api';
 import type { WaConversation, WaMessage } from '@/api/messages.api';
+import type { WorkspaceRole } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { QuickReplyTypeahead } from '@/components/inbox/quick-reply-typeahead';
 
-// ── 24h window helper ───────────────────────────────────────────────────────
+// ── Role helpers ─────────────────────────────────────────────────────────────
+
+function atLeast(role: WorkspaceRole | null, min: WorkspaceRole): boolean {
+  if (!role) return false;
+  return ROLE_RANK[role] >= ROLE_RANK[min];
+}
+
+// ── 24h window helpers ────────────────────────────────────────────────────────
+
+function windowMs(lastInboundAt: string | null): number {
+  if (!lastInboundAt) return 0;
+  const elapsed = Date.now() - new Date(lastInboundAt).getTime();
+  return Math.max(0, 24 * 60 * 60 * 1000 - elapsed);
+}
 
 function isWindowOpen(lastInboundAt: string | null): boolean {
-  if (!lastInboundAt) return false;
-  return Date.now() - new Date(lastInboundAt).getTime() < 24 * 60 * 60 * 1000;
+  return windowMs(lastInboundAt) > 0;
+}
+
+function formatRemaining(ms: number): string {
+  const h = Math.floor(ms / (60 * 60 * 1000));
+  const m = Math.floor((ms % (60 * 60 * 1000)) / 60_000);
+  return `${String(h)}h ${String(m)}m`;
 }
 
 /** Message ids we just sent — toast once if Meta later marks them failed. */
@@ -40,26 +78,128 @@ function trackOutbound(id: string) {
   window.setTimeout(() => recentOutboundIds.delete(id), 120_000);
 }
 
-// ── Text composer ───────────────────────────────────────────────────────────
+// ── Media bubble ─────────────────────────────────────────────────────────────
+
+function MediaBubble({ msg }: { msg: WaMessage }) {
+  const outbound = msg.direction === 'outbound';
+  const url = msg.mediaUrl ?? undefined;
+  const alt = msg.mediaFilename ?? msg.mediaType ?? 'media';
+  const mime = msg.mediaMime ?? '';
+
+  if (msg.mediaType === 'image' || msg.mediaType === 'sticker') {
+    return url ? (
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        <img
+          src={url}
+          alt={alt}
+          className={cn(
+            'max-w-[220px] rounded-lg object-cover',
+            outbound ? 'self-end' : 'self-start',
+          )}
+          loading="lazy"
+        />
+      </a>
+    ) : (
+      <span className="italic text-xs text-muted-foreground">[{msg.mediaType}]</span>
+    );
+  }
+
+  if (msg.mediaType === 'video') {
+    return url ? (
+      // eslint-disable-next-line jsx-a11y/media-has-caption
+      <video
+        src={url}
+        controls
+        className="max-w-[260px] rounded-lg"
+        preload="metadata"
+      />
+    ) : (
+      <span className="italic text-xs text-muted-foreground">[video]</span>
+    );
+  }
+
+  if (msg.mediaType === 'audio') {
+    return url ? (
+      // eslint-disable-next-line jsx-a11y/media-has-caption
+      <audio src={url} controls className="max-w-[260px]" preload="metadata" />
+    ) : (
+      <span className="flex items-center gap-1 italic text-xs text-muted-foreground">
+        <Music className="size-3" /> [audio]
+      </span>
+    );
+  }
+
+  if (msg.mediaType === 'document') {
+    const filename = msg.mediaFilename ?? 'Document';
+    return url ? (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 rounded border bg-white/60 dark:bg-white/10 px-3 py-2 text-sm hover:underline"
+      >
+        <FileText className="size-4 shrink-0" />
+        <span className="max-w-[180px] truncate">{filename}</span>
+      </a>
+    ) : (
+      <span className="flex items-center gap-1 italic text-xs text-muted-foreground">
+        <FileText className="size-3" /> {filename}
+      </span>
+    );
+  }
+
+  if (mime) {
+    return (
+      <span className="italic text-xs text-muted-foreground">
+        [{mime.split('/')[1] ?? 'file'}]
+      </span>
+    );
+  }
+
+  return null;
+}
+
+// ── Text composer ─────────────────────────────────────────────────────────────
 
 const textSchema = z.object({
   text: z.string().min(1).max(4096),
 });
 type TextForm = z.infer<typeof textSchema>;
 
+/** Accepted MIME types for the file picker — mirrors Meta's allowed types. */
+const ACCEPTED_MEDIA_TYPES =
+  'image/jpeg,image/png,image/gif,image/webp,' +
+  'audio/ogg,audio/mpeg,audio/mp4,audio/aac,' +
+  'video/mp4,video/3gpp,' +
+  'application/pdf,' +
+  'application/msword,' +
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document,' +
+  'application/vnd.ms-excel,' +
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,' +
+  'text/plain';
+
 function TextComposer({
   slug,
   conversationId,
+  canAttach,
 }: {
   slug: string;
   conversationId: string;
+  /** false when the caller is VIEWER or outside 24h window */
+  canAttach: boolean;
 }) {
   const { t } = useTranslation();
   const send = useSendMessage(slug, conversationId);
-  const { register, handleSubmit, reset, formState } = useForm<TextForm>({
+  const sendMedia = useSendMedia(slug, conversationId);
+  const { handleSubmit, reset, formState, watch, setValue } = useForm<TextForm>({
     resolver: zodResolver(textSchema),
     defaultValues: { text: '' },
   });
+  const text = watch('text');
+
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [caption, setCaption] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = (v: TextForm) =>
     send.mutate(
@@ -69,19 +209,141 @@ function TextComposer({
           trackOutbound(msg.id);
           reset();
         },
+        onError: (err) => {
+          const code = (err as { code?: string }).code;
+          if (
+            code === 'MESSAGE_WINDOW_CLOSED' ||
+            code === 'OUTSIDE_CUSTOMER_CARE_WINDOW'
+          ) {
+            toast.error(t('errors.MESSAGE_WINDOW_CLOSED'));
+          } else {
+            toast.error(err);
+          }
+        },
+      },
+    );
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPendingFile(file);
+      setCaption('');
+    }
+    // Reset input so the same file can be re-selected.
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function clearPendingFile() {
+    setPendingFile(null);
+    setCaption('');
+  }
+
+  function handleSendMedia() {
+    if (!pendingFile) return;
+    sendMedia.mutate(
+      { file: pendingFile, caption: caption.trim() || undefined },
+      {
+        onSuccess: (msg) => {
+          trackOutbound(msg.id);
+          clearPendingFile();
+        },
         onError: (err) => toast.error(err),
       },
     );
+  }
+
+  const isBusy = send.isPending || sendMedia.isPending;
+
+  // File pending: show preview + caption + send controls instead of text area.
+  if (pendingFile) {
+    return (
+      <div className="flex flex-col gap-2 border-t p-3">
+        <div className="flex items-center gap-2 rounded border bg-muted/40 px-3 py-2 text-sm">
+          <FileText className="size-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 truncate">{pendingFile.name}</span>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-6"
+            onClick={clearPendingFile}
+            disabled={isBusy}
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
+        {!pendingFile.type.startsWith('audio/') && (
+          <Input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder={t('inbox.composer.captionPlaceholder')}
+            className="h-8 text-sm"
+            disabled={isBusy}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMedia();
+              }
+            }}
+          />
+        )}
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleSendMedia}
+            disabled={isBusy}
+          >
+            {isBusy ? <Spinner className="mr-2" /> : <Send className="size-4 mr-2" />}
+            {t('inbox.composer.sendFile')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="flex items-end gap-2 border-t p-3"
     >
-      <Textarea
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_MEDIA_TYPES}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Paperclip — hidden for VIEWER (canAttach=false) */}
+      {canAttach && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="shrink-0"
+              disabled={isBusy}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label={t('inbox.composer.attachFile')}
+            >
+              <Paperclip className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('inbox.composer.attachFile')}</TooltipContent>
+        </Tooltip>
+      )}
+
+      <QuickReplyTypeahead
+        slug={slug}
+        value={text}
+        onChange={(v) =>
+          setValue('text', v, { shouldDirty: true, shouldValidate: true })
+        }
         placeholder={t('inbox.composer.textPlaceholder')}
         className="min-h-15 max-h-40 resize-none flex-1"
-        {...register('text')}
+        disabled={isBusy}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -92,7 +354,7 @@ function TextComposer({
       <Button
         type="submit"
         size="icon"
-        disabled={send.isPending || !formState.isDirty}
+        disabled={isBusy || !formState.isDirty}
         aria-label={t('inbox.composer.send')}
       >
         {send.isPending ? <Spinner /> : <Send className="size-4" />}
@@ -101,9 +363,8 @@ function TextComposer({
   );
 }
 
-// ── Template composer ───────────────────────────────────────────────────────
+// ── Template composer ─────────────────────────────────────────────────────────
 
-/** Extract ordered {{1}}, {{2}}… placeholders from a template BODY component. */
 function bodyPlaceholders(tpl: {
   components: Array<{ type: string; text?: string }>;
 }): number[] {
@@ -241,7 +502,7 @@ function TemplateComposer({
   );
 }
 
-// ── Bubble ──────────────────────────────────────────────────────────────────
+// ── Message bubble ────────────────────────────────────────────────────────────
 
 function MessageBubble({
   msg,
@@ -253,8 +514,8 @@ function MessageBubble({
   const { t } = useTranslation();
   const outbound = msg.direction === 'outbound';
   const failed = outbound && msg.status === 'failed';
+  const isMedia = !!msg.mediaType;
 
-  // Resolve body: server body > template cache body > fallback label
   const resolvedBody =
     msg.body ??
     (msg.templateName ? (templateBodyMap[msg.templateName] ?? null) : null);
@@ -274,12 +535,24 @@ function MessageBubble({
           {t('inbox.templateBubble.label', { name: msg.templateName })}
         </p>
       )}
-      <p className="whitespace-pre-wrap wrap-break-word">
-        {resolvedBody ??
-          (msg.templateName
-            ? t('inbox.templateBubble.bodyFallback')
-            : '—')}
-      </p>
+
+      {/* Media attachment */}
+      {isMedia && (
+        <div className="mb-1">
+          <MediaBubble msg={msg} />
+        </div>
+      )}
+
+      {/* Text body / caption */}
+      {resolvedBody && (
+        <p className="whitespace-pre-wrap wrap-break-word">{resolvedBody}</p>
+      )}
+      {!resolvedBody && !isMedia && (
+        <p className="whitespace-pre-wrap wrap-break-word">
+          {msg.templateName ? t('inbox.templateBubble.bodyFallback') : '—'}
+        </p>
+      )}
+
       {failed && msg.failureReason && (
         <p className="mt-1 text-[10px] text-red-600 dark:text-red-400 leading-snug">
           {msg.failureReason}
@@ -303,7 +576,207 @@ function MessageBubble({
   );
 }
 
-// ── Main thread view ─────────────────────────────────────────────────────────
+// ── Thread header ─────────────────────────────────────────────────────────────
+
+function ThreadHeader({
+  slug,
+  workspaceId,
+  conversation,
+}: {
+  slug: string;
+  workspaceId: string;
+  conversation: WaConversation;
+}) {
+  const { t } = useTranslation();
+  const role = useAuthStore((s) => s.activeWorkspaceRole);
+  const userId = useAuthStore((s) => s.user?.id);
+  const patch = usePatchConversation(slug);
+  const { data: rosterData } = useMembers(slug, workspaceId);
+
+  const members = (rosterData?.members ?? []).filter(
+    (m) => m.status === 'active',
+  );
+
+  const windowOpen = isWindowOpen(conversation.lastInboundAt);
+  const remaining = windowMs(conversation.lastInboundAt);
+  const closingSoon = windowOpen && remaining < 60 * 60 * 1000;
+
+  const isResolved = conversation.status === 'resolved';
+  const isUnassigned = !conversation.assignedToUserId;
+  const isMyChat = conversation.assignedToUserId === userId;
+
+  // MANAGER+ can resolve/assign; AGENT can resolve only own chat + claim
+  const canResolve =
+    atLeast(role, 'MANAGER') || (atLeast(role, 'AGENT') && isMyChat);
+  const canAssign = atLeast(role, 'MANAGER');
+  const canClaim = atLeast(role, 'AGENT') && isUnassigned && !atLeast(role, 'MANAGER');
+
+  function handleResolve() {
+    patch.mutate(
+      { id: conversation.id, body: { status: isResolved ? 'open' : 'resolved' } },
+      {
+        onSuccess: () =>
+          toast.success(
+            t(isResolved ? 'inbox.thread.reopenSuccess' : 'inbox.thread.resolveSuccess'),
+          ),
+        onError: (err) => toast.error(err),
+      },
+    );
+  }
+
+  function handleClaim() {
+    patch.mutate(
+      { id: conversation.id, body: { claim: true } },
+      {
+        onSuccess: () => toast.success(t('inbox.thread.claimSuccess')),
+        onError: (err) => toast.error(err),
+      },
+    );
+  }
+
+  function handleAssign(memberId: string) {
+    if (memberId === '__unassign__') {
+      patch.mutate(
+        { id: conversation.id, body: { assignedToUserId: null } },
+        {
+          onSuccess: () => toast.success(t('inbox.thread.assignSuccess', { name: t('inbox.unassigned') })),
+          onError: (err) => toast.error(err),
+        },
+      );
+      return;
+    }
+    const member = members.find((m) => m.userId === memberId);
+    patch.mutate(
+      { id: conversation.id, body: { assignedToUserId: memberId } },
+      {
+        onSuccess: () =>
+          toast.success(t('inbox.thread.assignSuccess', { name: member?.fullName ?? memberId })),
+        onError: (err) => toast.error(err),
+      },
+    );
+  }
+
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-2">
+      {/* Contact info */}
+      <div className="min-w-0">
+        <p className="text-sm font-semibold truncate">
+          {conversation.contactName ?? conversation.contactPhone}
+        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-muted-foreground text-xs">
+            {conversation.contactPhone}
+          </p>
+          {conversation.assigneeName && (
+            <>
+              <span className="text-muted-foreground text-xs">·</span>
+              <span className="text-muted-foreground text-xs">
+                {conversation.assigneeName}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        {/* 24h window badge */}
+        {windowOpen ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={closingSoon ? 'destructive' : 'default'}
+                className="text-xs cursor-default"
+              >
+                {closingSoon
+                  ? t('inbox.thread.windowRemainingLt1h')
+                  : t('inbox.thread.windowRemaining', {
+                      h: Math.floor(remaining / (60 * 60 * 1000)),
+                      m: Math.floor((remaining % (60 * 60 * 1000)) / 60_000),
+                    })}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('inbox.windowWarning')} — {formatRemaining(remaining)}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Badge variant="secondary" className="text-xs">
+            {t('inbox.windowClosedShort')}
+          </Badge>
+        )}
+
+        {/* Status badge */}
+        {isResolved && (
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            {t('inbox.thread.resolved')}
+          </Badge>
+        )}
+
+        {/* Claim button (AGENT when unassigned) */}
+        {canClaim && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            disabled={patch.isPending}
+            onClick={handleClaim}
+          >
+            <UserPlus className="size-3 mr-1" />
+            {t('inbox.thread.claimBtn')}
+          </Button>
+        )}
+
+        {/* Assign to (MANAGER+) */}
+        {canAssign && members.length > 0 && (
+          <Select
+            value={conversation.assignedToUserId ?? ''}
+            onValueChange={handleAssign}
+          >
+            <SelectTrigger className="h-7 text-xs w-36">
+              <SelectValue placeholder={t('inbox.thread.assignTo')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__unassign__">
+                {t('inbox.thread.unassignOption')}
+              </SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m.userId} value={m.userId}>
+                  {m.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Resolve / Reopen (MANAGER+ or AGENT on own chat) */}
+        {canResolve && (
+          <Button
+            size="sm"
+            variant={isResolved ? 'outline' : 'default'}
+            className="h-7 text-xs"
+            disabled={patch.isPending}
+            onClick={handleResolve}
+          >
+            {isResolved ? (
+              <>
+                <RotateCcw className="size-3 mr-1" />
+                {t('inbox.thread.reopenBtn')}
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-3 mr-1" />
+                {t('inbox.thread.resolveBtn')}
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main thread view ──────────────────────────────────────────────────────────
 
 interface ConversationThreadProps {
   slug: string;
@@ -317,6 +790,10 @@ export function ConversationThread({
   sseConnected = false,
 }: ConversationThreadProps) {
   const { t } = useTranslation();
+  const role = useAuthStore((s) => s.activeWorkspaceRole);
+  // WorkspaceLayout sets activeContext which includes workspace id; we read it
+  // from activeWorkspaceId in the store.
+  const workspaceId = useAuthStore((s) => s.activeWorkspaceId) ?? '';
   const { data, isLoading } = useMessages(slug, conversation.id, {
     sseConnected,
   });
@@ -326,7 +803,9 @@ export function ConversationThread({
   const windowOpen = isWindowOpen(conversation.lastInboundAt);
   const messages = data?.messages ?? [];
 
-  /** Map templateName → BODY text for inline bubble preview. */
+  // VIEWER cannot send
+  const canSend = atLeast(role, 'AGENT');
+
   const templateBodyMap = useMemo<Record<string, string>>(() => {
     const map: Record<string, string> = {};
     for (const tpl of (templatesData?.templates ?? [])) {
@@ -336,12 +815,10 @@ export function ConversationThread({
     return map;
   }, [templatesData]);
 
-  // Scroll to bottom on new messages.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  // Toast when a recently sent outbound message fails via webhook.
   useEffect(() => {
     for (const msg of messages) {
       if (
@@ -360,22 +837,14 @@ export function ConversationThread({
   }, [messages, t]);
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Thread header */}
-      <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold">
-            {conversation.contactName ?? conversation.contactPhone}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {conversation.contactPhone}
-          </p>
-        </div>
-        <Badge variant={windowOpen ? 'default' : 'secondary'} className="text-xs">
-          {windowOpen
-            ? t('inbox.windowWarning')
-            : t('inbox.windowClosed')}
-        </Badge>
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Thread header with actions */}
+      <div className="shrink-0">
+        <ThreadHeader
+          slug={slug}
+          workspaceId={workspaceId}
+          conversation={conversation}
+        />
       </div>
 
       {/* 24h education banner when window closed */}
@@ -393,8 +862,15 @@ export function ConversationThread({
         </div>
       )}
 
-      {/* Messages — WhatsApp-style chat background */}
-      <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-4 py-3 bg-[#e5ddd5] dark:bg-[#0d1417]">
+      {/* VIEWER read-only hint */}
+      {!canSend && (
+        <div className="mx-3 mt-2 flex shrink-0 items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-800/40 dark:bg-blue-950/20 dark:text-blue-300">
+          {t('inbox.thread.viewerReadOnly')}
+        </div>
+      )}
+
+      {/* Messages — the only pane that should scroll */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-4 py-3 bg-[#e5ddd5] dark:bg-[#0d1417]">
         {isLoading && (
           <div className="flex justify-center py-8">
             <Spinner />
@@ -411,31 +887,37 @@ export function ConversationThread({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Composer tabs: text (if window open) / template */}
-      <div className="shrink-0">
-        {windowOpen ? (
-          <Tabs defaultValue="text">
-            <div className="border-t px-3 pt-2">
-              <TabsList className="h-7 text-xs">
-                <TabsTrigger value="text" className="px-2 text-xs">
-                  {t('inbox.composer.tabText')}
-                </TabsTrigger>
-                <TabsTrigger value="template" className="px-2 text-xs">
-                  {t('inbox.composer.tabTemplate')}
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            <TabsContent value="text" className="mt-0">
-              <TextComposer slug={slug} conversationId={conversation.id} />
-            </TabsContent>
-            <TabsContent value="template" className="mt-0">
-              <TemplateComposer slug={slug} conversationId={conversation.id} />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <TemplateComposer slug={slug} conversationId={conversation.id} />
-        )}
-      </div>
+      {/* Composer — hidden for VIEWER */}
+      {canSend && (
+        <div className="shrink-0">
+          {windowOpen ? (
+            <Tabs defaultValue="text">
+              <div className="border-t px-3 pt-2">
+                <TabsList className="h-7 text-xs">
+                  <TabsTrigger value="text" className="px-2 text-xs">
+                    {t('inbox.composer.tabText')}
+                  </TabsTrigger>
+                  <TabsTrigger value="template" className="px-2 text-xs">
+                    {t('inbox.composer.tabTemplate')}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="text" className="mt-0">
+                <TextComposer
+                  slug={slug}
+                  conversationId={conversation.id}
+                  canAttach={true}
+                />
+              </TabsContent>
+              <TabsContent value="template" className="mt-0">
+                <TemplateComposer slug={slug} conversationId={conversation.id} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <TemplateComposer slug={slug} conversationId={conversation.id} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

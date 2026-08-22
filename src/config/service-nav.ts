@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   CreditCard,
   Inbox,
+  KanbanSquare,
   LayoutDashboard,
   LayoutTemplate,
   Megaphone,
@@ -42,6 +43,11 @@ export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
       icon: Contact,
     },
     {
+      segment: 'leads',
+      labelKey: 'nav.leads',
+      icon: KanbanSquare,
+    },
+    {
       segment: 'campaigns',
       labelKey: 'nav.campaigns',
       icon: Megaphone,
@@ -70,7 +76,6 @@ export const COMMON_NAV: ServiceNavItem[] = [
     segment: 'settings',
     labelKey: 'nav.settings',
     icon: Settings,
-    comingSoon: true,
   },
 ];
 

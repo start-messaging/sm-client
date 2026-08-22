@@ -338,3 +338,16 @@ export interface InviteMemberBody {
   email: string;
   role: WorkspaceRole;
 }
+
+/* ----------------------------- quick replies ----------------------------- */
+
+/** Mirrors WaQuickReply serialised by WhatsappQuickRepliesService.serialize. */
+export interface QuickReply {
+  id: string;
+  title: string;
+  body: string;
+  /** Stored without leading '/'. */
+  shortcut: string;
+  createdAt: string;
+  updatedAt: string;
+}

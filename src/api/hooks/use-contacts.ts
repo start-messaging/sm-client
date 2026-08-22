@@ -35,11 +35,17 @@ export function useCreateContact(slug: string) {
 }
 
 export function useUpdateContact(slug: string) {
-  return useContactMutation(
-    slug,
-    (args: { id: string; body: UpdateContactBody }) =>
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string; body: UpdateContactBody }) =>
       contactsApi.update(slug, args.id, args.body),
-  );
+    onSuccess: (_data, args) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all(slug) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.contacts.byId(slug, args.id),
+      });
+    },
+  });
 }
 
 export function useDeleteContact(slug: string) {

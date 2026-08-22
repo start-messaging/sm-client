@@ -55,7 +55,11 @@ export const queryKeys = {
 
   // ── Messages / conversations ───────────────────────────────────────────────
   messages: {
-    conversations: (slug: string) => ['messages', 'conversations', slug] as const,
+    // Prefix for all conversations of a workspace (useful for broad invalidation).
+    conversationsAll: (slug: string) => ['messages', 'conversations', slug] as const,
+    // Tab-scoped list — tab is part of the key so switching tabs fetches fresh.
+    conversations: (slug: string, tab?: string) =>
+      ['messages', 'conversations', slug, tab ?? 'all'] as const,
     list: (slug: string, conversationId: string) =>
       ['messages', 'list', slug, conversationId] as const,
   },
@@ -64,6 +68,13 @@ export const queryKeys = {
   contacts: {
     all: (slug: string) => ['contacts', slug] as const,
     byId: (slug: string, id: string) => ['contacts', slug, id] as const,
+    notes: (slug: string, contactId: string) =>
+      ['contacts', 'notes', slug, contactId] as const,
+  },
+
+  // ── WhatsApp inbox pipeline stages ────────────────────────────────────────
+  whatsappInbox: {
+    pipelineStages: (slug: string) => ['whatsapp-inbox', 'pipeline-stages', slug] as const,
   },
 
   // ── Campaigns ─────────────────────────────────────────────────────────────

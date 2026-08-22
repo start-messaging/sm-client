@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, Outlet, useParams } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   SidebarInset,
@@ -17,6 +17,7 @@ import { useMeSync } from '@/hooks/use-me-sync';
 import { toast } from '@/lib/toast';
 import { errorMessage } from '@/lib/errors';
 import { useAuthStore } from '@/stores/auth.store';
+import { cn } from '@/lib/utils';
 
 /**
  * The workspace shell for /w/:slug/*. The URL is the source of truth: the slug
@@ -26,7 +27,9 @@ import { useAuthStore } from '@/stores/auth.store';
  */
 export function WorkspaceLayout() {
   const { slug } = useParams();
+  const location = useLocation();
   const qc = useQueryClient();
+  const lockToViewport = location.pathname.endsWith('/inbox');
   const setActiveContext = useAuthStore((s) => s.setActiveContext);
   const clearActiveContext = useAuthStore((s) => s.clearActiveContext);
   const workspace = useWorkspace(slug);
@@ -70,15 +73,20 @@ export function WorkspaceLayout() {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <WorkspaceSidebar workspace={workspace.data} />
-      <SidebarInset>
+      <SidebarInset className="h-svh overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <HeaderActions />
         </header>
-        <main className="flex-1 overflow-auto p-6">
+        <main
+          className={cn(
+            'flex min-h-0 flex-1 flex-col p-6',
+            lockToViewport ? 'overflow-hidden' : 'overflow-auto',
+          )}
+        >
           <Outlet context={workspace.data} />
         </main>
       </SidebarInset>

@@ -5,6 +5,7 @@ import { I18nextProvider } from 'react-i18next';
 import { queryClient } from '@/lib/query-client';
 import i18n from '@/lib/i18n';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { initThemeListener } from '@/stores/theme.store';
 import { env } from '@/config/env';
 
@@ -19,9 +20,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
-        {children}
-        <Toaster />
-        {env.isDev ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+        <TooltipProvider delayDuration={0}>
+          {children}
+          <Toaster />
+          {env.isDev ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+        </TooltipProvider>
       </QueryClientProvider>
     </I18nextProvider>
   );

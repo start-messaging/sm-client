@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/lib/http';
+import { apiGet, apiPatch, apiPost } from '@/lib/http';
 import { endpoints } from '@/api/endpoints';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -11,6 +11,13 @@ export type MessageStatus =
   | 'failed';
 
 export type MessageDirection = 'inbound' | 'outbound';
+
+export type MessageMediaType =
+  | 'image'
+  | 'audio'
+  | 'video'
+  | 'document'
+  | 'sticker';
 
 export interface WaMessage {
   id: string;
@@ -27,10 +34,22 @@ export interface WaMessage {
   failureCode?: number | null;
   /** Human-readable Meta failure detail when status is failed. */
   failureReason?: string | null;
+  /** Media type for image/audio/video/document/sticker messages. */
+  mediaType?: MessageMediaType | null;
+  /** Public R2 URL for the media file (when R2_PUBLIC_URL is configured). */
+  mediaUrl?: string | null;
+  /** MIME type of the media file. */
+  mediaMime?: string | null;
+  /** Original filename (primarily for document messages). */
+  mediaFilename?: string | null;
 }
+
+export type ConversationTab = 'all' | 'active' | 'mine';
+export type ConversationStatus = 'open' | 'resolved';
 
 export interface WaConversation {
   id: string;
+  contactId: string | null;
   contactName: string | null;
   contactPhone: string;
   /**
@@ -41,6 +60,29 @@ export interface WaConversation {
   lastMessage: WaMessage | null;
   unreadCount: number;
   updatedAt: string;
+  /** Assignment / resolution (Slice 1 additions). */
+  assignedToUserId: string | null;
+  assigneeName: string | null;
+  status: ConversationStatus;
+  resolvedAt: string | null;
+}
+
+export interface PatchConversationBody {
+  assignedToUserId?: string | null;
+  status?: ConversationStatus;
+  unreadCount?: 0;
+  claim?: true;
+}
+
+export interface PipelineStage {
+  id: string;
+  name: string;
+  sortOrder: number;
+  isDefault: boolean;
+}
+
+export interface PipelineStagesResult {
+  pipelineStages: PipelineStage[];
 }
 
 export interface ConversationListResult {
@@ -76,8 +118,11 @@ export interface CreateConversationBody {
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export const messagesApi = {
-  listConversations: (slug: string) =>
-    apiGet<ConversationListResult>(endpoints.messages.conversations(slug)),
+  listConversations: (slug: string, tab?: ConversationTab) =>
+    apiGet<ConversationListResult>(endpoints.messages.conversations(slug, tab)),
+
+  patchConversation: (slug: string, id: string, body: PatchConversationBody) =>
+    apiPatch<WaConversation>(endpoints.messages.patch(slug, id), body),
 
   createConversation: (slug: string, body: CreateConversationBody) =>
     apiPost<WaConversation>(endpoints.messages.createConversation(slug), body),
@@ -87,4 +132,24 @@ export const messagesApi = {
 
   send: (slug: string, conversationId: string, body: SendMessageBody) =>
     apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), body),
+
+  /**
+   * Upload and send a media message via multipart/form-data.
+   * Server handles: R2 storage → Meta Graph upload → send message.
+   */
+  sendMedia: (
+    slug: string,
+    conversationId: string,
+    file: File,
+    caption?: string,
+  ) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (caption?.trim()) form.append('caption', caption.trim());
+    return apiPost<WaMessage>(
+      endpoints.messages.sendMedia(slug, conversationId),
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+  },
 };
