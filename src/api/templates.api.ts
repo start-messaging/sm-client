@@ -10,10 +10,28 @@ export type TemplateStatus =
   | 'PAUSED'
   | 'DISABLED';
 
-export type TemplateCategory =
-  | 'MARKETING'
-  | 'UTILITY'
-  | 'AUTHENTICATION';
+export type TemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
+
+/**
+ * One button in a BUTTONS component.
+ * Matches Meta Business Management API template button shapes:
+ *   QUICK_REPLY  → { type, text }
+ *   URL          → { type, text, url, example?: [string] }
+ *   PHONE_NUMBER → { type, text, phone_number }
+ */
+export interface TemplateButton {
+  type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER';
+  text: string;
+  /** URL buttons: website URL, may contain one {{1}} variable at the end. */
+  url?: string;
+  /**
+   * URL buttons: sample for the {{1}} variable (suffix only, e.g. ["summer2023"]).
+   * Single-element array.
+   */
+  example?: string[];
+  /** PHONE_NUMBER buttons: E.164 phone number. */
+  phone_number?: string;
+}
 
 export interface TemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
@@ -23,6 +41,8 @@ export interface TemplateComponent {
     body_text?: string[][];
     header_text?: string[];
   };
+  /** BUTTONS component only: 1–3 buttons. */
+  buttons?: TemplateButton[];
 }
 
 export interface WaTemplate {

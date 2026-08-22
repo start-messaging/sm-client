@@ -18,9 +18,12 @@ import { WorkspaceDashboardPage } from '@/pages/workspace/workspace-dashboard-pa
 import { ConnectPage } from '@/pages/workspace/connect-page';
 import { InboxPage } from '@/pages/workspace/inbox-page';
 import { TemplatesPage } from '@/pages/workspace/templates-page';
+import { TemplateSamplesPage } from '@/pages/workspace/template-samples-page';
+import { TemplateEditorPage } from '@/pages/workspace/template-editor-page';
 import { ContactsPage } from '@/pages/workspace/contacts-page';
 import { LeadsPage } from '@/pages/workspace/leads-page';
 import { CampaignsPage } from '@/pages/workspace/campaigns-page';
+import { CreateCampaignPage } from '@/pages/workspace/create-campaign-page';
 import { BillingPage } from '@/pages/workspace/billing-page';
 import { SettingsPage } from '@/pages/workspace/settings-page';
 
@@ -83,9 +86,16 @@ export const router = createBrowserRouter([
               { path: 'connect', element: <ConnectPage /> },
               { path: 'inbox', element: <InboxPage /> },
               { path: 'templates', element: <TemplatesPage /> },
+              { path: 'templates/samples', element: <TemplateSamplesPage /> },
+              { path: 'templates/new', element: <TemplateEditorPage /> },
+              {
+                path: 'templates/:id/edit',
+                element: <TemplateEditorPage />,
+              },
               { path: 'contacts', element: <ContactsPage /> },
               { path: 'leads', element: <LeadsPage /> },
               { path: 'campaigns', element: <CampaignsPage /> },
+              { path: 'campaigns/new', element: <CreateCampaignPage /> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
               { path: 'settings', element: <SettingsPage /> },

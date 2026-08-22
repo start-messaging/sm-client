@@ -9,7 +9,9 @@ export function usePipelineStages(slug: string) {
   return useQuery({
     queryKey: queryKeys.whatsappInbox.pipelineStages(slug),
     queryFn: () =>
-      apiGet<PipelineStagesResult>(endpoints.whatsappInbox.pipelineStages(slug)),
+      apiGet<PipelineStagesResult>(
+        endpoints.whatsappInbox.pipelineStages(slug),
+      ),
     enabled: slug.length > 0,
     staleTime: STALE.STANDARD,
   });

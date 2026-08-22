@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fcmPushApi, loadStoredFcmToken, storeFcmToken } from '@/api/fcm-push.api';
+import {
+  fcmPushApi,
+  loadStoredFcmToken,
+  storeFcmToken,
+} from '@/api/fcm-push.api';
 import {
   isFcmClientConfigured,
   listenFcmForeground,

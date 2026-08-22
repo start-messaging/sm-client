@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { TemplateCategory } from '@/api/templates.api';
 import {
-  TEMPLATE_EXAMPLES,
   exampleBodyPreview,
   type TemplateExample,
 } from '@/lib/template-examples';
-import { useTemplateExamples } from '@/api/hooks/use-template-examples';
+import { useResolvedTemplateExamples } from '@/api/hooks/use-template-examples';
 
 const CATEGORY_TABS: { value: TemplateCategory | 'ALL'; labelKey: string }[] = [
   { value: 'ALL', labelKey: 'templates.examples.tabAll' },
@@ -42,21 +41,7 @@ export function TemplateExamplesGallery({
   onApply,
 }: TemplateExamplesGalleryProps) {
   const { t } = useTranslation();
-  const { data: apiExamples, isError } = useTemplateExamples(slug);
-
-  /**
-   * Gallery source selection:
-   *   1. API returned a non-empty array  → use API data (admin-curated, live)
-   *   2. API empty or errored            → fall back to local TEMPLATE_EXAMPLES
-   *
-   * During loading `apiExamples` is undefined → fallback shown immediately so
-   * there is never a blank gallery. Once the query resolves with data the React
-   * Query cache swaps in the API list without a spinner.
-   */
-  const examples: TemplateExample[] =
-    !isError && apiExamples && apiExamples.length > 0
-      ? apiExamples
-      : TEMPLATE_EXAMPLES;
+  const examples = useResolvedTemplateExamples(slug);
 
   return (
     <Card>
@@ -77,7 +62,11 @@ export function TemplateExamplesGallery({
         <Tabs defaultValue="ALL">
           <TabsList className="mb-4 flex h-auto flex-wrap gap-1">
             {CATEGORY_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="text-xs"
+              >
                 {t(tab.labelKey)}
                 <span className="text-muted-foreground ml-1.5 tabular-nums">
                   {filterByCategory(examples, tab.value).length}

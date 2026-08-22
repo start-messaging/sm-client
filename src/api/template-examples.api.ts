@@ -34,9 +34,9 @@ export function mapApiExample(api: ApiTemplateExample): TemplateExample {
 
 export const templateExamplesApi = {
   list: async (): Promise<TemplateExample[]> => {
-    const result = await apiGet<ApiTemplateExample[] | { examples: ApiTemplateExample[] }>(
-      endpoints.templateExamples.list(),
-    );
+    const result = await apiGet<
+      ApiTemplateExample[] | { examples: ApiTemplateExample[] }
+    >(endpoints.templateExamples.list());
     const rows = Array.isArray(result) ? result : (result.examples ?? []);
     return rows.map(mapApiExample);
   },

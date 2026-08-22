@@ -44,6 +44,8 @@ export interface CreateCampaignBody {
   templateLanguage: string;
   audienceIds: string[];
   scheduledAt?: string;
+  /** Per-variable contact field mapping, e.g. { "1": "name", "2": "phone", "3": "attr:company" }. */
+  variableMapping?: Record<string, string>;
 }
 
 export interface UpdateCampaignBody {
@@ -74,4 +76,7 @@ export const campaignsApi = {
 
   pause: (slug: string, id: string) =>
     apiPost<Campaign>(endpoints.campaigns.pause(slug, id), {}),
+
+  resume: (slug: string, id: string) =>
+    apiPost<Campaign>(endpoints.campaigns.resume(slug, id), {}),
 };

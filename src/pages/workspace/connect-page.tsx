@@ -27,7 +27,12 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
-import { useWabaStatus, useConnectWhatsApp, useRegisterPhone, useSyncWhatsApp } from '@/api/hooks/use-whatsapp';
+import {
+  useWabaStatus,
+  useConnectWhatsApp,
+  useRegisterPhone,
+  useSyncWhatsApp,
+} from '@/api/hooks/use-whatsapp';
 import { env } from '@/config/env';
 import { toast } from '@/lib/toast';
 import type { ConnectWhatsAppBody } from '@/api/whatsapp.api';
@@ -179,10 +184,17 @@ function PinDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
             {t('common.cancel')}
           </Button>
-          <Button disabled={pin.length !== 6 || isPending} onClick={() => onSubmit(pin)}>
+          <Button
+            disabled={pin.length !== 6 || isPending}
+            onClick={() => onSubmit(pin)}
+          >
             {isPending && <Spinner />}
             {t('connect.pin.submit')}
           </Button>
@@ -284,8 +296,11 @@ export function ConnectPage() {
         body={
           <>
             <span>{t('connect.intro.body')}</span>
-            <br /><br />
-            <span className="font-medium">{t('connect.intro.metaBillingNote')}</span>
+            <br />
+            <br />
+            <span className="font-medium">
+              {t('connect.intro.metaBillingNote')}
+            </span>
           </>
         }
         docsUrl="https://developers.facebook.com/docs/whatsapp/embedded-signup"
@@ -325,7 +340,9 @@ export function ConnectPage() {
 
           {isConnected && needsPhonePin && (
             <div className="flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
-              <p className="text-sm font-medium">{t('connect.pin.pendingTitle')}</p>
+              <p className="text-sm font-medium">
+                {t('connect.pin.pendingTitle')}
+              </p>
               <p className="text-muted-foreground text-xs">
                 {t('connect.pin.pendingBody')}
               </p>
@@ -370,7 +387,9 @@ export function ConnectPage() {
               {t('connect.sync.cta')}
             </Button>
           </div>
-          <p className="text-muted-foreground text-xs">{t('connect.sync.hint')}</p>
+          <p className="text-muted-foreground text-xs">
+            {t('connect.sync.hint')}
+          </p>
         </CardContent>
       </Card>
 

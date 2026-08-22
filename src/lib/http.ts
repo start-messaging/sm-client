@@ -36,7 +36,7 @@ export const http: AxiosInstance = axios.create({
 
 /* ----------------------- dev-only artificial latency ----------------------- */
 // Optional: pause before every request so loading states are visible against a
- // fast localhost backend. Default OFF — inbox polling + forms feel laggy at 1s.
+// fast localhost backend. Default OFF — inbox polling + forms feel laggy at 1s.
 // Enable with VITE_DEV_API_DELAY_MS=400 (or similar) in sm-client/.env.
 const DEV_API_DELAY_MS = (() => {
   const raw = import.meta.env.VITE_DEV_API_DELAY_MS as string | undefined;

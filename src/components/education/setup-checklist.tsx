@@ -35,7 +35,10 @@ export interface SetupChecklistProps {
   className?: string;
 }
 
-const STATUS_ICON: Record<ChecklistStepStatus, React.FC<{ className?: string }>> = {
+const STATUS_ICON: Record<
+  ChecklistStepStatus,
+  React.FC<{ className?: string }>
+> = {
   done: ({ className }) => (
     <CheckCircle2 className={cn('text-green-500', className)} />
   ),
@@ -61,7 +64,11 @@ const STATUS_BADGE_VARIANT: Record<
  * Shows the state of each step (done/pending/blocked) with an optional CTA.
  * Used on the dashboard to guide: connect → Meta pay → template → first send.
  */
-export function SetupChecklist({ steps, title, className }: SetupChecklistProps) {
+export function SetupChecklist({
+  steps,
+  title,
+  className,
+}: SetupChecklistProps) {
   const { t } = useTranslation();
 
   const doneCount = steps.filter((s) => s.status === 'done').length;
@@ -95,7 +102,8 @@ export function SetupChecklist({ steps, title, className }: SetupChecklistProps)
                 'flex items-start gap-3 rounded-lg p-3 transition-colors',
                 step.status === 'done' && 'opacity-70',
                 step.status === 'pending' && 'hover:bg-muted/50',
-                step.status === 'blocked' && 'bg-amber-50/50 dark:bg-amber-950/20',
+                step.status === 'blocked' &&
+                  'bg-amber-50/50 dark:bg-amber-950/20',
               )}
             >
               {/* Step number + icon */}
@@ -116,8 +124,13 @@ export function SetupChecklist({ steps, title, className }: SetupChecklistProps)
                   >
                     {step.label}
                   </span>
-                  <Badge variant={STATUS_BADGE_VARIANT[step.status]} className="text-xs">
-                    {t(`education.checklist.step${step.status.charAt(0).toUpperCase() + step.status.slice(1)}`)}
+                  <Badge
+                    variant={STATUS_BADGE_VARIANT[step.status]}
+                    className="text-xs"
+                  >
+                    {t(
+                      `education.checklist.step${step.status.charAt(0).toUpperCase() + step.status.slice(1)}`,
+                    )}
                   </Badge>
                 </div>
 

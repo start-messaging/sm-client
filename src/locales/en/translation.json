@@ -195,7 +195,9 @@
   "education": {
     "slot": {
       "docsLabel": "Read the docs",
-      "videoLabel": "Watch a short video"
+      "videoLabel": "Watch a short video",
+      "help": "How this works",
+      "dismiss": "Dismiss"
     },
     "checklist": {
       "title": "Get set up in 4 steps",
@@ -272,6 +274,10 @@
       "title": "24-hour messaging window closed",
       "body": "WhatsApp only allows free-form replies within 24 hours of a customer's last message. Use an approved template to re-open the conversation.",
       "cta": "Pick a template"
+    },
+    "CONTACT_OPTED_OUT": {
+      "title": "Contact has opted out",
+      "body": "This contact replied STOP and has opted out of messages from your business. You cannot send until they opt back in — turn opt-in on from the contact if they have consented again."
     }
   },
   "connect": {
@@ -399,6 +405,29 @@
       "bodyFallback": "Template message"
     },
     "lastMessageTemplate": "Template: {{name}}",
+    "filters": {
+      "unread": "Unread only",
+      "assignee": "Assignee",
+      "windowOpen": "Window open",
+      "windowClosed": "Window closed",
+      "tag": "Tag…",
+      "clear": "Clear filters"
+    },
+    "shortcuts": {
+      "hint": "Tip: press j / k to move up and down the list, Esc to close."
+    },
+    "presence": {
+      "viewing": "{{name}} is viewing",
+      "others": "{{name}} and {{count}} other(s)"
+    },
+    "events": {
+      "assigned": "Assigned to {{name}}",
+      "claimed": "Claimed by {{name}}",
+      "unassigned": "Unassigned",
+      "takeover": "{{name}} took over from {{prev}}",
+      "resolved": "Resolved by {{name}}",
+      "reopened": "Reopened by {{name}}"
+    },
     "rail": {
       "title": "Contact",
       "contact": "Contact info",
@@ -417,7 +446,10 @@
       "noNotes": "No notes yet",
       "addNote": "Add a note… (Enter to save)",
       "saveNote": "Save note",
-      "attributes": "Attributes"
+      "attributes": "Attributes",
+      "editAttributes": "Edit attributes",
+      "addAttribute": "Add attribute",
+      "dueFollowUp": "Due follow-up"
     },
     "newConversation": {
       "trigger": "New conversation",
@@ -449,7 +481,7 @@
     },
     "empty": {
       "title": "No templates yet",
-      "body": "Start from an example below, or create a blank template. Only Meta-approved templates can be sent outside the 24-hour window."
+      "body": "Use a sample or create from scratch. Only Meta-approved templates can be sent outside the 24-hour window."
     },
     "examples": {
       "title": "Start from an example",
@@ -458,10 +490,10 @@
       "tabUtility": "Utility",
       "tabMarketing": "Marketing",
       "tabAuth": "Authentication",
-      "apply": "Use example",
+      "apply": "Use sample",
       "footer": "{{count}} starters · not live until you submit to Meta"
     },
-    "createCta": "Create blank",
+    "createCta": "Create template",
     "syncCta": "Sync from Meta",
     "syncSuccess": "Templates synced from Meta",
     "deleteCta": "Delete",
@@ -516,6 +548,27 @@
       "previewCaption": "Visual only — variables show sample values",
       "previewInputHint": "Message"
     },
+    "featured": {
+      "title": "Start from a sample",
+      "subtitle": "A few Meta-style recipes. Customize, then submit for review.",
+      "more": "More samples",
+      "useSample": "Use a sample",
+      "fromScratch": "Create from scratch"
+    },
+    "yours": {
+      "title": "Your templates",
+      "filterAll": "All statuses",
+      "noApproved": "No approved templates yet — campaigns can only send after Meta review.",
+      "emptyFilter": "No templates match this status."
+    },
+    "editor": {
+      "back": "All templates",
+      "editTitle": "Edit template",
+      "notFound": "That template was not found.",
+      "copyApproved": "Approved templates cannot be changed on Meta. This submits a new template (name ends with _v2).",
+      "resubmitRejected": "This opens a new Meta submission with the previous copy. Change anything that caused the rejection."
+    },
+    "editCta": "Edit",
     "status": {
       "APPROVED": "Approved",
       "PENDING": "Pending review",
@@ -650,6 +703,10 @@
       "body": "Create a campaign to send a template to your contact list."
     },
     "createCta": "Create campaign",
+    "launched": "Campaign launched",
+    "paused": "Campaign paused",
+    "resumed": "Campaign resumed",
+    "resumeUnavailable": "Resume is not available yet — try again in a moment.",
     "status": {
       "DRAFT": "Draft",
       "SCHEDULED": "Scheduled",
@@ -657,6 +714,72 @@
       "COMPLETED": "Completed",
       "PAUSED": "Paused",
       "FAILED": "Failed"
+    },
+    "table": {
+      "name": "Campaign",
+      "template": "Template",
+      "status": "Status",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed",
+      "actions": "Actions"
+    },
+    "action": {
+      "launch": "Launch",
+      "pause": "Pause",
+      "resume": "Resume"
+    },
+    "create": {
+      "title": "Create campaign",
+      "subtitle": "Choose an approved template and select the contacts to reach.",
+      "name": "Campaign name",
+      "namePlaceholder": "e.g. July reactivation",
+      "nameRequired": "Campaign name is required.",
+      "template": "Template",
+      "templatePlaceholder": "Pick an approved template…",
+      "templateRequired": "Select an approved template.",
+      "noApprovedTemplates": "No approved templates yet. Create and get one approved in Templates first.",
+      "language": "Language",
+      "variableMapping": "Variable mapping",
+      "variableMappingHint": "Fill each {{n}} from a contact field, or type the same value for every recipient. Meta rejects empty variables.",
+      "mappingRequired": "Map every template variable before creating the campaign.",
+      "audienceOptedInRequired": "Select at least one opted-in contact. STOP / unsubscribed numbers cannot be included.",
+      "varMapPlaceholder": "How should we fill this?",
+      "varName": "Contact name",
+      "varPhone": "Phone number",
+      "varText": "Same value for everyone",
+      "varTextValue": "Value to insert (e.g. shipped)",
+      "varAttr": "Contact attribute key",
+      "varAttrKey": "Attribute key on the contact (e.g. company)",
+      "audience": "Audience",
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected",
+      "selectedCount": "{{count}} selected",
+      "allTags": "All tags",
+      "noContacts": "No contacts match this filter.",
+      "notOptedIn": "Not opted in",
+      "submit": "Create campaign",
+      "success": "Campaign created"
+    },
+    "wizard": {
+      "back": "All campaigns",
+      "stepMessage": "Message",
+      "stepAudience": "Audience",
+      "stepReview": "Review",
+      "next": "Next",
+      "backStep": "Back",
+      "goTemplates": "Go to Templates",
+      "searchAudience": "Search name or phone…",
+      "showOptedOut": "Show opted-out",
+      "selectAll": "Select all opted-in",
+      "colName": "Name",
+      "colPhone": "Phone",
+      "colTags": "Tags",
+      "audienceCount": "Audience",
+      "metaNote": "Meta bills conversations on your WhatsApp Business Account. This is not a CRM wallet charge.",
+      "saveDraft": "Create draft",
+      "createLaunch": "Create and launch"
     }
   },
   "billing": {
@@ -738,7 +861,8 @@
     "MEDIA_TOO_LARGE": "That file is too large for WhatsApp. Try a smaller image, video, or document.",
     "MEDIA_TYPE_UNSUPPORTED": "That file type cannot be sent on WhatsApp. Use an image, audio, video, or PDF/document.",
     "MEDIA_STORAGE_NOT_CONFIGURED": "Media storage is not set up for this workspace. Contact Start Messaging support.",
-    "MEDIA_UPLOAD_FAILED": "WhatsApp could not accept this file. Try again, or send a smaller file."
+    "MEDIA_UPLOAD_FAILED": "WhatsApp could not accept this file. Try again, or send a smaller file.",
+    "CONTACT_OPTED_OUT": "This contact has opted out of WhatsApp messages and cannot receive messages right now."
   },
   "plan": {
     "keys": {

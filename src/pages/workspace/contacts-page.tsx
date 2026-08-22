@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import {
-  Download,
-  KanbanSquare,
-  Trash2,
-  Users,
-  X,
-} from 'lucide-react';
+import { Download, KanbanSquare, Trash2, Users, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -182,7 +176,13 @@ export function ContactsPage() {
 
   const filtered = useMemo(
     () =>
-      applyFilters(contacts, tagFilter, stageFilter, assigneeFilter, followUpFilter),
+      applyFilters(
+        contacts,
+        tagFilter,
+        stageFilter,
+        assigneeFilter,
+        followUpFilter,
+      ),
     [contacts, tagFilter, stageFilter, assigneeFilter, followUpFilter],
   );
 
@@ -301,7 +301,9 @@ export function ContactsPage() {
                   <SelectValue placeholder={t('contacts.filter.allTags')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>{t('contacts.filter.allTags')}</SelectItem>
+                  <SelectItem value={ALL}>
+                    {t('contacts.filter.allTags')}
+                  </SelectItem>
                   {allTags.map((tag) => (
                     <SelectItem key={tag} value={tag}>
                       {tag}
@@ -324,9 +326,7 @@ export function ContactsPage() {
                   <SelectItem value={ALL}>
                     {t('contacts.filter.allStages')}
                   </SelectItem>
-                  <SelectItem value="__none__">
-                    {t('leads.noStage')}
-                  </SelectItem>
+                  <SelectItem value="__none__">{t('leads.noStage')}</SelectItem>
                   {stages.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -371,9 +371,7 @@ export function ContactsPage() {
               }
             >
               <SelectTrigger className="h-8 w-44 text-xs">
-                <SelectValue
-                  placeholder={t('contacts.filter.anyFollowUp')}
-                />
+                <SelectValue placeholder={t('contacts.filter.anyFollowUp')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>
@@ -503,7 +501,11 @@ function ContactRow({
   const isOverdue = followUpDate !== null && followUpDate < new Date();
 
   return (
-    <TableRow>
+    <TableRow
+      className={
+        isOverdue ? 'bg-destructive/5 hover:bg-destructive/10' : undefined
+      }
+    >
       <TableCell className="font-medium">
         {c.name ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
@@ -535,9 +537,9 @@ function ContactRow({
       </TableCell>
       <TableCell className="text-sm">
         {c.assignedToUserId ? (
-          memberMap[c.assignedToUserId] ?? (
+          (memberMap[c.assignedToUserId] ?? (
             <span className="text-muted-foreground">—</span>
-          )
+          ))
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
         )}
@@ -557,9 +559,7 @@ function ContactRow({
       </TableCell>
       <TableCell>
         <Badge variant={c.optedIn ? 'default' : 'outline'}>
-          {c.optedIn
-            ? t('inbox.rail.optedIn')
-            : t('inbox.rail.notOptedIn')}
+          {c.optedIn ? t('inbox.rail.optedIn') : t('inbox.rail.notOptedIn')}
         </Badge>
       </TableCell>
       <TableCell>

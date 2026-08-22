@@ -30,8 +30,9 @@ export function WorkspaceDashboardPage() {
 
   const isConnected = wabaStatus?.status === 'connected';
   const metaPayReady = wabaStatus?.metaPaymentReady === true;
-  const hasApprovedTemplate =
-    (templatesData?.templates ?? []).some((t) => t.status === 'APPROVED');
+  const hasApprovedTemplate = (templatesData?.templates ?? []).some(
+    (t) => t.status === 'APPROVED',
+  );
 
   const setupSteps: ChecklistStep[] = [
     {
@@ -85,7 +86,9 @@ export function WorkspaceDashboardPage() {
       label: t('education.steps.firstSend.label'),
       description: t('education.steps.firstSend.description'),
       status:
-        isConnected && metaPayReady && hasApprovedTemplate ? 'pending' : 'blocked',
+        isConnected && metaPayReady && hasApprovedTemplate
+          ? 'pending'
+          : 'blocked',
       cta:
         isConnected && metaPayReady && hasApprovedTemplate
           ? {

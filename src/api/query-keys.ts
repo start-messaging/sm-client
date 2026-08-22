@@ -56,10 +56,27 @@ export const queryKeys = {
   // ── Messages / conversations ───────────────────────────────────────────────
   messages: {
     // Prefix for all conversations of a workspace (useful for broad invalidation).
-    conversationsAll: (slug: string) => ['messages', 'conversations', slug] as const,
-    // Tab-scoped list — tab is part of the key so switching tabs fetches fresh.
-    conversations: (slug: string, tab?: string) =>
-      ['messages', 'conversations', slug, tab ?? 'all'] as const,
+    conversationsAll: (slug: string) =>
+      ['messages', 'conversations', slug] as const,
+    // Tab + filter-scoped list — both are part of the key so changes fetch fresh.
+    // filters is intentionally an object so TanStack deep-compares it.
+    conversations: (
+      slug: string,
+      tab?: string,
+      filters?: {
+        unread?: boolean;
+        assigneeUserId?: string;
+        window?: 'open' | 'closed';
+        tag?: string;
+      } | null,
+    ) =>
+      [
+        'messages',
+        'conversations',
+        slug,
+        tab ?? 'all',
+        filters ?? null,
+      ] as const,
     list: (slug: string, conversationId: string) =>
       ['messages', 'list', slug, conversationId] as const,
   },
@@ -74,7 +91,8 @@ export const queryKeys = {
 
   // ── WhatsApp inbox pipeline stages ────────────────────────────────────────
   whatsappInbox: {
-    pipelineStages: (slug: string) => ['whatsapp-inbox', 'pipeline-stages', slug] as const,
+    pipelineStages: (slug: string) =>
+      ['whatsapp-inbox', 'pipeline-stages', slug] as const,
   },
 
   // ── Campaigns ─────────────────────────────────────────────────────────────

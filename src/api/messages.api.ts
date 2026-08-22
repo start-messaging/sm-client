@@ -3,12 +3,7 @@ import { endpoints } from '@/api/endpoints';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type MessageStatus =
-  | 'queued'
-  | 'sent'
-  | 'delivered'
-  | 'read'
-  | 'failed';
+export type MessageStatus = 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
 
 export type MessageDirection = 'inbound' | 'outbound';
 
@@ -46,6 +41,19 @@ export interface WaMessage {
 
 export type ConversationTab = 'all' | 'active' | 'mine';
 export type ConversationStatus = 'open' | 'resolved';
+export type ConversationWindowFilter = 'open' | 'closed';
+
+/** Server-side filters sent as query params to GET /conversations. All optional. */
+export interface ConversationFilters {
+  /** Only conversations with unread_count > 0. */
+  unread?: boolean;
+  /** Conversations assigned to this userId. */
+  assigneeUserId?: string;
+  /** open = last_inbound_at within 24 h; closed = beyond 24 h. */
+  window?: ConversationWindowFilter;
+  /** Joined contact.tags jsonb contains this string. */
+  tag?: string;
+}
 
 export interface WaConversation {
   id: string;
@@ -118,8 +126,14 @@ export interface CreateConversationBody {
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export const messagesApi = {
-  listConversations: (slug: string, tab?: ConversationTab) =>
-    apiGet<ConversationListResult>(endpoints.messages.conversations(slug, tab)),
+  listConversations: (
+    slug: string,
+    tab?: ConversationTab,
+    filters?: ConversationFilters,
+  ) =>
+    apiGet<ConversationListResult>(
+      endpoints.messages.conversations(slug, { tab, ...filters }),
+    ),
 
   patchConversation: (slug: string, id: string, body: PatchConversationBody) =>
     apiPatch<WaConversation>(endpoints.messages.patch(slug, id), body),

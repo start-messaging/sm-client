@@ -59,3 +59,9 @@ export function usePauseCampaign(slug: string) {
     campaignsApi.pause(slug, id),
   );
 }
+
+export function useResumeCampaign(slug: string) {
+  return useCampaignMutation(slug, (id: string) =>
+    campaignsApi.resume(slug, id),
+  );
+}

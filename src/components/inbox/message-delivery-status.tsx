@@ -37,11 +37,7 @@ export function MessageDeliveryStatus({
 
   const label = t(`inbox.status.${status}`);
   const Icon =
-    status === 'queued'
-      ? Clock
-      : status === 'sent'
-        ? Check
-        : CheckCheck;
+    status === 'queued' ? Clock : status === 'sent' ? Check : CheckCheck;
 
   return (
     <span

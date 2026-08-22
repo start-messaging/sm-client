@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +13,7 @@ import {
   FileText,
   Music,
   X,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,11 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { MessageDeliveryStatus } from '@/components/inbox/message-delivery-status';
 import {
   useMessages,
@@ -43,6 +48,17 @@ import type { WaConversation, WaMessage } from '@/api/messages.api';
 import type { WorkspaceRole } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { QuickReplyTypeahead } from '@/components/inbox/quick-reply-typeahead';
+import { useInboxPresence } from '@/api/hooks/use-inbox-presence';
+import type { PresenceViewer } from '@/api/inbox-presence.api';
+import {
+  assignmentEventKeys,
+  useAssignmentEvents,
+} from '@/api/hooks/use-assignment-events';
+import {
+  toAssignmentEventView,
+  type WaAssignmentEvent,
+} from '@/api/assignment-events.api';
+import { useQueryClient } from '@tanstack/react-query';
 
 // ── Role helpers ─────────────────────────────────────────────────────────────
 
@@ -100,7 +116,9 @@ function MediaBubble({ msg }: { msg: WaMessage }) {
         />
       </a>
     ) : (
-      <span className="italic text-xs text-muted-foreground">[{msg.mediaType}]</span>
+      <span className="italic text-xs text-muted-foreground">
+        [{msg.mediaType}]
+      </span>
     );
   }
 
@@ -191,10 +209,12 @@ function TextComposer({
   const { t } = useTranslation();
   const send = useSendMessage(slug, conversationId);
   const sendMedia = useSendMedia(slug, conversationId);
-  const { handleSubmit, reset, formState, watch, setValue } = useForm<TextForm>({
-    resolver: zodResolver(textSchema),
-    defaultValues: { text: '' },
-  });
+  const { handleSubmit, reset, formState, watch, setValue } = useForm<TextForm>(
+    {
+      resolver: zodResolver(textSchema),
+      defaultValues: { text: '' },
+    },
+  );
   const text = watch('text');
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -288,12 +308,12 @@ function TextComposer({
           />
         )}
         <div className="flex justify-end">
-          <Button
-            size="sm"
-            onClick={handleSendMedia}
-            disabled={isBusy}
-          >
-            {isBusy ? <Spinner className="mr-2" /> : <Send className="size-4 mr-2" />}
+          <Button size="sm" onClick={handleSendMedia} disabled={isBusy}>
+            {isBusy ? (
+              <Spinner className="mr-2" />
+            ) : (
+              <Send className="size-4 mr-2" />
+            )}
             {t('inbox.composer.sendFile')}
           </Button>
         </div>
@@ -576,21 +596,54 @@ function MessageBubble({
   );
 }
 
+// ── System event line (assignment / resolve / reopen) ────────────────────────
+
+/**
+ * Centered transcript line for assignment-event interleaving.
+ * Uses i18n keys inbox.events.{kind} (added by agent C).
+ */
+function SystemEventLine({ event }: { event: WaAssignmentEvent }) {
+  const { t } = useTranslation();
+  const name =
+    event.kind === 'assigned'
+      ? (event.targetName ?? event.actorName)
+      : event.actorName;
+  const label = t(`inbox.events.${event.kind}`, {
+    name: name ?? '',
+    prev: event.prevName ?? '',
+  });
+  const time = new Date(event.createdAt).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return (
+    <div className="flex items-center justify-center py-1.5 select-none">
+      <span className="text-[11px] text-muted-foreground bg-black/5 dark:bg-white/10 rounded-full px-3 py-0.5">
+        {label}
+        <span className="ml-1.5 opacity-60">{time}</span>
+      </span>
+    </div>
+  );
+}
+
 // ── Thread header ─────────────────────────────────────────────────────────────
 
 function ThreadHeader({
   slug,
   workspaceId,
   conversation,
+  viewers = [],
 }: {
   slug: string;
   workspaceId: string;
   conversation: WaConversation;
+  viewers?: PresenceViewer[];
 }) {
   const { t } = useTranslation();
   const role = useAuthStore((s) => s.activeWorkspaceRole);
   const userId = useAuthStore((s) => s.user?.id);
   const patch = usePatchConversation(slug);
+  const qc = useQueryClient();
   const { data: rosterData } = useMembers(slug, workspaceId);
 
   const members = (rosterData?.members ?? []).filter(
@@ -609,26 +662,69 @@ function ThreadHeader({
   const canResolve =
     atLeast(role, 'MANAGER') || (atLeast(role, 'AGENT') && isMyChat);
   const canAssign = atLeast(role, 'MANAGER');
-  const canClaim = atLeast(role, 'AGENT') && isUnassigned && !atLeast(role, 'MANAGER');
+  const canClaim =
+    atLeast(role, 'AGENT') && isUnassigned && !atLeast(role, 'MANAGER');
 
-  function handleResolve() {
+  const refreshEvents = useCallback(() => {
+    void qc.invalidateQueries({
+      queryKey: assignmentEventKeys.list(slug, conversation.id),
+    });
+  }, [qc, slug, conversation.id]);
+
+  const handleResolve = useCallback(() => {
     patch.mutate(
-      { id: conversation.id, body: { status: isResolved ? 'open' : 'resolved' } },
       {
-        onSuccess: () =>
+        id: conversation.id,
+        body: { status: isResolved ? 'open' : 'resolved' },
+      },
+      {
+        onSuccess: () => {
+          refreshEvents();
           toast.success(
-            t(isResolved ? 'inbox.thread.reopenSuccess' : 'inbox.thread.resolveSuccess'),
-          ),
+            t(
+              isResolved
+                ? 'inbox.thread.reopenSuccess'
+                : 'inbox.thread.resolveSuccess',
+            ),
+          );
+        },
         onError: (err) => toast.error(err),
       },
     );
-  }
+  }, [conversation.id, isResolved, patch, t, refreshEvents]);
+
+  // ── `e` keyboard shortcut: toggle resolve / reopen ──────────────────────
+  const handleResolveRef = useRef(handleResolve);
+  useEffect(() => {
+    handleResolveRef.current = handleResolve;
+  }, [handleResolve]);
+
+  useEffect(() => {
+    function onKeyDown(ev: KeyboardEvent) {
+      if (ev.key !== 'e') return;
+      const target = ev.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+      if (!canResolve) return;
+      handleResolveRef.current();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [canResolve]);
 
   function handleClaim() {
     patch.mutate(
       { id: conversation.id, body: { claim: true } },
       {
-        onSuccess: () => toast.success(t('inbox.thread.claimSuccess')),
+        onSuccess: () => {
+          refreshEvents();
+          toast.success(t('inbox.thread.claimSuccess'));
+        },
         onError: (err) => toast.error(err),
       },
     );
@@ -639,7 +735,12 @@ function ThreadHeader({
       patch.mutate(
         { id: conversation.id, body: { assignedToUserId: null } },
         {
-          onSuccess: () => toast.success(t('inbox.thread.assignSuccess', { name: t('inbox.unassigned') })),
+          onSuccess: () => {
+            refreshEvents();
+            toast.success(
+              t('inbox.thread.assignSuccess', { name: t('inbox.unassigned') }),
+            );
+          },
           onError: (err) => toast.error(err),
         },
       );
@@ -649,8 +750,14 @@ function ThreadHeader({
     patch.mutate(
       { id: conversation.id, body: { assignedToUserId: memberId } },
       {
-        onSuccess: () =>
-          toast.success(t('inbox.thread.assignSuccess', { name: member?.fullName ?? memberId })),
+        onSuccess: () => {
+          refreshEvents();
+          toast.success(
+            t('inbox.thread.assignSuccess', {
+              name: member?.fullName ?? memberId,
+            }),
+          );
+        },
         onError: (err) => toast.error(err),
       },
     );
@@ -680,6 +787,28 @@ function ThreadHeader({
 
       {/* Actions */}
       <div className="flex items-center gap-1.5 shrink-0">
+        {/* Presence chip — soft warning, not a lock */}
+        {viewers.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="secondary"
+                className="text-xs cursor-default gap-1"
+              >
+                <Eye className="size-3" />
+                {viewers.length === 1
+                  ? t('inbox.presence.viewing', { name: viewers[0]!.fullName })
+                  : t('inbox.presence.others', {
+                      name: viewers[0]!.fullName,
+                      count: viewers.length - 1,
+                    })}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {viewers.map((v) => v.fullName).join(', ')}
+            </TooltipContent>
+          </Tooltip>
+        )}
         {/* 24h window badge */}
         {windowOpen ? (
           <Tooltip>
@@ -800,24 +929,67 @@ export function ConversationThread({
   const { data: templatesData } = useTemplates(slug);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── Presence + assignment events ────────────────────────────────────────
+  const { viewers } = useInboxPresence(slug, conversation.id);
+  const { data: eventsData } = useAssignmentEvents(slug, conversation.id);
+  const { data: rosterData } = useMembers(slug, workspaceId);
+  const memberNames = useMemo(
+    () =>
+      Object.fromEntries(
+        (rosterData?.members ?? []).map((m) => [m.userId, m.fullName]),
+      ) as Record<string, string>,
+    [rosterData?.members],
+  );
+
   const windowOpen = isWindowOpen(conversation.lastInboundAt);
   const messages = data?.messages ?? [];
+  const assignmentEvents = useMemo(
+    () =>
+      (eventsData?.events ?? []).map((ev) =>
+        toAssignmentEventView(ev, memberNames),
+      ),
+    [eventsData?.events, memberNames],
+  );
 
   // VIEWER cannot send
   const canSend = atLeast(role, 'AGENT');
 
   const templateBodyMap = useMemo<Record<string, string>>(() => {
     const map: Record<string, string> = {};
-    for (const tpl of (templatesData?.templates ?? [])) {
+    for (const tpl of templatesData?.templates ?? []) {
       const body = tpl.components.find((c) => c.type === 'BODY')?.text;
       if (body) map[tpl.name] = body;
     }
     return map;
   }, [templatesData]);
 
+  // ── Interleave messages + assignment events by timestamp ────────────────
+  type ThreadItem =
+    | { kind: 'message'; key: string; msg: WaMessage; sortTs: number }
+    | { kind: 'event'; key: string; event: WaAssignmentEvent; sortTs: number };
+
+  const threadItems = useMemo<ThreadItem[]>(() => {
+    const items: ThreadItem[] = [
+      ...messages.map((msg) => ({
+        kind: 'message' as const,
+        key: msg.id,
+        msg,
+        sortTs: new Date(msg.timestamp).getTime(),
+      })),
+      ...assignmentEvents.map((ev) => ({
+        kind: 'event' as const,
+        key: ev.id,
+        event: ev,
+        sortTs: new Date(ev.createdAt).getTime(),
+      })),
+    ];
+    items.sort((a, b) => a.sortTs - b.sortTs);
+    return items;
+  }, [messages, assignmentEvents]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [threadItems.length]);
 
   useEffect(() => {
     for (const msg of messages) {
@@ -830,9 +1002,7 @@ export function ConversationThread({
         continue;
       }
       toastedFailureIds.add(msg.id);
-      toast.error(
-        msg.failureReason ?? t('inbox.composer.deliveryFailed'),
-      );
+      toast.error(msg.failureReason ?? t('inbox.composer.deliveryFailed'));
     }
   }, [messages, t]);
 
@@ -844,6 +1014,7 @@ export function ConversationThread({
           slug={slug}
           workspaceId={workspaceId}
           conversation={conversation}
+          viewers={viewers}
         />
       </div>
 
@@ -881,9 +1052,17 @@ export function ConversationThread({
             {t('inbox.thread.empty')}
           </p>
         )}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} templateBodyMap={templateBodyMap} />
-        ))}
+        {threadItems.map((item) =>
+          item.kind === 'message' ? (
+            <MessageBubble
+              key={item.key}
+              msg={item.msg}
+              templateBodyMap={templateBodyMap}
+            />
+          ) : (
+            <SystemEventLine key={item.key} event={item.event} />
+          ),
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -910,7 +1089,10 @@ export function ConversationThread({
                 />
               </TabsContent>
               <TabsContent value="template" className="mt-0">
-                <TemplateComposer slug={slug} conversationId={conversation.id} />
+                <TemplateComposer
+                  slug={slug}
+                  conversationId={conversation.id}
+                />
               </TabsContent>
             </Tabs>
           ) : (

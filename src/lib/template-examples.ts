@@ -55,7 +55,8 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
       },
     ],
     useWhen: 'Ecommerce order status (confirmed, shipped, delivered).',
-    metaTip: 'Utility must match a user-requested update. Don’t add discounts here.',
+    metaTip:
+      'Utility must match a user-requested update. Don’t add discounts here.',
   },
   {
     id: 'appointment_reminder',
@@ -68,8 +69,10 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
         text: 'Hi {{1}}, reminder: your appointment is on {{2}} at {{3}}. Reply YES to confirm or call us to reschedule.',
       },
     ],
-    useWhen: 'Clinics, salons, service bookings — reminder of an existing appointment.',
-    metaTip: 'Must refer to an appointment the customer already has; avoid sales pitches.',
+    useWhen:
+      'Clinics, salons, service bookings — reminder of an existing appointment.',
+    metaTip:
+      'Must refer to an appointment the customer already has; avoid sales pitches.',
   },
   {
     id: 'payment_reminder',
@@ -83,7 +86,8 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
       },
     ],
     useWhen: 'Invoice / dues reminder the customer already owes.',
-    metaTip: 'Don’t bundle unrelated offers — that often gets categorized as Marketing.',
+    metaTip:
+      'Don’t bundle unrelated offers — that often gets categorized as Marketing.',
   },
   {
     id: 'shipping_update',
@@ -122,7 +126,8 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
       },
     ],
     useWhen: 'Sales, discounts, seasonal campaigns to opted-in customers.',
-    metaTip: 'Always include clear opt-out. Marketing is reviewed more strictly than Utility.',
+    metaTip:
+      'Always include clear opt-out. Marketing is reviewed more strictly than Utility.',
   },
   {
     id: 'new_arrival',
@@ -136,7 +141,8 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
       },
     ],
     useWhen: 'Product launch or catalogue “what’s new” blasts.',
-    metaTip: 'Recipients must have opted in to marketing. Avoid misleading urgency.',
+    metaTip:
+      'Recipients must have opted in to marketing. Avoid misleading urgency.',
   },
   {
     id: 'feedback_request',
@@ -150,7 +156,8 @@ export const TEMPLATE_EXAMPLES: TemplateExample[] = [
       },
     ],
     useWhen: 'Post-purchase feedback / NPS style asks.',
-    metaTip: 'If it’s only transactional survey after a purchase, Utility may fit better — pick category carefully.',
+    metaTip:
+      'If it’s only transactional survey after a purchase, Utility may fit better — pick category carefully.',
   },
 
   // ── Authentication ────────────────────────────────────────────────────────
@@ -181,6 +188,29 @@ export function examplesByCategory(
 export function exampleBodyPreview(example: TemplateExample): string {
   return (
     example.components.find((c) => c.type === 'BODY')?.text ??
-    example.components.map((c) => c.text).filter(Boolean).join(' ')
+    example.components
+      .map((c) => c.text)
+      .filter(Boolean)
+      .join(' ')
   );
+}
+
+/** 3–4 cards for the templates home: prefer Utility, include one Marketing. */
+export function featuredExamples(
+  examples: TemplateExample[],
+  limit = 4,
+): TemplateExample[] {
+  const utility = examples.filter((e) => e.category === 'UTILITY');
+  const marketing = examples.filter((e) => e.category === 'MARKETING');
+  const picked: TemplateExample[] = [];
+  for (const e of utility) {
+    if (picked.length >= Math.min(3, limit)) break;
+    picked.push(e);
+  }
+  if (picked.length < limit && marketing[0]) picked.push(marketing[0]);
+  for (const e of examples) {
+    if (picked.length >= limit) break;
+    if (!picked.includes(e)) picked.push(e);
+  }
+  return picked.slice(0, limit);
 }

@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
   User,
   Phone,
@@ -15,6 +16,7 @@ import {
   ChevronRight,
   PlusCircle,
   Loader2,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +36,10 @@ import { useAuthStore } from '@/stores/auth.store';
 import { ROLE_RANK } from '@/types/api';
 import type { WorkspaceRole } from '@/types/api';
 import { useUpdateContact } from '@/api/hooks/use-contacts';
-import { useContactNotes, useAddContactNote } from '@/api/hooks/use-contact-notes';
+import {
+  useContactNotes,
+  useAddContactNote,
+} from '@/api/hooks/use-contact-notes';
 import { usePipelineStages } from '@/api/hooks/use-pipeline-stages';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { contactsApi } from '@/api/contacts.api';
@@ -115,7 +120,10 @@ function TagsEditor({
         <Badge
           key={tag}
           variant="secondary"
-          className={cn('text-xs gap-1', canWrite && 'cursor-pointer hover:line-through')}
+          className={cn(
+            'text-xs gap-1',
+            canWrite && 'cursor-pointer hover:line-through',
+          )}
           onClick={canWrite ? () => removeTag(tag) : undefined}
         >
           {tag}
@@ -146,6 +154,121 @@ function TagsEditor({
             className="h-6 w-6"
             onClick={addTag}
             disabled={update.isPending || !newTag.trim()}
+          >
+            {update.isPending ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <PlusCircle className="size-3" />
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Attributes editor ─────────────────────────────────────────────────────────
+
+function AttributesEditor({
+  slug,
+  contactId,
+  attributes,
+  canWrite,
+}: {
+  slug: string;
+  contactId: string;
+  attributes: Record<string, string>;
+  canWrite: boolean;
+}) {
+  const { t } = useTranslation();
+  const [newKey, setNewKey] = useState('');
+  const [newVal, setNewVal] = useState('');
+  const update = useUpdateContact(slug);
+
+  function addPair() {
+    const key = newKey.trim();
+    const val = newVal.trim();
+    if (!key) return;
+    const next = { ...attributes, [key]: val };
+    update.mutate(
+      { id: contactId, body: { attributes: next } },
+      {
+        onSuccess: () => {
+          setNewKey('');
+          setNewVal('');
+        },
+        onError: (err) => toast.error(err),
+      },
+    );
+  }
+
+  function removePair(key: string) {
+    const next = { ...attributes };
+    delete next[key];
+    update.mutate(
+      { id: contactId, body: { attributes: next } },
+      { onError: (err) => toast.error(err) },
+    );
+  }
+
+  const entries = Object.entries(attributes);
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {entries.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          {t('inbox.rail.editAttributes', 'No attributes yet')}
+        </p>
+      )}
+      {entries.map(([key, val]) => (
+        <div key={key} className="flex items-center gap-1 text-xs group">
+          <span className="text-muted-foreground shrink-0 font-medium">
+            {key}:
+          </span>
+          <span className="truncate flex-1">{val}</span>
+          {canWrite && (
+            <button
+              onClick={() => removePair(key)}
+              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+              aria-label="Remove attribute"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
+      ))}
+      {canWrite && (
+        <div className="flex gap-1 mt-1">
+          <Input
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+            placeholder={t('inbox.rail.addAttribute', 'Key')}
+            className="h-6 text-xs w-16 min-w-0"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addPair();
+              }
+            }}
+          />
+          <Input
+            value={newVal}
+            onChange={(e) => setNewVal(e.target.value)}
+            placeholder={t('inbox.rail.dueFollowUp', 'Value')}
+            className="h-6 text-xs flex-1 min-w-0"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addPair();
+              }
+            }}
+          />
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 shrink-0"
+            onClick={addPair}
+            disabled={update.isPending || !newKey.trim()}
           >
             {update.isPending ? (
               <Loader2 className="size-3 animate-spin" />
@@ -193,7 +316,9 @@ function NotesSection({
     <div className="flex flex-col gap-1.5">
       {isLoading && <Skeleton className="h-8 w-full" />}
       {!isLoading && notes.length === 0 && (
-        <p className="text-xs text-muted-foreground">{t('inbox.rail.noNotes')}</p>
+        <p className="text-xs text-muted-foreground">
+          {t('inbox.rail.noNotes')}
+        </p>
       )}
       {notes.map((note) => (
         <div
@@ -249,7 +374,10 @@ interface InboxContactRailProps {
   conversation: WaConversation;
 }
 
-export function InboxContactRail({ slug, conversation }: InboxContactRailProps) {
+export function InboxContactRail({
+  slug,
+  conversation,
+}: InboxContactRailProps) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const role = useAuthStore((s) => s.activeWorkspaceRole);
@@ -305,7 +433,10 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
     if (!contactId) return;
     const value = e.target.value;
     update.mutate(
-      { id: contactId, body: { followUpAt: value ? new Date(value).toISOString() : null } },
+      {
+        id: contactId,
+        body: { followUpAt: value ? new Date(value).toISOString() : null },
+      },
       { onError: (err) => toast.error(err) },
     );
   }
@@ -319,14 +450,15 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
     : '';
 
   const attributes = contact?.attributes ?? {};
-  const hasAttributes = Object.keys(attributes).length > 0;
 
   if (!contactId) {
     return (
       <div className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-contain border-l">
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
           <User className="size-6 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">{t('inbox.rail.noContact')}</p>
+          <p className="text-xs text-muted-foreground">
+            {t('inbox.rail.noContact')}
+          </p>
         </div>
       </div>
     );
@@ -360,14 +492,14 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
                 {conversation.contactPhone}
               </p>
             </div>
-            {/* Manage leads link — /contacts for now */}
-            <a
-              href={`/w/${slug}/contacts`}
+            {/* Manage leads link */}
+            <Link
+              to={`/w/${slug}/leads`}
               className="flex items-center gap-0.5 mt-1.5 text-xs text-primary hover:underline"
             >
               {t('inbox.thread.manageleads')}
               <ChevronRight className="size-3" />
-            </a>
+            </Link>
           </Section>
 
           <Separator />
@@ -382,7 +514,9 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
                 aria-label={t('inbox.rail.optIn')}
               />
               <span className="text-xs text-muted-foreground">
-                {contact?.optedIn ? t('inbox.rail.optedIn') : t('inbox.rail.notOptedIn')}
+                {contact?.optedIn
+                  ? t('inbox.rail.optedIn')
+                  : t('inbox.rail.notOptedIn')}
               </span>
             </div>
           </Section>
@@ -415,7 +549,9 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
                       <SelectValue placeholder={t('inbox.rail.noStage')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">{t('inbox.rail.noStage')}</SelectItem>
+                      <SelectItem value="__none__">
+                        {t('inbox.rail.noStage')}
+                      </SelectItem>
                       {stages.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           {s.name}
@@ -425,8 +561,8 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
                   </Select>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    {stages.find((s) => s.id === contact?.pipelineStageId)?.name ??
-                      t('inbox.rail.noStage')}
+                    {stages.find((s) => s.id === contact?.pipelineStageId)
+                      ?.name ?? t('inbox.rail.noStage')}
                   </p>
                 )}
               </Section>
@@ -469,22 +605,16 @@ export function InboxContactRail({ slug, conversation }: InboxContactRailProps) 
             />
           </Section>
 
-          {/* Attributes (read-only key/value) */}
-          {hasAttributes && (
-            <>
-              <Separator />
-              <Section icon={Tag} label={t('inbox.rail.attributes')}>
-                <div className="flex flex-col gap-1">
-                  {Object.entries(attributes).map(([key, val]) => (
-                    <div key={key} className="flex gap-1 text-xs">
-                      <span className="text-muted-foreground shrink-0">{key}:</span>
-                      <span className="truncate">{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            </>
-          )}
+          {/* Attributes (editable key/value) */}
+          <Separator />
+          <Section icon={Tag} label={t('inbox.rail.attributes', 'Attributes')}>
+            <AttributesEditor
+              slug={slug}
+              contactId={contactId}
+              attributes={attributes}
+              canWrite={canWrite}
+            />
+          </Section>
         </div>
       )}
     </div>

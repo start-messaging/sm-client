@@ -147,8 +147,8 @@ export function NewConversationDialog({
                 errors={[
                   {
                     message: t(
-                      (errors.nationalNumber as { message?: string })
-                        .message ?? 'inbox.newConversation.nationalNumberMin',
+                      (errors.nationalNumber as { message?: string }).message ??
+                        'inbox.newConversation.nationalNumberMin',
                     ),
                   },
                 ]}

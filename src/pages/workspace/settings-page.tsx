@@ -265,7 +265,10 @@ function RoutingCard({ slug, isAdmin }: RoutingCardProps) {
   const { data: settings, isLoading } = useInboxSettings(slug);
   const patch = usePatchInboxSettings(slug);
 
-  function toggle(field: 'roundRobinEnabled' | 'inboxAvailable', value: boolean) {
+  function toggle(
+    field: 'roundRobinEnabled' | 'inboxAvailable',
+    value: boolean,
+  ) {
     patch.mutate(
       { [field]: value },
       {
@@ -375,9 +378,7 @@ export function SettingsPage() {
       </div>
 
       {/* Routing */}
-      {isAgent && (
-        <RoutingCard slug={ws.slug} isAdmin={canWrite} />
-      )}
+      {isAgent && <RoutingCard slug={ws.slug} isAdmin={canWrite} />}
 
       {/* Education */}
       <EducationSlot

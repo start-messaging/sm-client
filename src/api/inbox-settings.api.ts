@@ -1,7 +1,6 @@
 import { apiGet, apiPatch } from '@/lib/http';
 
-const base = (slug: string) =>
-  `/v1/workspaces/${slug}/whatsapp/inbox-settings`;
+const base = (slug: string) => `/v1/workspaces/${slug}/whatsapp/inbox-settings`;
 
 export interface InboxSettings {
   id: string;

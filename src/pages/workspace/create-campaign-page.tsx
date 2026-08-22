@@ -1,0 +1,677 @@
+import { useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
+import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
+import { useTemplates } from '@/api/hooks/use-templates';
+import { useContacts } from '@/api/hooks/use-contacts';
+import {
+  useCreateCampaign,
+  useLaunchCampaign,
+} from '@/api/hooks/use-campaigns';
+import { useWabaStatus } from '@/api/hooks/use-whatsapp';
+import { toast } from '@/lib/toast';
+import type { Campaign } from '@/api/campaigns.api';
+import type { TemplateComponent, WaTemplate } from '@/api/templates.api';
+import type { WaContact } from '@/api/contacts.api';
+
+function extractBodyVars(components: TemplateComponent[]): number[] {
+  const body = components.find((c) => c.type === 'BODY');
+  if (!body?.text) return [];
+  const matches = [...body.text.matchAll(/\{\{(\d+)\}\}/g)];
+  const nums = [...new Set(matches.map((m) => parseInt(m[1], 10)))];
+  return nums.sort((a, b) => a - b);
+}
+
+function componentText(
+  components: TemplateComponent[],
+  type: 'HEADER' | 'BODY' | 'FOOTER',
+): string {
+  return components.find((c) => c.type === type)?.text ?? '';
+}
+
+function templateButtonLabels(tpl: WaTemplate): string[] {
+  return (
+    tpl.components
+      .find((c) => c.type === 'BUTTONS')
+      ?.buttons?.map((b) => b.text)
+      .filter(Boolean) ?? []
+  );
+}
+
+type VarMappingType = 'name' | 'phone' | 'attr' | 'text';
+const TAG_FILTER_ALL = '__all__';
+
+interface VarMappingEntry {
+  type: VarMappingType;
+  attrKey: string;
+}
+
+const schema = z.object({
+  name: z.string().min(1, 'campaigns.create.nameRequired'),
+  templateId: z.string().min(1, 'campaigns.create.templateRequired'),
+  // Audience is required on step 2, not here — otherwise Next on Message
+  // runs the full schema against an empty list.
+  audienceIds: z.array(z.string()),
+});
+type FormValues = z.infer<typeof schema>;
+
+function isMappingComplete(
+  vars: number[],
+  mapping: Record<string, VarMappingEntry>,
+): boolean {
+  if (vars.length === 0) return true;
+  return vars.every((n) => {
+    const entry = mapping[String(n)];
+    if (!entry) return false;
+    if (entry.type === 'attr' || entry.type === 'text') {
+      return (entry.attrKey ?? '').trim().length > 0;
+    }
+    return entry.type === 'name' || entry.type === 'phone';
+  });
+}
+
+function VarMappingRow({
+  index,
+  value,
+  onChange,
+}: {
+  index: number;
+  value: VarMappingEntry | undefined;
+  onChange: (val: VarMappingEntry) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-muted-foreground w-12 shrink-0 font-mono text-sm">
+        {`{{${index}}}`}
+      </span>
+      <Select
+        value={value?.type}
+        onValueChange={(v) => {
+          if (v !== 'name' && v !== 'phone' && v !== 'attr' && v !== 'text') {
+            return;
+          }
+          onChange({
+            type: v,
+            attrKey:
+              v === 'attr' || v === 'text' ? (value?.attrKey ?? '') : '',
+          });
+        }}
+      >
+        <SelectTrigger className="h-8 flex-1 text-sm">
+          <SelectValue placeholder={t('campaigns.create.varMapPlaceholder')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="name">{t('campaigns.create.varName')}</SelectItem>
+          <SelectItem value="phone">{t('campaigns.create.varPhone')}</SelectItem>
+          <SelectItem value="text">{t('campaigns.create.varText')}</SelectItem>
+          <SelectItem value="attr">{t('campaigns.create.varAttr')}</SelectItem>
+        </SelectContent>
+      </Select>
+      {(value?.type === 'attr' || value?.type === 'text') && (
+        <Input
+          className="h-8 flex-1 text-sm"
+          placeholder={
+            value.type === 'text'
+              ? t('campaigns.create.varTextValue')
+              : t('campaigns.create.varAttrKey')
+          }
+          value={value.attrKey ?? ''}
+          onChange={(e) =>
+            onChange({ type: value.type, attrKey: e.target.value })
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+export function CreateCampaignPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const ws = useCurrentWorkspace();
+  const { data: tplData } = useTemplates(ws.slug);
+  const { data: contactsData } = useContacts(ws.slug);
+  const { data: wabaStatus } = useWabaStatus(ws.slug);
+  const createMutation = useCreateCampaign(ws.slug);
+  const launchMutation = useLaunchCampaign(ws.slug);
+
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [tagFilter, setTagFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [showOptedOut, setShowOptedOut] = useState(false);
+  const [varMapping, setVarMapping] = useState<Record<string, VarMappingEntry>>(
+    {},
+  );
+  const varMappingRef = useRef(varMapping);
+  varMappingRef.current = varMapping;
+  const [mappingError, setMappingError] = useState('');
+
+  const launchBlocked = wabaStatus?.metaPaymentReady === false;
+  const listPath = `/w/${ws.slug}/campaigns`;
+
+  const approvedTemplates: WaTemplate[] = useMemo(
+    () => (tplData?.templates ?? []).filter((tpl) => tpl.status === 'APPROVED'),
+    [tplData],
+  );
+  const allContacts = contactsData?.contacts ?? [];
+
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    allContacts.forEach((c) => c.tags.forEach((tag) => tagSet.add(tag)));
+    return [...tagSet].sort();
+  }, [allContacts]);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    trigger,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', templateId: '', audienceIds: [] },
+  });
+
+  const templateId = useWatch({ control, name: 'templateId' });
+  const campaignName = useWatch({ control, name: 'name' });
+  const audienceIds = useWatch({ control, name: 'audienceIds' }) ?? [];
+
+  const selectedTemplate = approvedTemplates.find((x) => x.id === templateId);
+  const templateVars = selectedTemplate
+    ? extractBodyVars(selectedTemplate.components)
+    : [];
+
+  const visibleContacts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return allContacts.filter((c) => {
+      if (!showOptedOut && !c.optedIn) return false;
+      if (tagFilter && !c.tags.includes(tagFilter)) return false;
+      if (!q) return true;
+      return (
+        (c.name ?? '').toLowerCase().includes(q) ||
+        c.phoneE164.toLowerCase().includes(q)
+      );
+    });
+  }, [allContacts, showOptedOut, tagFilter, search]);
+
+  const optedInVisible = visibleContacts.filter((c) => c.optedIn);
+
+  function writeVarMapping(
+    updater: (
+      prev: Record<string, VarMappingEntry>,
+    ) => Record<string, VarMappingEntry>,
+  ) {
+    setVarMapping((prev) => {
+      const next = updater(prev);
+      varMappingRef.current = next;
+      return next;
+    });
+  }
+
+  function buildVarMappingPayload(): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const [key, entry] of Object.entries(varMappingRef.current)) {
+      if (entry.type === 'name') result[key] = 'name';
+      else if (entry.type === 'phone') result[key] = 'phone';
+      else if (entry.type === 'attr' && (entry.attrKey ?? '').trim())
+        result[key] = `attr:${entry.attrKey.trim()}`;
+      else if (entry.type === 'text' && (entry.attrKey ?? '').trim())
+        result[key] = `text:${entry.attrKey.trim()}`;
+    }
+    return result;
+  }
+
+  function toggleContact(id: string, checked: boolean) {
+    setValue(
+      'audienceIds',
+      checked ? [...audienceIds, id] : audienceIds.filter((x) => x !== id),
+      { shouldValidate: true },
+    );
+  }
+
+  function selectAllVisible() {
+    const ids = new Set(audienceIds);
+    for (const c of optedInVisible) ids.add(c.id);
+    setValue('audienceIds', [...ids], { shouldValidate: true });
+  }
+
+  async function goNextFromMessage() {
+    const ok = await trigger(['name', 'templateId']);
+    if (!ok) return;
+    if (!isMappingComplete(templateVars, varMappingRef.current)) {
+      setMappingError(t('campaigns.create.mappingRequired'));
+      return;
+    }
+    setStep(2);
+  }
+
+  function goNextFromAudience() {
+    const optedInIds = audienceIds.filter(
+      (id) => allContacts.find((c) => c.id === id)?.optedIn === true,
+    );
+    if (optedInIds.length === 0) {
+      toast.error(t('campaigns.create.audienceOptedInRequired'));
+      return;
+    }
+    setValue('audienceIds', optedInIds);
+    setStep(3);
+  }
+
+  async function submit(launch: boolean) {
+    if (!selectedTemplate) return;
+    const optedInIds = audienceIds.filter(
+      (id) => allContacts.find((c) => c.id === id)?.optedIn === true,
+    );
+    if (optedInIds.length === 0) {
+      toast.error(t('campaigns.create.audienceOptedInRequired'));
+      return;
+    }
+    try {
+      const created = (await createMutation.mutateAsync({
+        name: campaignName.trim(),
+        templateName: selectedTemplate.name,
+        templateLanguage: selectedTemplate.language,
+        audienceIds: optedInIds,
+        variableMapping: buildVarMappingPayload(),
+      })) as Campaign;
+      if (launch) {
+        await launchMutation.mutateAsync(created.id);
+        toast.success(t('campaigns.launched'));
+      } else {
+        toast.success(t('campaigns.create.success'));
+      }
+      navigate(listPath);
+    } catch (err) {
+      toast.error(err);
+    }
+  }
+
+  const pending = createMutation.isPending || launchMutation.isPending;
+  const selectedContacts: WaContact[] = audienceIds
+    .map((id) => allContacts.find((c) => c.id === id))
+    .filter((c): c is WaContact => Boolean(c));
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div>
+        <Button variant="ghost" size="sm" className="-ml-2 mb-2" asChild>
+          <Link to={listPath}>
+            <ArrowLeft className="mr-1.5 size-3.5" />
+            {t('campaigns.wizard.back', 'All campaigns')}
+          </Link>
+        </Button>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('campaigns.create.title')}
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          {t('campaigns.create.subtitle')}
+        </p>
+      </div>
+
+      <ol className="text-muted-foreground flex gap-4 text-sm">
+        {([1, 2, 3] as const).map((n) => (
+          <li
+            key={n}
+            className={n === step ? 'text-foreground font-medium' : undefined}
+          >
+            {n}.{' '}
+            {n === 1
+              ? t('campaigns.wizard.stepMessage', 'Message')
+              : n === 2
+                ? t('campaigns.wizard.stepAudience', 'Audience')
+                : t('campaigns.wizard.stepReview', 'Review')}
+          </li>
+        ))}
+      </ol>
+
+      {step === 1 && (
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="cc-name">
+                {t('campaigns.create.name')}
+              </FieldLabel>
+              <Input
+                id="cc-name"
+                placeholder={t('campaigns.create.namePlaceholder')}
+                {...register('name')}
+              />
+              {errors.name && (
+                <FieldError>{t(errors.name.message ?? '')}</FieldError>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>{t('campaigns.create.template')}</FieldLabel>
+              <Controller
+                name="templateId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={(v) => {
+                      if (v !== field.value) {
+                        writeVarMapping(() => ({}));
+                        setMappingError('');
+                      }
+                      field.onChange(v);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('campaigns.create.templatePlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {approvedTemplates.length === 0 ? (
+                        <div className="text-muted-foreground p-3 text-sm">
+                          {t('campaigns.create.noApprovedTemplates')}
+                        </div>
+                      ) : (
+                        approvedTemplates.map((tpl) => (
+                          <SelectItem key={tpl.id} value={tpl.id}>
+                            {tpl.name}
+                            <span className="text-muted-foreground ml-2 text-xs">
+                              {tpl.language}
+                            </span>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.templateId && (
+                <FieldError>{t(errors.templateId.message ?? '')}</FieldError>
+              )}
+              {approvedTemplates.length === 0 && (
+                <Button variant="link" className="h-auto justify-start p-0" asChild>
+                  <Link to={`/w/${ws.slug}/templates`}>
+                    {t('campaigns.wizard.goTemplates', 'Go to Templates')}
+                  </Link>
+                </Button>
+              )}
+            </div>
+
+            {templateVars.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <FieldLabel>{t('campaigns.create.variableMapping')}</FieldLabel>
+                <p className="text-muted-foreground text-xs">
+                  {t('campaigns.create.variableMappingHint')}
+                </p>
+                {templateVars.map((n) => (
+                  <VarMappingRow
+                    key={n}
+                    index={n}
+                    value={varMapping[String(n)]}
+                    onChange={(val) => {
+                      setMappingError('');
+                      writeVarMapping((prev) => ({
+                        ...prev,
+                        [String(n)]: val,
+                      }));
+                    }}
+                  />
+                ))}
+                {mappingError && <FieldError>{mappingError}</FieldError>}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" asChild>
+                <Link to={listPath}>{t('common.cancel')}</Link>
+              </Button>
+              <Button type="button" onClick={() => void goNextFromMessage()}>
+                {t('campaigns.wizard.next', 'Next')}
+              </Button>
+            </div>
+          </div>
+
+          {selectedTemplate && (
+            <aside className="hidden w-72 shrink-0 lg:block">
+              <WaMessagePreview
+                headerText={componentText(selectedTemplate.components, 'HEADER')}
+                bodyText={componentText(selectedTemplate.components, 'BODY')}
+                footerText={componentText(selectedTemplate.components, 'FOOTER')}
+                templateName={selectedTemplate.name}
+                buttonLabels={templateButtonLabels(selectedTemplate)}
+              />
+            </aside>
+          )}
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              className="h-8 max-w-xs text-sm"
+              placeholder={t(
+                'campaigns.wizard.searchAudience',
+                'Search name or phone…',
+              )}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {allTags.length > 0 && (
+              <Select
+                value={tagFilter || TAG_FILTER_ALL}
+                onValueChange={(v) =>
+                  setTagFilter(v === TAG_FILTER_ALL ? '' : v)
+                }
+              >
+                <SelectTrigger className="h-8 w-40 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TAG_FILTER_ALL}>
+                    {t('campaigns.create.allTags')}
+                  </SelectItem>
+                  {allTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <label className="text-muted-foreground flex items-center gap-2 text-xs">
+              <Checkbox
+                checked={showOptedOut}
+                onCheckedChange={(v) => setShowOptedOut(Boolean(v))}
+              />
+              {t('campaigns.wizard.showOptedOut', 'Show opted-out')}
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="ml-auto h-8"
+              onClick={selectAllVisible}
+            >
+              {t('campaigns.wizard.selectAll', 'Select all opted-in')}
+            </Button>
+          </div>
+
+          <p className="text-muted-foreground text-xs">
+            {t('campaigns.create.selectedCount', { count: audienceIds.length })}
+          </p>
+
+          <div className="rounded-md border">
+            {visibleContacts.length === 0 ? (
+              <p className="text-muted-foreground p-4 text-sm">
+                {t('campaigns.create.noContacts')}
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-muted-foreground text-left text-xs">
+                  <tr>
+                    <th className="w-10 px-3 py-2" />
+                    <th className="px-3 py-2 font-medium">
+                      {t('campaigns.wizard.colName', 'Name')}
+                    </th>
+                    <th className="px-3 py-2 font-medium">
+                      {t('campaigns.wizard.colPhone', 'Phone')}
+                    </th>
+                    <th className="px-3 py-2 font-medium">
+                      {t('campaigns.wizard.colTags', 'Tags')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleContacts.map((c) => (
+                    <tr key={c.id} className="border-t">
+                      <td className="px-3 py-2">
+                        <Checkbox
+                          checked={audienceIds.includes(c.id)}
+                          disabled={!c.optedIn}
+                          onCheckedChange={(checked) =>
+                            toggleContact(c.id, Boolean(checked))
+                          }
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        {c.name ?? '—'}
+                        {!c.optedIn && (
+                          <Badge variant="outline" className="ml-2 text-[10px]">
+                            {t('campaigns.create.notOptedIn')}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="text-muted-foreground px-3 py-2 font-mono text-xs">
+                        {c.phoneE164}
+                      </td>
+                      <td className="text-muted-foreground px-3 py-2 text-xs">
+                        {c.tags.join(', ') || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          {errors.audienceIds && (
+            <FieldError>{t(errors.audienceIds.message ?? '')}</FieldError>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+              {t('campaigns.wizard.backStep', 'Back')}
+            </Button>
+            <Button type="button" onClick={goNextFromAudience}>
+              {t('campaigns.wizard.next', 'Next')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && selectedTemplate && (
+        <div className="flex flex-col gap-4">
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">
+                {t('campaigns.create.name')}
+              </dt>
+              <dd className="font-medium">{campaignName}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">
+                {t('campaigns.create.template')}
+              </dt>
+              <dd className="font-mono">{selectedTemplate.name}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">
+                {t('campaigns.wizard.audienceCount', 'Audience')}
+              </dt>
+              <dd>
+                {t('campaigns.create.selectedCount', {
+                  count: selectedContacts.length,
+                })}
+              </dd>
+            </div>
+          </dl>
+
+          {templateVars.length > 0 && (
+            <div className="text-sm">
+              <p className="text-muted-foreground mb-1">
+                {t('campaigns.create.variableMapping')}
+              </p>
+              <ul className="font-mono text-xs">
+                {templateVars.map((n) => {
+                  const entry = varMapping[String(n)];
+                  const label =
+                    entry?.type === 'attr'
+                      ? `attr:${entry.attrKey}`
+                      : entry?.type === 'text'
+                        ? `"${entry.attrKey}"`
+                        : (entry?.type ?? '—');
+                  return (
+                    <li key={n}>
+                      {`{{${n}}}`} → {label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          <p className="text-muted-foreground text-xs">
+            {t(
+              'campaigns.wizard.metaNote',
+              'Meta bills conversations on your WhatsApp Business Account. This is not a CRM wallet charge.',
+            )}
+          </p>
+
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setStep(2)}>
+              {t('campaigns.wizard.backStep', 'Back')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => void handleSubmit(() => submit(false))()}
+            >
+              {pending && <Spinner className="mr-2 size-4" />}
+              {t('campaigns.wizard.saveDraft', 'Create draft')}
+            </Button>
+            <Button
+              type="button"
+              disabled={pending || launchBlocked}
+              title={
+                launchBlocked
+                  ? t('education.META_PAYMENT_REQUIRED.title')
+                  : undefined
+              }
+              onClick={() => void handleSubmit(() => submit(true))()}
+            >
+              {pending && <Spinner className="mr-2 size-4" />}
+              {t('campaigns.wizard.createLaunch', 'Create and launch')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

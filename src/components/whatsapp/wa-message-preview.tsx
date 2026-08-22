@@ -5,6 +5,8 @@ interface WaMessagePreviewProps {
   bodyText?: string;
   footerText?: string;
   templateName?: string;
+  /** Optional button labels rendered inside the bubble. */
+  buttonLabels?: string[];
 }
 
 /**
@@ -34,10 +36,15 @@ export function WaMessagePreview({
   bodyText,
   footerText,
   templateName,
+  buttonLabels,
 }: WaMessagePreviewProps) {
   const { t } = useTranslation();
 
-  const hasContent = !!(headerText?.trim() || bodyText?.trim() || footerText?.trim());
+  const hasContent = !!(
+    headerText?.trim() ||
+    bodyText?.trim() ||
+    footerText?.trim()
+  );
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -128,15 +135,26 @@ export function WaMessagePreview({
                   </p>
                 )}
 
-                {/* Timestamp + double-tick */}
-                <div className="mt-1 flex items-center justify-end gap-1">
+                {buttonLabels && buttonLabels.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {buttonLabels.map((label, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-emerald-800/20 bg-white/70 px-2 py-1 text-center text-[11px] font-medium text-[#075E54]"
+                      >
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-1 flex items-end justify-end gap-0.5">
                   <span className="text-[10px] text-zinc-400">
                     {new Date().toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
-                  {/* Read ticks (blue) */}
                   <svg
                     viewBox="0 0 16 11"
                     className="size-3.5 fill-[#53bdeb]"
@@ -164,7 +182,11 @@ export function WaMessagePreview({
             {t('templates.create.previewInputHint')}
           </div>
           <div className="flex size-6 items-center justify-center rounded-full bg-[#075E54]">
-            <svg viewBox="0 0 24 24" className="size-3.5 fill-white" aria-hidden>
+            <svg
+              viewBox="0 0 24 24"
+              className="size-3.5 fill-white"
+              aria-hidden
+            >
               <path d="M2 12L22 2l-7 20-4-8-9-2Z" />
             </svg>
           </div>

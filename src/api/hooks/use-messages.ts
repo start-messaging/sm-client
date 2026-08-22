@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   messagesApi,
+  type ConversationFilters,
   type ConversationTab,
   type CreateConversationBody,
   type MessageListResult,
@@ -33,13 +34,27 @@ function shouldPollInbox(sseConnected: boolean): number | false {
 /** Conversation list (inbox) — SSE primary, light poll as fallback. */
 export function useConversations(
   slug: string,
-  opts?: { sseConnected?: boolean; tab?: ConversationTab },
+  opts?: {
+    sseConnected?: boolean;
+    tab?: ConversationTab;
+    filters?: ConversationFilters;
+  },
 ) {
   const sseConnected = opts?.sseConnected ?? false;
   const tab = opts?.tab ?? 'all';
+  const filters = opts?.filters ?? null;
+  // Normalise so undefined fields don't create cache-key drift.
+  const normalisedFilters =
+    filters &&
+    Object.values(filters).some(
+      (v) => v !== undefined && v !== false && v !== '',
+    )
+      ? filters
+      : null;
   return useQuery({
-    queryKey: queryKeys.messages.conversations(slug, tab),
-    queryFn: () => messagesApi.listConversations(slug, tab),
+    queryKey: queryKeys.messages.conversations(slug, tab, normalisedFilters),
+    queryFn: () =>
+      messagesApi.listConversations(slug, tab, normalisedFilters ?? undefined),
     enabled: slug.length > 0,
     staleTime: STALE.LIVE,
     refetchInterval: (query) =>

@@ -2,9 +2,9 @@
  * Leads Kanban — contacts grouped by pipeline stage.
  * Stages are columns; each card shows name, phone, assignee, follow-up.
  * Moving a contact to a new stage calls PATCH /contacts/:id { pipelineStageId }.
- * No drag-and-drop library used; move is done via a Select per card.
+ * HTML5 drag-and-drop is the primary move mechanism; Select per card is the fallback.
  */
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CalendarClock, KanbanSquare, Users } from 'lucide-react';
@@ -47,37 +47,40 @@ interface ContactCardProps {
   contact: WaContact;
   stages: PipelineStage[];
   memberMap: Record<string, string>;
-  slug: string;
+  onDragStart: (contactId: string) => void;
+  onMove: (contactId: string, toStageId: string) => void;
+  isPending: boolean;
 }
 
-function ContactCard({ contact: c, stages, memberMap, slug }: ContactCardProps) {
+function ContactCard({
+  contact: c,
+  stages,
+  memberMap,
+  onDragStart,
+  onMove,
+  isPending,
+}: ContactCardProps) {
   const { t } = useTranslation();
-  const updateContact = useUpdateContact(slug);
 
   const followUpDate = c.followUpAt ? new Date(c.followUpAt) : null;
   const now = new Date();
-  const isOverdue = followUpDate !== null && followUpDate < now;
-
-  function moveTo(stageId: string) {
-    const newStageId = stageId === '__none__' ? null : stageId;
-    const stageName =
-      stageId === '__none__'
-        ? t('leads.noStage')
-        : (stages.find((s) => s.id === stageId)?.name ?? stageId);
-
-    updateContact.mutate(
-      { id: c.id, body: { pipelineStageId: newStageId } },
-      {
-        onSuccess: () => toast.success(t('leads.moveSuccess', { stage: stageName })),
-        onError: (err) => toast.error(err),
-      },
-    );
-  }
+  const isOverdue = followUpDate !== null && followUpDate <= now;
 
   const currentStageId = c.pipelineStageId ?? '__none__';
 
   return (
-    <Card className="group relative text-sm shadow-sm transition-shadow hover:shadow-md">
+    <Card
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', c.id);
+        onDragStart(c.id);
+      }}
+      className={cn(
+        'group relative cursor-grab text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing',
+        isOverdue && 'ring-2 ring-destructive/50 border-destructive/40',
+      )}
+    >
       <CardHeader className="flex flex-row items-start gap-2.5 space-y-0 p-3 pb-2">
         {/* Avatar */}
         <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
@@ -97,12 +100,20 @@ function ContactCard({ contact: c, stages, memberMap, slug }: ContactCardProps) 
           )}
         </div>
         {/* Pending indicator */}
-        {updateContact.isPending && (
-          <Spinner className="size-3.5 shrink-0" />
-        )}
+        {isPending && <Spinner className="size-3.5 shrink-0" />}
       </CardHeader>
 
       <CardContent className="flex flex-col gap-1.5 p-3 pt-0">
+        {/* Overdue banner */}
+        {isOverdue && (
+          <div className="flex items-center gap-1 rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
+            <CalendarClock className="size-3 shrink-0" />
+            <span className="font-medium">
+              {t('leads.card.overdue')} · {followUpDate!.toLocaleDateString()}
+            </span>
+          </div>
+        )}
+
         {/* Tags (first 2) */}
         {c.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -129,18 +140,10 @@ function ContactCard({ contact: c, stages, memberMap, slug }: ContactCardProps) 
           </span>
         </div>
 
-        {/* Follow-up */}
-        {followUpDate && (
-          <div
-            className={cn(
-              'flex items-center gap-1 text-xs',
-              isOverdue ? 'text-destructive' : 'text-muted-foreground',
-            )}
-          >
+        {/* Follow-up (non-overdue) */}
+        {followUpDate && !isOverdue && (
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
             <CalendarClock className="size-3" />
-            {isOverdue && (
-              <span className="font-medium">{t('leads.card.overdue')} · </span>
-            )}
             <span>
               {t('leads.card.followUp', {
                 date: followUpDate.toLocaleDateString(),
@@ -149,11 +152,11 @@ function ContactCard({ contact: c, stages, memberMap, slug }: ContactCardProps) 
           </div>
         )}
 
-        {/* Move to stage */}
+        {/* Move to stage (Select fallback) */}
         <Select
           value={currentStageId}
-          onValueChange={moveTo}
-          disabled={updateContact.isPending}
+          onValueChange={(v) => onMove(c.id, v)}
+          disabled={isPending}
         >
           <SelectTrigger className="mt-1 h-7 text-xs">
             <SelectValue placeholder={t('leads.card.moveTo')} />
@@ -175,18 +178,61 @@ function ContactCard({ contact: c, stages, memberMap, slug }: ContactCardProps) 
 // ── Column ────────────────────────────────────────────────────────────────────
 
 interface KanbanColumnProps {
+  stageId: string;
   title: string;
   contacts: WaContact[];
   stages: PipelineStage[];
   memberMap: Record<string, string>;
-  slug: string;
+  pendingContactId: string | null;
+  onDragStart: (contactId: string) => void;
+  onMove: (contactId: string, toStageId: string) => void;
 }
 
-function KanbanColumn({ title, contacts, stages, memberMap, slug }: KanbanColumnProps) {
+function KanbanColumn({
+  stageId,
+  title,
+  contacts,
+  stages,
+  memberMap,
+  pendingContactId,
+  onDragStart,
+  onMove,
+}: KanbanColumnProps) {
   const { t } = useTranslation();
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // Only clear if leaving the column entirely (not a child)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const contactId = e.dataTransfer.getData('text/plain');
+    if (contactId) {
+      onMove(contactId, stageId);
+    }
+  }
 
   return (
-    <div className="flex w-72 shrink-0 flex-col gap-2">
+    <div
+      className={cn(
+        'flex w-72 shrink-0 flex-col gap-2 rounded-lg p-2 transition-colors',
+        isDragOver && 'bg-muted/60 ring-2 ring-primary/30',
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Column header */}
       <div className="flex items-center justify-between px-1">
         <h3 className="text-sm font-semibold">{title}</h3>
@@ -196,9 +242,14 @@ function KanbanColumn({ title, contacts, stages, memberMap, slug }: KanbanColumn
       </div>
 
       {/* Cards */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-h-12">
         {contacts.length === 0 ? (
-          <div className="border-muted rounded-lg border border-dashed p-4 text-center">
+          <div
+            className={cn(
+              'border-muted rounded-lg border border-dashed p-4 text-center transition-colors',
+              isDragOver && 'border-primary/50 bg-primary/5',
+            )}
+          >
             <p className="text-muted-foreground text-xs">
               {t('leads.empty.body')}
             </p>
@@ -210,7 +261,9 @@ function KanbanColumn({ title, contacts, stages, memberMap, slug }: KanbanColumn
               contact={c}
               stages={stages}
               memberMap={memberMap}
-              slug={slug}
+              onDragStart={onDragStart}
+              onMove={onMove}
+              isPending={pendingContactId === c.id}
             />
           ))
         )}
@@ -241,13 +294,25 @@ export function LeadsPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
 
-  const { data: contactsData, isLoading: contactsLoading } = useContacts(ws.slug);
-  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(ws.slug);
+  const { data: contactsData, isLoading: contactsLoading } = useContacts(
+    ws.slug,
+  );
+  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(
+    ws.slug,
+  );
   const { data: membersData } = useMembers(ws.slug, ws.id);
+  const updateContact = useUpdateContact(ws.slug);
+
+  // DnD state — track which contact is currently being dragged/pending
+  const [pendingContactId, setPendingContactId] = useState<string | null>(null);
+  const draggedContactId = useRef<string | null>(null);
 
   const contacts = contactsData?.contacts ?? [];
   const stages = useMemo(
-    () => [...(stagesData?.pipelineStages ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+    () =>
+      [...(stagesData?.pipelineStages ?? [])].sort(
+        (a, b) => a.sortOrder - b.sortOrder,
+      ),
     [stagesData],
   );
   const members = membersData?.members ?? [];
@@ -273,6 +338,38 @@ export function LeadsPage() {
     });
     return map;
   }, [contacts, stages]);
+
+  function handleDragStart(contactId: string) {
+    draggedContactId.current = contactId;
+  }
+
+  function handleMove(contactId: string, toStageId: string) {
+    const contact = contacts.find((c) => c.id === contactId);
+    const currentStageId = contact?.pipelineStageId ?? '__none__';
+    if (currentStageId === toStageId) return;
+
+    const newStageId = toStageId === '__none__' ? null : toStageId;
+    const stageName =
+      toStageId === '__none__'
+        ? t('leads.noStage')
+        : (stages.find((s) => s.id === toStageId)?.name ?? toStageId);
+
+    setPendingContactId(contactId);
+    updateContact.mutate(
+      { id: contactId, body: { pipelineStageId: newStageId } },
+      {
+        onSuccess: () => {
+          toast.success(t('leads.moveSuccess', { stage: stageName }));
+          setPendingContactId(null);
+        },
+        onError: (err) => {
+          toast.error(err);
+          setPendingContactId(null);
+        },
+      },
+    );
+    draggedContactId.current = null;
+  }
 
   const isLoading = contactsLoading || stagesLoading;
 
@@ -330,22 +427,28 @@ export function LeadsPage() {
           {stages.map((stage) => (
             <KanbanColumn
               key={stage.id}
+              stageId={stage.id}
               title={stage.name}
               contacts={columnMap[stage.id] ?? []}
               stages={stages}
               memberMap={memberMap}
-              slug={ws.slug}
+              pendingContactId={pendingContactId}
+              onDragStart={handleDragStart}
+              onMove={handleMove}
             />
           ))}
 
           {/* "No stage" column — always last */}
           {(columnMap['__none__'] ?? []).length > 0 && (
             <KanbanColumn
+              stageId="__none__"
               title={t('leads.noStage')}
               contacts={columnMap['__none__'] ?? []}
               stages={stages}
               memberMap={memberMap}
-              slug={ws.slug}
+              pendingContactId={pendingContactId}
+              onDragStart={handleDragStart}
+              onMove={handleMove}
             />
           )}
         </div>

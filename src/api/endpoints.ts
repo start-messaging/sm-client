@@ -92,10 +92,27 @@ export const endpoints = {
 
   // ── Messages / Inbox ──────────────────────────────────────────────────────
   messages: {
-    // Conversation list (inbox) with optional tab filter (all|active|mine).
-    conversations: (slug: string, tab?: string) => {
+    // Conversation list (inbox) with optional tab + server-side filters.
+    conversations: (
+      slug: string,
+      params?: {
+        tab?: string;
+        unread?: boolean;
+        assigneeUserId?: string;
+        window?: 'open' | 'closed';
+        tag?: string;
+      },
+    ) => {
       const base = v1(`/workspaces/${slug}/whatsapp/conversations`);
-      return tab ? `${base}?tab=${tab}` : base;
+      const qs = new URLSearchParams();
+      if (params?.tab) qs.set('tab', params.tab);
+      if (params?.unread) qs.set('unread', 'true');
+      if (params?.assigneeUserId)
+        qs.set('assigneeUserId', params.assigneeUserId);
+      if (params?.window) qs.set('window', params.window);
+      if (params?.tag) qs.set('tag', params.tag);
+      const str = qs.toString();
+      return str ? `${base}?${str}` : base;
     },
     // PATCH a conversation (assign, resolve, mark-read, claim).
     patch: (slug: string, id: string) =>
@@ -105,10 +122,14 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/conversations`),
     // Messages within a conversation.
     list: (slug: string, conversationId: string) =>
-      v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`),
+      v1(
+        `/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`,
+      ),
     // Send a message (free-form or template).
     send: (slug: string, conversationId: string) =>
-      v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`),
+      v1(
+        `/workspaces/${slug}/whatsapp/conversations/${conversationId}/messages`,
+      ),
     // Upload and send a media message (multipart/form-data).
     sendMedia: (slug: string, conversationId: string) =>
       v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/media`),
@@ -120,9 +141,12 @@ export const endpoints = {
   contacts: {
     list: (slug: string) => v1(`/workspaces/${slug}/contacts`),
     create: (slug: string) => v1(`/workspaces/${slug}/contacts`),
-    byId: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
-    update: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
-    delete: (slug: string, id: string) => v1(`/workspaces/${slug}/contacts/${id}`),
+    byId: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/contacts/${id}`),
+    update: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/contacts/${id}`),
+    delete: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/contacts/${id}`),
     import: (slug: string) => v1(`/workspaces/${slug}/contacts/import`),
     notes: (slug: string, contactId: string) =>
       v1(`/workspaces/${slug}/contacts/${contactId}/notes`),
@@ -148,12 +172,15 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/launch`),
     pause: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/pause`),
+    resume: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/resume`),
   },
 
   // ── Billing (CRM subscription) ────────────────────────────────────────────
   billing: {
     // Current subscription status.
-    subscription: (slug: string) => v1(`/workspaces/${slug}/billing/subscription`),
+    subscription: (slug: string) =>
+      v1(`/workspaces/${slug}/billing/subscription`),
     // Create / upgrade via Razorpay checkout.
     checkout: (slug: string) => v1(`/workspaces/${slug}/billing/checkout`),
     // Available plans to upgrade to.

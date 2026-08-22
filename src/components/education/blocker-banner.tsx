@@ -84,7 +84,9 @@ export function BlockerBanner({
         className,
       )}
     >
-      <AlertTriangle className={cn('mt-0.5 size-4 shrink-0', iconStyles[variant])} />
+      <AlertTriangle
+        className={cn('mt-0.5 size-4 shrink-0', iconStyles[variant])}
+      />
 
       <div className="flex-1 space-y-1">
         <p className="text-sm font-medium">{title}</p>
@@ -98,7 +100,9 @@ export function BlockerBanner({
                 <a
                   href={cta.href}
                   target={cta.external !== false ? '_blank' : undefined}
-                  rel={cta.external !== false ? 'noopener noreferrer' : undefined}
+                  rel={
+                    cta.external !== false ? 'noopener noreferrer' : undefined
+                  }
                 >
                   {ctaLabel}
                   {cta.external !== false && (

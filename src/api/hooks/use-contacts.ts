@@ -49,9 +49,7 @@ export function useUpdateContact(slug: string) {
 }
 
 export function useDeleteContact(slug: string) {
-  return useContactMutation(slug, (id: string) =>
-    contactsApi.delete(slug, id),
-  );
+  return useContactMutation(slug, (id: string) => contactsApi.delete(slug, id));
 }
 
 export function useImportContacts(slug: string) {

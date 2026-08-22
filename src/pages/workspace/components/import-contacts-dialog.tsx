@@ -123,9 +123,7 @@ export function ImportContactsDialog({ slug }: { slug: string }) {
             />
           </div>
 
-          {fileError && (
-            <p className="text-destructive text-xs">{fileError}</p>
-          )}
+          {fileError && <p className="text-destructive text-xs">{fileError}</p>}
         </div>
 
         <DialogFooter>

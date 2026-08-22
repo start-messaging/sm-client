@@ -99,7 +99,9 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
         if (cancelled) return;
         let payload: InboxSsePayload = {};
         try {
-          payload = JSON.parse((ev as MessageEvent).data as string) as InboxSsePayload;
+          payload = JSON.parse(
+            (ev as MessageEvent).data as string,
+          ) as InboxSsePayload;
         } catch {
           /* ignore malformed */
         }
@@ -113,7 +115,7 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
         }
 
         void qc.invalidateQueries({
-          queryKey: queryKeys.messages.conversations(slug),
+          queryKey: queryKeys.messages.conversationsAll(slug),
         });
         if (payload.conversationId) {
           void qc.invalidateQueries({
@@ -150,7 +152,7 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
             );
           }
           void qc.invalidateQueries({
-            queryKey: queryKeys.messages.conversations(slug),
+            queryKey: queryKeys.messages.conversationsAll(slug),
           });
           if (payload.conversationId) {
             void qc.invalidateQueries({
