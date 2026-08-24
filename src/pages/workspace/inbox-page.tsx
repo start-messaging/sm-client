@@ -33,7 +33,6 @@ import type {
 import { ConversationThread } from './components/conversation-thread';
 import { NewConversationDialog } from './components/new-conversation-dialog';
 import { InboxContactRail } from './components/inbox-contact-rail';
-import { DisconnectedBanner } from '@/components/whatsapp/disconnected-banner';
 import { cn } from '@/lib/utils';
 import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 import { formatRelativeShort } from '@/lib/relative-time';
@@ -297,11 +296,6 @@ export function InboxPage() {
           slug={ws.slug}
           onCreated={(conv) => setSelectedConv(conv)}
         />
-      </div>
-
-      {/* WABA disconnected banner */}
-      <div className="shrink-0">
-        <DisconnectedBanner />
       </div>
 
       {/* Notification banners */}

@@ -13,6 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { WorkspaceSidebar } from '@/components/layout/workspace-sidebar';
 import { UserMenu } from '@/components/layout/user-menu';
 import { WhatsAppFab } from '@/components/shared/whatsapp-fab';
+import { WabaRequiredGate } from '@/components/whatsapp/waba-required-gate';
 import { useWorkspace } from '@/api/hooks/use-workspaces';
 import { queryKeys } from '@/api/query-keys';
 import { useMeSync } from '@/hooks/use-me-sync';
@@ -119,7 +120,9 @@ export function WorkspaceLayout() {
             lockToViewport ? 'overflow-hidden' : 'overflow-auto',
           )}
         >
-          <Outlet context={workspace.data} />
+          <WabaRequiredGate slug={workspace.data.slug}>
+            <Outlet context={workspace.data} />
+          </WabaRequiredGate>
         </main>
       </SidebarInset>
       <WhatsAppFab />

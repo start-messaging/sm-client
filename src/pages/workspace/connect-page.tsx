@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
   CheckCircle2,
   ExternalLink,
+  Layers,
   Link2,
   MinusCircle,
   RefreshCw,
@@ -360,6 +362,28 @@ function PaymentMissingCard() {
   );
 }
 
+function AnotherWabaCard() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#e4e4e7] bg-white p-5">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f4f4f5]">
+        <Layers className="size-5 text-[#52525b]" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-semibold text-[#18181b]">
+          {t('connect.anotherWaba.title')}
+        </p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-[#71717a]">
+          {t('connect.anotherWaba.body')}
+        </p>
+        <Button size="sm" variant="outline" className="mt-3 text-[12px]" asChild>
+          <Link to="/services/whatsapp/new">{t('connect.anotherWaba.cta')}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── PIN pending card ─────────────────────────────────────────────────────────
 
 function PinPendingCard({ onOpen }: { onOpen: () => void }) {
@@ -591,6 +615,8 @@ export function ConnectPage() {
       {isConnected && (
         <WabaHealthCard status={wabaStatus} />
       )}
+
+      <AnotherWabaCard />
 
       <PinDialog
         open={pinOpen}

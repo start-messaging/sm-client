@@ -261,8 +261,9 @@
     },
     "WABA_NOT_CONNECTED": {
       "title": "Connect your WhatsApp Business Account first",
-      "body": "You'll need to complete the WhatsApp Embedded Signup to link a WABA before you can use this feature.",
-      "cta": "Connect WhatsApp"
+      "body": "Inbox, templates, contacts, leads, and campaigns stay locked until this workspace is linked to a WhatsApp Business Account. Complete Embedded Signup on Connect — it takes a few minutes.",
+      "cta": "Connect WhatsApp",
+      "note": "Meta bills WhatsApp conversations on the payment method in WhatsApp Manager. Your Start Messaging plan is only the CRM subscription — we never ask you to add funds to send."
     },
     "META_PAYMENT_REQUIRED": {
       "title": "Add a payment method in WhatsApp Manager",
@@ -303,8 +304,9 @@
     },
     "WABA_DISCONNECTED": {
       "title": "WhatsApp Business Account disconnected",
-      "body": "Your WABA has been disconnected or the access token is no longer valid. Reconnect via Embedded Signup to restore messaging.",
-      "cta": "Reconnect WhatsApp"
+      "body": "This workspace is no longer linked to WhatsApp. Inbox, templates, and campaigns are paused until you reconnect. Existing history is kept, but sending and receiving need a live WABA.",
+      "cta": "Reconnect WhatsApp",
+      "note": "Reconnect does not charge your CRM wallet. Conversation fees stay on Meta’s WhatsApp Manager payment method."
     },
     "MESSAGE_WINDOW_CLOSED": {
       "title": "24-hour messaging window closed",
@@ -356,6 +358,11 @@
       "hint": "Connection updates normally arrive via webhooks. Use refresh if you changed the number or WABA in Meta and status looks wrong.",
       "stillConnected": "Still connected on Meta",
       "updated": "Status updated from Meta"
+    },
+    "anotherWaba": {
+      "title": "Need another WhatsApp number?",
+      "body": "Each workspace connects to one WhatsApp Business Account. To add a second number or a different business, create a new workspace and run Connect there. Use Reconnect above only to restore or switch the WABA on this workspace.",
+      "cta": "Create another workspace"
     },
     "health": {
       "title": "Account health",
@@ -1179,8 +1186,8 @@
   },
   "whatsapp": {
     "disconnectedBanner": {
-      "body": "WhatsApp account is not connected. Conversations and templates are read-only until reconnected.",
-      "cta": "Reconnect →"
+      "body": "WhatsApp is not connected. Connect a WABA to use inbox, templates, and campaigns.",
+      "cta": "Connect WhatsApp"
     }
   },
   "invite": {
