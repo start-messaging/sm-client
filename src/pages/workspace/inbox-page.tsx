@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, BellOff, MessageSquare, X } from 'lucide-react';
+import { Bell, BellOff, MessageSquare, Pencil, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useInboxRealtime } from '@/hooks/use-inbox-realtime';
 import { useFcmWebPush } from '@/hooks/use-fcm-web-push';
@@ -29,6 +33,7 @@ import type {
 import { ConversationThread } from './components/conversation-thread';
 import { NewConversationDialog } from './components/new-conversation-dialog';
 import { InboxContactRail } from './components/inbox-contact-rail';
+import { DisconnectedBanner } from '@/components/whatsapp/disconnected-banner';
 import { cn } from '@/lib/utils';
 import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 import { formatRelativeShort } from '@/lib/relative-time';
@@ -290,6 +295,11 @@ export function InboxPage() {
         />
       </div>
 
+      {/* WABA disconnected banner */}
+      <div className="shrink-0">
+        <DisconnectedBanner />
+      </div>
+
       {/* Notification banners */}
       {notifPermission === 'default' && (
         <div className="shrink-0 flex items-center gap-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm dark:border-sky-800/40 dark:bg-sky-950/20">
@@ -335,132 +345,148 @@ export function InboxPage() {
       {/* 3-pane: list | thread | right rail */}
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg border">
         {/* LEFT — conversation list */}
-        <div className="flex w-72 min-h-0 shrink-0 flex-col border-r">
-          {/* Tabs */}
-          <div className="px-2 pt-2 shrink-0 border-b bg-muted/20">
-            <Tabs
-              value={activeTab}
-              onValueChange={(v) => {
-                setActiveTab(v as ConversationTab);
-                setSelectedConv(null);
-              }}
-            >
-              <TabsList className="w-full h-8 text-xs">
-                <TabsTrigger value="all" className="flex-1 text-xs">
-                  {t('inbox.tabs.all')}
-                </TabsTrigger>
-                <TabsTrigger value="active" className="flex-1 text-xs">
-                  {t('inbox.tabs.active')}
-                </TabsTrigger>
-                <TabsTrigger value="mine" className="flex-1 text-xs">
-                  {t('inbox.tabs.mine')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+        <div className="flex w-[288px] min-h-0 shrink-0 flex-col border-r bg-white">
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-[14px] py-3 border-b border-[#e4e4e7] shrink-0">
+            <h3 className="text-[14px] font-semibold text-[#18181b]">{t('inbox.title')}</h3>
+            <div className="flex items-center gap-0.5">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      'flex size-7 items-center justify-center rounded-[5px] text-[#71717a] hover:bg-[#f4f4f5] transition-colors',
+                      hasActiveFilters && 'text-[#18181b] bg-[#f4f4f5]',
+                    )}
+                  >
+                    <SlidersHorizontal className="size-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 p-3 flex flex-col gap-3">
+                  {/* Unread */}
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="filter-unread"
+                      checked={filterUnread}
+                      onCheckedChange={setFilterUnread}
+                    />
+                    <Label htmlFor="filter-unread" className="text-[12px] cursor-pointer">
+                      {t('inbox.filters.unread')}
+                    </Label>
+                  </div>
+
+                  {/* Window */}
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[11px] text-[#71717a]">{t('inbox.filters.window')}</Label>
+                    <Select
+                      value={filterWindow || FILTER_WINDOW_ALL}
+                      onValueChange={(v) =>
+                        setFilterWindow(v === FILTER_WINDOW_ALL ? '' : (v as ConversationWindowFilter))
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-[12px]">
+                        <SelectValue placeholder={t('inbox.tabs.all')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={FILTER_WINDOW_ALL} className="text-xs">{t('inbox.tabs.all')}</SelectItem>
+                        <SelectItem value="open" className="text-xs">{t('inbox.filters.windowOpen')}</SelectItem>
+                        <SelectItem value="closed" className="text-xs">{t('inbox.filters.windowClosed')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Tag */}
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[11px] text-[#71717a]">{t('inbox.filters.tag')}</Label>
+                    <Input
+                      value={filterTag}
+                      onChange={(e) => setFilterTag(e.target.value)}
+                      placeholder={t('inbox.filters.tag')}
+                      className="h-8 text-[12px]"
+                    />
+                  </div>
+
+                  {/* Assignee */}
+                  {members.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[11px] text-[#71717a]">{t('inbox.filters.assignee')}</Label>
+                      <Select
+                        value={filterAssignee || FILTER_ASSIGNEE_ALL}
+                        onValueChange={(v) => setFilterAssignee(v === FILTER_ASSIGNEE_ALL ? '' : v)}
+                      >
+                        <SelectTrigger className="h-8 text-[12px]">
+                          <SelectValue placeholder={t('inbox.filters.assignee')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={FILTER_ASSIGNEE_ALL} className="text-xs">{t('inbox.filters.assignee')}</SelectItem>
+                          {members.map((m) => (
+                            <SelectItem key={m.userId} value={m.userId} className="text-xs">
+                              {m.fullName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="flex items-center gap-1 text-[11px] text-[#71717a] hover:text-[#18181b] transition-colors"
+                    >
+                      <X className="size-3" />
+                      {t('inbox.filters.clear')}
+                    </button>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              <NewConversationDialog
+                slug={ws.slug}
+                onCreated={(conv) => setSelectedConv(conv)}
+                trigger={
+                  <button
+                    type="button"
+                    className="flex size-7 items-center justify-center rounded-[5px] text-[#71717a] hover:bg-[#f4f4f5] transition-colors"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                }
+              />
+            </div>
+          </div>
+
+          {/* Quick tabs: All / Active / Mine */}
+          <div className="flex border-b border-[#f4f4f5] shrink-0 px-[14px]">
+            {(['all', 'active', 'mine'] as ConversationTab[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => { setActiveTab(tab); setSelectedConv(null); }}
+                className={cn(
+                  'px-0 py-2 mr-4 text-[13px] border-b-2 transition-colors',
+                  activeTab === tab
+                    ? 'border-[#18181b] text-[#18181b] font-medium'
+                    : 'border-transparent text-[#71717a] hover:text-[#18181b]',
+                )}
+              >
+                {t(`inbox.tabs.${tab}`)}
+              </button>
+            ))}
           </div>
 
           {/* Search */}
-          <div className="px-2 py-1.5 shrink-0 border-b">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('inbox.search')}
-              className="h-7 text-xs"
-            />
-          </div>
-
-          {/* Compact filter bar */}
-          <div className="px-2 py-1.5 shrink-0 border-b bg-muted/10 flex flex-col gap-1.5">
-            {/* Row 1: Unread toggle + Window select */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Switch
-                  id="filter-unread"
-                  checked={filterUnread}
-                  onCheckedChange={setFilterUnread}
-                  className="scale-75 origin-left"
-                />
-                <Label
-                  htmlFor="filter-unread"
-                  className="text-[10px] text-muted-foreground cursor-pointer whitespace-nowrap"
-                >
-                  {t('inbox.filters.unread')}
-                </Label>
-              </div>
-              <Select
-                value={filterWindow || FILTER_WINDOW_ALL}
-                onValueChange={(v) =>
-                  setFilterWindow(
-                    v === FILTER_WINDOW_ALL
-                      ? ''
-                      : (v as ConversationWindowFilter),
-                  )
-                }
-              >
-                <SelectTrigger className="h-6 text-[10px] flex-1 px-2">
-                  <SelectValue placeholder={t('inbox.tabs.all')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={FILTER_WINDOW_ALL} className="text-xs">
-                    {t('inbox.tabs.all')}
-                  </SelectItem>
-                  <SelectItem value="open" className="text-xs">
-                    {t('inbox.filters.windowOpen')}
-                  </SelectItem>
-                  <SelectItem value="closed" className="text-xs">
-                    {t('inbox.filters.windowClosed')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Row 2: Tag input + Assignee select */}
-            <div className="flex items-center gap-1.5">
-              <Input
-                value={filterTag}
-                onChange={(e) => setFilterTag(e.target.value)}
-                placeholder={t('inbox.filters.tag')}
-                className="h-6 text-[10px] flex-1 px-2"
+          <div className="px-[10px] py-2 shrink-0 border-b border-[#f4f4f5]">
+            <div className="flex items-center gap-[6px] bg-[#f4f4f5] rounded-[6px] px-[10px] py-[6px]">
+              <Search className="size-3 text-[#a1a1aa] shrink-0" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('inbox.search')}
+                className="border-none bg-transparent outline-none text-[12px] text-[#18181b] placeholder:text-[#a1a1aa] w-full"
               />
-              {members.length > 0 && (
-                <Select
-                  value={filterAssignee || FILTER_ASSIGNEE_ALL}
-                  onValueChange={(v) =>
-                    setFilterAssignee(v === FILTER_ASSIGNEE_ALL ? '' : v)
-                  }
-                >
-                  <SelectTrigger className="h-6 text-[10px] flex-1 px-2">
-                    <SelectValue placeholder={t('inbox.filters.assignee')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={FILTER_ASSIGNEE_ALL} className="text-xs">
-                      {t('inbox.filters.assignee')}
-                    </SelectItem>
-                    {members.map((m) => (
-                      <SelectItem
-                        key={m.userId}
-                        value={m.userId}
-                        className="text-xs"
-                      >
-                        {m.fullName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
             </div>
-
-            {/* Clear filters */}
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="flex items-center gap-1 self-start text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="size-2.5" />
-                {t('inbox.filters.clear')}
-              </button>
-            )}
           </div>
 
           {/* List body */}

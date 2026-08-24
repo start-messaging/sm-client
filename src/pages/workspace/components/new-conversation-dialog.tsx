@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,11 +45,13 @@ type FormValues = z.infer<typeof schema>;
 interface NewConversationDialogProps {
   slug: string;
   onCreated: (conversation: WaConversation) => void;
+  trigger?: ReactNode;
 }
 
 export function NewConversationDialog({
   slug,
   onCreated,
+  trigger,
 }: NewConversationDialogProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -113,10 +115,12 @@ export function NewConversationDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Plus className="mr-1.5 size-3.5" />
-          {t('inbox.newConversation.trigger')}
-        </Button>
+        {trigger ?? (
+          <Button size="sm" variant="outline">
+            <Plus className="mr-1.5 size-3.5" />
+            {t('inbox.newConversation.trigger')}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

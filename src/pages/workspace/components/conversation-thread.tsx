@@ -549,63 +549,67 @@ function MessageBubble({
     (msg.templateName ? (templateBodyMap[msg.templateName] ?? null) : null);
 
   return (
-    <div
-      className={cn(
-        'max-w-[75%] px-3 py-2 text-sm',
-        outbound
-          ? 'self-end bg-[#18181b] text-white rounded-[10px_0_10px_10px]'
-          : 'self-start bg-white border border-[#e4e4e7] rounded-[0_10px_10px_10px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
-        failed && 'bg-red-100 border-red-200',
-      )}
-    >
-      {msg.templateName && (
-        <p
-          className={cn(
-            'mb-1 text-[11px]',
-            outbound ? 'text-[#a1a1aa]' : 'text-muted-foreground',
-          )}
-        >
-          {t('inbox.templateBubble.label', { name: msg.templateName })}
-        </p>
-      )}
+    <>
+      <div
+        className={cn(
+          'max-w-[75%] px-3 py-2 text-sm',
+          outbound
+            ? 'self-end bg-[#18181b] text-white rounded-[10px_0_10px_10px]'
+            : 'self-start bg-white border border-[#e4e4e7] rounded-[0_10px_10px_10px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+        )}
+      >
+        {msg.templateName && (
+          <p
+            className={cn(
+              'mb-1 text-[11px]',
+              outbound ? 'text-[#a1a1aa]' : 'text-muted-foreground',
+            )}
+          >
+            {t('inbox.templateBubble.label', { name: msg.templateName })}
+          </p>
+        )}
 
-      {/* Media attachment */}
-      {isMedia && (
-        <div className="mb-1">
-          <MediaBubble msg={msg} />
+        {/* Media attachment */}
+        {isMedia && (
+          <div className="mb-1">
+            <MediaBubble msg={msg} />
+          </div>
+        )}
+
+        {/* Text body / caption */}
+        {resolvedBody && (
+          <p className="whitespace-pre-wrap wrap-break-word">{resolvedBody}</p>
+        )}
+        {!resolvedBody && !isMedia && (
+          <p className="whitespace-pre-wrap wrap-break-word">
+            {msg.templateName ? t('inbox.templateBubble.bodyFallback') : '—'}
+          </p>
+        )}
+
+        <div className="mt-1 flex items-center justify-end gap-1">
+          <span className="text-[11px] text-[#a1a1aa]">
+            {new Date(msg.timestamp).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+          {outbound && (
+            <MessageDeliveryStatus
+              status={msg.status}
+              failureReason={msg.failureReason}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Failed indicator — rendered below the bubble, aligned right */}
+      {failed && (
+        <div className="self-end flex items-center gap-1 text-[11px] text-[#dc2626]">
+          <AlertCircle className="size-3 shrink-0" />
+          <span>{msg.failureReason ?? t('inbox.message.failed')}</span>
         </div>
       )}
-
-      {/* Text body / caption */}
-      {resolvedBody && (
-        <p className="whitespace-pre-wrap wrap-break-word">{resolvedBody}</p>
-      )}
-      {!resolvedBody && !isMedia && (
-        <p className="whitespace-pre-wrap wrap-break-word">
-          {msg.templateName ? t('inbox.templateBubble.bodyFallback') : '—'}
-        </p>
-      )}
-
-      {failed && msg.failureReason && (
-        <p className="mt-1 text-[10px] text-red-600 dark:text-red-400 leading-snug">
-          {msg.failureReason}
-        </p>
-      )}
-      <div className="mt-1 flex items-center justify-end gap-1">
-        <span className={cn('text-[11px]', outbound ? 'text-[#a1a1aa]' : 'text-[#a1a1aa]')}>
-          {new Date(msg.timestamp).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
-        {outbound && (
-          <MessageDeliveryStatus
-            status={msg.status}
-            failureReason={msg.failureReason}
-          />
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 

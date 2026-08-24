@@ -64,9 +64,11 @@ export function useConversations(
 }
 
 /**
- * Total unread-conversation count, for the sidebar Inbox badge. Polls every
- * 30s as a floor and is invalidated by `useInboxRealtime`'s `inbox.updated`
- * handler, so it stays current without a second SSE connection.
+ * Total unread-conversation count, for the sidebar Inbox badge.
+ * Kept fresh by:
+ *  1. `useInboxRealtime` invalidating this key on every SSE `inbox.updated` event.
+ *  2. `refetchOnWindowFocus` (global default) when the user returns to the tab.
+ * No interval poll — SSE covers real-time; window-focus covers "was away" case.
  */
 export function useUnreadCount(slug: string, opts?: { enabled?: boolean }) {
   const enabled = (opts?.enabled ?? true) && slug.length > 0;
@@ -75,7 +77,6 @@ export function useUnreadCount(slug: string, opts?: { enabled?: boolean }) {
     queryFn: () => messagesApi.getUnreadCount(slug),
     enabled,
     staleTime: STALE.STANDARD,
-    refetchInterval: enabled ? 30_000 : false,
   });
 }
 

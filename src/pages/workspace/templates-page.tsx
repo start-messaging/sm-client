@@ -41,6 +41,7 @@ import { toast } from '@/lib/toast';
 import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
 import { exampleBodyPreview, featuredExamples } from '@/lib/template-examples';
 import { cn } from '@/lib/utils';
+import { DisconnectedBanner } from '@/components/whatsapp/disconnected-banner';
 
 const STATUS_PILL: Record<
   TemplateStatus,
@@ -299,6 +300,8 @@ export function TemplatesPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <DisconnectedBanner />
+
       {/* Action bar */}
       <div className="flex items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={handleSync} disabled={manualSyncing}>

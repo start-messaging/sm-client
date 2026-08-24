@@ -395,6 +395,9 @@
     "search": "Search conversations…",
     "assignee": "Assignee: {{name}}",
     "unassigned": "Unassigned",
+    "message": {
+      "failed": "Failed to deliver"
+    },
     "thread": {
       "selectPrompt": "Select a conversation",
       "selectHint": "Choose a conversation on the left to view messages and reply.",
@@ -454,6 +457,7 @@
     "filters": {
       "unread": "Unread only",
       "assignee": "Assignee",
+      "window": "Window",
       "windowOpen": "Window open",
       "windowClosed": "Window closed",
       "tag": "Tag…",
@@ -1165,6 +1169,12 @@
         "hint": "When off, you will not receive auto-assigned chats. Conversations already assigned to you are unaffected."
       },
       "education": "Meta bills conversations directly to your WABA payment method — Start Messaging charges only your CRM subscription. Turning on round-robin does not change what you are billed."
+    }
+  },
+  "whatsapp": {
+    "disconnectedBanner": {
+      "body": "WhatsApp account is not connected. Conversations and templates are read-only until reconnected.",
+      "cta": "Reconnect →"
     }
   },
   "invite": {
