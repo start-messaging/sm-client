@@ -13,6 +13,7 @@ import { useWabaStatus } from '@/api/hooks/use-whatsapp';
 import { useTemplates } from '@/api/hooks/use-templates';
 import { PlanPanel } from './components/plan-panel';
 import { WalletPanel } from './components/wallet-panel';
+import { AnalyticsOverviewPanel } from './components/analytics-overview-panel';
 import type { ChecklistStep } from '@/components/education/setup-checklist';
 
 /**
@@ -133,6 +134,8 @@ export function WorkspaceDashboardPage() {
 
       {/* Setup checklist — the main onboarding guide for new workspaces */}
       <SetupChecklist steps={setupSteps} />
+
+      <AnalyticsOverviewPanel slug={workspace.slug} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <WalletPanel slug={workspace.slug} />

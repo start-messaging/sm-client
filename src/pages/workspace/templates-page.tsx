@@ -41,10 +41,7 @@ import {
 import { useResolvedTemplateExamples } from '@/api/hooks/use-template-examples';
 import { toast } from '@/lib/toast';
 import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
-import {
-  exampleBodyPreview,
-  featuredExamples,
-} from '@/lib/template-examples';
+import { exampleBodyPreview, featuredExamples } from '@/lib/template-examples';
 
 const STATUS_VARIANT: Record<
   TemplateStatus,
@@ -113,7 +110,9 @@ export function TemplatesPage() {
   const recategorized = templates.filter(wasRecategorized);
   const pendingCategory = templates.filter(hasPendingCategoryChange);
   const hasPending = templates.some((tpl) => tpl.status === 'PENDING');
-  const approvedCount = templates.filter((tpl) => tpl.status === 'APPROVED').length;
+  const approvedCount = templates.filter(
+    (tpl) => tpl.status === 'APPROVED',
+  ).length;
 
   const visible = useMemo(() => {
     const filtered =
@@ -287,9 +286,7 @@ export function TemplatesPage() {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium">
-            {t('templates.yours.title')}
-          </h2>
+          <h2 className="text-sm font-medium">{t('templates.yours.title')}</h2>
           {templates.length > 0 && (
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-8 w-40 text-xs">

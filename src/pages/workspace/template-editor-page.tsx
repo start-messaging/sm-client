@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -84,12 +89,7 @@ export function TemplateEditorPage() {
 
       {!waitingForTemplate && !missingEdit && (
         <TemplateEditorForm
-          key={
-            editId ??
-            params.get('from') ??
-            params.get('example') ??
-            'new'
-          }
+          key={editId ?? params.get('from') ?? params.get('example') ?? 'new'}
           slug={ws.slug}
           seed={seed}
           onCancel={() => navigate(listPath)}

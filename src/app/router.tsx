@@ -24,6 +24,7 @@ import { ContactsPage } from '@/pages/workspace/contacts-page';
 import { LeadsPage } from '@/pages/workspace/leads-page';
 import { CampaignsPage } from '@/pages/workspace/campaigns-page';
 import { CreateCampaignPage } from '@/pages/workspace/create-campaign-page';
+import { CampaignInsightsPage } from '@/pages/workspace/campaign-insights-page';
 import { BillingPage } from '@/pages/workspace/billing-page';
 import { SettingsPage } from '@/pages/workspace/settings-page';
 
@@ -96,6 +97,7 @@ export const router = createBrowserRouter([
               { path: 'leads', element: <LeadsPage /> },
               { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'campaigns/new', element: <CreateCampaignPage /> },
+              { path: 'campaigns/:id', element: <CampaignInsightsPage /> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
               { path: 'settings', element: <SettingsPage /> },

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Download, KanbanSquare, Trash2, Users, X } from 'lucide-react';
+import { Download, KanbanSquare, Search, Trash2, Users, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
+import { useQueryParam } from '@/hooks/use-query-param';
 import { useContacts, useDeleteContact } from '@/api/hooks/use-contacts';
 import { usePipelineStages } from '@/api/hooks/use-pipeline-stages';
 import { useMembers } from '@/api/hooks/use-members';
@@ -153,7 +155,12 @@ function applyFilters(
 export function ContactsPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
-  const { data, isLoading } = useContacts(ws.slug);
+  const {
+    value: searchValue,
+    debouncedValue: searchTerm,
+    setValue: setSearchValue,
+  } = useQueryParam('search');
+  const { data, isLoading } = useContacts(ws.slug, searchTerm || undefined);
   const { data: stagesData } = usePipelineStages(ws.slug);
   const { data: membersData } = useMembers(ws.slug, ws.id);
   const deleteContact = useDeleteContact(ws.slug);
@@ -262,13 +269,24 @@ export function ContactsPage() {
         body={t('contacts.intro.body')}
       />
 
+      {/* Search */}
+      <div className="relative max-w-xs">
+        <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
+        <Input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          placeholder={t('contacts.filter.search')}
+          className="pl-8"
+        />
+      </div>
+
       {/* Loading */}
       {isLoading && (
         <p className="text-muted-foreground text-sm">{t('common.loading')}</p>
       )}
 
       {/* Empty state */}
-      {!isLoading && contacts.length === 0 && (
+      {!isLoading && contacts.length === 0 && !searchTerm && (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <Users className="text-muted-foreground size-10" />
@@ -282,6 +300,15 @@ export function ContactsPage() {
               <ImportContactsDialog slug={ws.slug} />
               <AddContactDialog slug={ws.slug} />
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No search results */}
+      {!isLoading && contacts.length === 0 && searchTerm && (
+        <Card>
+          <CardContent className="text-muted-foreground py-12 text-center text-sm">
+            {t('contacts.filter.noResults', { term: searchTerm })}
           </CardContent>
         </Card>
       )}

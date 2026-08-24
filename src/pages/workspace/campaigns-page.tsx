@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, Megaphone, MoreHorizontal, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,40 +23,22 @@ import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import {
   useCampaigns,
+  useDuplicateCampaign,
   useLaunchCampaign,
   usePauseCampaign,
   useResumeCampaign,
 } from '@/api/hooks/use-campaigns';
 import { useWabaStatus } from '@/api/hooks/use-whatsapp';
 import { toast } from '@/lib/toast';
-import type { Campaign, CampaignStatus } from '@/api/campaigns.api';
+import { STATUS_VARIANT } from './components/campaign-status';
+import type { Campaign } from '@/api/campaigns.api';
 
 const META_MANAGER_URL =
   'https://business.facebook.com/latest/whatsapp_manager/payment_methods';
 
-const STATUS_VARIANT: Record<
-  CampaignStatus,
-  'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-  DRAFT: 'secondary',
-  SCHEDULED: 'outline',
-  RUNNING: 'default',
-  COMPLETED: 'default',
-  PAUSED: 'outline',
-  FAILED: 'destructive',
-};
-
-function rowHasActions(status: CampaignStatus): boolean {
-  return (
-    status === 'DRAFT' ||
-    status === 'SCHEDULED' ||
-    status === 'RUNNING' ||
-    status === 'PAUSED'
-  );
-}
-
 export function CampaignsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const ws = useCurrentWorkspace();
 
   const { data, isLoading } = useCampaigns(ws.slug);
@@ -65,6 +47,7 @@ export function CampaignsPage() {
   const launchMutation = useLaunchCampaign(ws.slug);
   const pauseMutation = usePauseCampaign(ws.slug);
   const resumeMutation = useResumeCampaign(ws.slug);
+  const duplicateMutation = useDuplicateCampaign(ws.slug);
 
   const campaigns = data?.campaigns ?? [];
   const launchBlocked = wabaStatus?.metaPaymentReady === false;
@@ -91,11 +74,19 @@ export function CampaignsPage() {
     });
   }
 
+  function handleDuplicate(id: string) {
+    duplicateMutation.mutate(id, {
+      onSuccess: () => toast.success(t('campaigns.duplicated')),
+      onError: (err) => toast.error(err),
+    });
+  }
+
   function actionPending(c: Campaign): boolean {
     return (
       (launchMutation.isPending && launchMutation.variables === c.id) ||
       (pauseMutation.isPending && pauseMutation.variables === c.id) ||
-      (resumeMutation.isPending && resumeMutation.variables === c.id)
+      (resumeMutation.isPending && resumeMutation.variables === c.id) ||
+      (duplicateMutation.isPending && duplicateMutation.variables === c.id)
     );
   }
 
@@ -226,52 +217,62 @@ export function CampaignsPage() {
                       {c.stats.failed}
                     </TableCell>
                     <TableCell className="text-right">
-                      {rowHasActions(c.status) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              disabled={pending}
-                              aria-label={t('campaigns.table.actions')}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            disabled={pending}
+                            aria-label={t('campaigns.table.actions')}
+                          >
+                            {pending ? (
+                              <Spinner className="size-3.5" />
+                            ) : (
+                              <MoreHorizontal className="size-4" />
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              navigate(`/w/${ws.slug}/campaigns/${c.id}`)
+                            }
+                          >
+                            {t('campaigns.action.viewInsights')}
+                          </DropdownMenuItem>
+                          {(c.status === 'DRAFT' ||
+                            c.status === 'SCHEDULED') && (
+                            <DropdownMenuItem
+                              disabled={launchBlocked}
+                              onSelect={() => handleLaunch(c.id)}
                             >
-                              {pending ? (
-                                <Spinner className="size-3.5" />
-                              ) : (
-                                <MoreHorizontal className="size-4" />
-                              )}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {(c.status === 'DRAFT' ||
-                              c.status === 'SCHEDULED') && (
-                              <DropdownMenuItem
-                                disabled={launchBlocked}
-                                onSelect={() => handleLaunch(c.id)}
-                              >
-                                {t('campaigns.action.launch')}
-                              </DropdownMenuItem>
-                            )}
-                            {c.status === 'RUNNING' && (
-                              <DropdownMenuItem
-                                onSelect={() => handlePause(c.id)}
-                              >
-                                {t('campaigns.action.pause')}
-                              </DropdownMenuItem>
-                            )}
-                            {c.status === 'PAUSED' && (
-                              <DropdownMenuItem
-                                disabled={launchBlocked}
-                                onSelect={() => handleResume(c.id)}
-                              >
-                                {t('campaigns.action.resume')}
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                              {t('campaigns.action.launch')}
+                            </DropdownMenuItem>
+                          )}
+                          {c.status === 'RUNNING' && (
+                            <DropdownMenuItem
+                              onSelect={() => handlePause(c.id)}
+                            >
+                              {t('campaigns.action.pause')}
+                            </DropdownMenuItem>
+                          )}
+                          {c.status === 'PAUSED' && (
+                            <DropdownMenuItem
+                              disabled={launchBlocked}
+                              onSelect={() => handleResume(c.id)}
+                            >
+                              {t('campaigns.action.resume')}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onSelect={() => handleDuplicate(c.id)}
+                          >
+                            {t('campaigns.action.duplicate')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );

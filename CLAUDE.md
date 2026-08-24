@@ -8,7 +8,8 @@ recipe), see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 - Hub: [../.claude/CLAUDE.md](../.claude/CLAUDE.md)
 - WhatsApp plan: [../.claude/plans/whatsapp-deep-build-plan.md](../.claude/plans/whatsapp-deep-build-plan.md)
-- Skills: [../.claude/skills/whatsapp-educational-ux/SKILL.md](../.claude/skills/whatsapp-educational-ux/SKILL.md), [whatsapp-product](../.claude/skills/whatsapp-product/SKILL.md)
+- Multitask models: [../.claude/AGENT_MODELS.md](../.claude/AGENT_MODELS.md)
+- Skills: [whatsapp-educational-ux](../.claude/skills/whatsapp-educational-ux/SKILL.md), [whatsapp-product](../.claude/skills/whatsapp-product/SKILL.md), [cross-repo-feature](../.claude/skills/cross-repo-feature/SKILL.md)
 
 **Product:** Customer WhatsApp CRM SPA (`whatsapp.startmessaging.com`). Prefer WhatsApp-only IA (not multi-service gallery). Educational UX + Meta payment-method gates required. Tech Provider: never “add funds to send.” Backend: `sm-server`. Admin: `sm-admin`.
 

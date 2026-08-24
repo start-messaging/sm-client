@@ -73,6 +73,11 @@ export interface WaConversation {
   assigneeName: string | null;
   status: ConversationStatus;
   resolvedAt: string | null;
+  /**
+   * Contact tags (joined from the linked contact). Not yet populated by the
+   * list endpoint — the row renders once the server includes it.
+   */
+  tags?: string[];
 }
 
 export interface PatchConversationBody {
@@ -123,6 +128,10 @@ export interface CreateConversationBody {
   contactName?: string;
 }
 
+export interface UnreadCountResult {
+  total: number;
+}
+
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export const messagesApi = {
@@ -143,6 +152,9 @@ export const messagesApi = {
 
   listMessages: (slug: string, conversationId: string) =>
     apiGet<MessageListResult>(endpoints.messages.list(slug, conversationId)),
+
+  getUnreadCount: (slug: string) =>
+    apiGet<UnreadCountResult>(endpoints.messages.unreadCount(slug)),
 
   send: (slug: string, conversationId: string, body: SendMessageBody) =>
     apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), body),

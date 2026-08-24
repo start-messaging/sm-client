@@ -2,15 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   contactsApi,
   type CreateContactBody,
+  type ImportContactsMappedBody,
   type UpdateContactBody,
 } from '@/api/contacts.api';
 import { queryKeys } from '@/api/query-keys';
 import { STALE } from '@/lib/query-client';
 
-export function useContacts(slug: string) {
+export function useContacts(slug: string, search?: string) {
   return useQuery({
-    queryKey: queryKeys.contacts.all(slug),
-    queryFn: () => contactsApi.list(slug),
+    queryKey: queryKeys.contacts.all(slug, search),
+    queryFn: () => contactsApi.list(slug, { search }),
     enabled: slug.length > 0,
     staleTime: STALE.STANDARD,
   });
@@ -52,10 +53,11 @@ export function useDeleteContact(slug: string) {
   return useContactMutation(slug, (id: string) => contactsApi.delete(slug, id));
 }
 
-export function useImportContacts(slug: string) {
+export function useImportContactsMapped(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (formData: FormData) => contactsApi.import(slug, formData),
+    mutationFn: (body: ImportContactsMappedBody) =>
+      contactsApi.importMapped(slug, body),
     onSuccess: () =>
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all(slug) }),
   });

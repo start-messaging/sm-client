@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -90,14 +90,44 @@ function urlExampleSuffix(url: string, sample: string): string {
   return sample;
 }
 
-const schema = z.object({
-  name: z.string().regex(TEMPLATE_NAME_RE, 'templates.create.nameInvalid'),
-  language: z.string().min(2),
-  category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
-  bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
-  headerText: z.string().max(60).optional(),
-  footerText: z.string().max(60).optional(),
-});
+function bodyVariableIndexes(text: string): number[] {
+  const matches = [...text.matchAll(/\{\{([0-9]+)\}\}/g)];
+  const indexes = matches.map((m) => Number(m[1]));
+  return Array.from(new Set(indexes)).sort((a, b) => a - b);
+}
+
+function substituteBodyVariables(
+  text: string,
+  samples: Record<number, string>,
+): string {
+  return text.replace(/\{\{([0-9]+)\}\}/g, (match, n) => {
+    const sample = samples[Number(n)]?.trim();
+    return sample || match;
+  });
+}
+
+const HEADER_FORMATS: NonNullable<TemplateComponent['format']>[] = [
+  'TEXT',
+  'IMAGE',
+  'VIDEO',
+  'DOCUMENT',
+];
+
+const schema = z
+  .object({
+    name: z.string().regex(TEMPLATE_NAME_RE, 'templates.create.nameInvalid'),
+    language: z.string().min(2),
+    category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
+    bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
+    headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
+    headerText: z.string().max(60).optional(),
+    headerLink: z.string().max(2048).optional(),
+    footerText: z.string().max(60).optional(),
+  })
+  .refine((v) => v.headerFormat === 'TEXT' || !!v.headerLink?.trim(), {
+    message: 'templates.create.headerLinkRequired',
+    path: ['headerLink'],
+  });
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateTemplateSeed {
@@ -105,10 +135,38 @@ export interface CreateTemplateSeed {
   language: string;
   category: TemplateCategory;
   bodyText: string;
+  bodySamples?: string[];
+  headerFormat?: TemplateComponent['format'];
   headerText?: string;
+  headerLink?: string;
   footerText?: string;
   buttons?: ButtonRow[];
   banner?: 'copyApproved' | 'resubmitRejected';
+}
+
+function seedFromComponents(
+  components: TemplateComponent[],
+): Pick<
+  CreateTemplateSeed,
+  | 'bodyText'
+  | 'bodySamples'
+  | 'headerFormat'
+  | 'headerText'
+  | 'headerLink'
+  | 'footerText'
+  | 'buttons'
+> {
+  const header = components.find((c) => c.type === 'HEADER');
+  const body = components.find((c) => c.type === 'BODY');
+  return {
+    bodyText: body?.text ?? '',
+    bodySamples: body?.example?.body_text?.[0],
+    headerFormat: header?.format,
+    headerText: header?.text,
+    headerLink: header?.link,
+    footerText: components.find((c) => c.type === 'FOOTER')?.text,
+    buttons: buttonsFromComponents(components),
+  };
 }
 
 export function seedFromExample(example: TemplateExample): CreateTemplateSeed {
@@ -116,10 +174,7 @@ export function seedFromExample(example: TemplateExample): CreateTemplateSeed {
     name: example.suggestedName,
     language: example.language,
     category: example.category,
-    bodyText: example.components.find((c) => c.type === 'BODY')?.text ?? '',
-    headerText: example.components.find((c) => c.type === 'HEADER')?.text,
-    footerText: example.components.find((c) => c.type === 'FOOTER')?.text,
-    buttons: buttonsFromComponents(example.components),
+    ...seedFromComponents(example.components),
   };
 }
 
@@ -132,10 +187,7 @@ export function seedFromTemplate(
     name,
     language: tpl.language,
     category: tpl.category,
-    bodyText: tpl.components.find((c) => c.type === 'BODY')?.text ?? '',
-    headerText: tpl.components.find((c) => c.type === 'HEADER')?.text,
-    footerText: tpl.components.find((c) => c.type === 'FOOTER')?.text,
-    buttons: buttonsFromComponents(tpl.components),
+    ...seedFromComponents(tpl.components),
     banner: opts?.asNewVersion ? 'copyApproved' : 'resubmitRejected',
   };
 }
@@ -167,6 +219,14 @@ export function TemplateEditorForm({
   const { t } = useTranslation();
   const [buttons, setButtons] = useState<ButtonRow[]>(seed?.buttons ?? []);
   const [buttonErrors, setButtonErrors] = useState<string[]>([]);
+  const [bodySamples, setBodySamples] = useState<Record<number, string>>(() => {
+    const init: Record<number, string> = {};
+    seed?.bodySamples?.forEach((v, i) => {
+      init[i + 1] = v;
+    });
+    return init;
+  });
+  const [bodySampleError, setBodySampleError] = useState('');
   const createTemplate = useCreateTemplate(slug);
 
   const {
@@ -182,7 +242,9 @@ export function TemplateEditorForm({
       language: seed?.language ?? 'en_US',
       category: seed?.category ?? 'UTILITY',
       bodyText: seed?.bodyText ?? '',
+      headerFormat: seed?.headerFormat ?? 'TEXT',
       headerText: seed?.headerText ?? '',
+      headerLink: seed?.headerLink ?? '',
       footerText: seed?.footerText ?? '',
     },
   });
@@ -191,8 +253,26 @@ export function TemplateEditorForm({
   const category = useWatch({ control, name: 'category' });
   const name = useWatch({ control, name: 'name' });
   const bodyText = useWatch({ control, name: 'bodyText' });
+  const headerFormat = useWatch({ control, name: 'headerFormat' });
   const headerText = useWatch({ control, name: 'headerText' });
   const footerText = useWatch({ control, name: 'footerText' });
+
+  const bodyVariables = useMemo(
+    () => bodyVariableIndexes(bodyText ?? ''),
+    [bodyText],
+  );
+
+  const previewBodyText = useMemo(
+    () => substituteBodyVariables(bodyText ?? '', bodySamples),
+    [bodyText, bodySamples],
+  );
+
+  const previewHeaderText = headerFormat === 'TEXT' ? headerText : undefined;
+
+  function updateBodySample(index: number, value: string) {
+    setBodySamples((prev) => ({ ...prev, [index]: value }));
+    setBodySampleError('');
+  }
 
   function addButton() {
     if (buttons.length >= MAX_BUTTONS) return;
@@ -223,7 +303,10 @@ export function TemplateEditorForm({
     let seenPhone = 0;
     return buttons.map((b) => {
       if (!b.text.trim())
-        return t('templates.create.buttons.errorText', 'Button label is required');
+        return t(
+          'templates.create.buttons.errorText',
+          'Button label is required',
+        );
       if (b.type === 'URL') {
         seenUrl += 1;
         if (urlCount > 2 && seenUrl > 2)
@@ -247,7 +330,10 @@ export function TemplateEditorForm({
             'Meta allows only one call button',
           );
         if (!b.phoneNumber.trim())
-          return t('templates.create.buttons.errorPhone', 'Phone number is required');
+          return t(
+            'templates.create.buttons.errorPhone',
+            'Phone number is required',
+          );
       }
       return '';
     });
@@ -260,15 +346,42 @@ export function TemplateEditorForm({
       return;
     }
 
+    const missingSample = bodyVariables.some((n) => !bodySamples[n]?.trim());
+    if (missingSample) {
+      setBodySampleError(
+        t(
+          'templates.create.sampleRequired',
+          'A sample value is required for every {{n}} variable in the body',
+        ),
+      );
+      return;
+    }
+
     const components: TemplateComponent[] = [];
-    if (v.headerText?.trim()) {
+    if (v.headerFormat === 'TEXT') {
+      if (v.headerText?.trim()) {
+        components.push({
+          type: 'HEADER',
+          format: 'TEXT',
+          text: v.headerText.trim(),
+        });
+      }
+    } else {
       components.push({
         type: 'HEADER',
-        format: 'TEXT',
-        text: v.headerText.trim(),
+        format: v.headerFormat,
+        link: v.headerLink?.trim(),
       });
     }
-    components.push({ type: 'BODY', text: v.bodyText });
+
+    const bodyComponent: TemplateComponent = { type: 'BODY', text: v.bodyText };
+    if (bodyVariables.length > 0) {
+      bodyComponent.example = {
+        body_text: [bodyVariables.map((n) => bodySamples[n]?.trim() ?? '')],
+      };
+    }
+    components.push(bodyComponent);
+
     if (v.footerText?.trim()) {
       components.push({ type: 'FOOTER', text: v.footerText.trim() });
     }
@@ -341,7 +454,9 @@ export function TemplateEditorForm({
         )}
 
         <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-name">{t('templates.create.name')}</FieldLabel>
+          <FieldLabel htmlFor="tpl-name">
+            {t('templates.create.name')}
+          </FieldLabel>
           <Input
             id="tpl-name"
             placeholder="order_confirmation"
@@ -400,19 +515,58 @@ export function TemplateEditorForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-header">
+          <FieldLabel htmlFor="tpl-header-format">
             {t('templates.create.headerOptional')}
           </FieldLabel>
-          <Input
-            id="tpl-header"
-            placeholder={t('templates.create.headerPlaceholder')}
-            maxLength={60}
-            {...register('headerText')}
-          />
+          <Select
+            value={headerFormat}
+            onValueChange={(v) =>
+              setValue('headerFormat', v as FormValues['headerFormat'])
+            }
+          >
+            <SelectTrigger id="tpl-header-format">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {HEADER_FORMATS.map((f) => (
+                <SelectItem key={f} value={f}>
+                  {t(`templates.create.headerFormat.${f}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {headerFormat === 'TEXT' ? (
+            <Input
+              id="tpl-header"
+              placeholder={t('templates.create.headerPlaceholder')}
+              maxLength={60}
+              {...register('headerText')}
+            />
+          ) : (
+            <>
+              <Input
+                id="tpl-header-link"
+                placeholder="https://cdn.example.com/banner.jpg"
+                aria-invalid={!!errors.headerLink}
+                {...register('headerLink')}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.headerLinkHint')}
+              </p>
+              {errors.headerLink && (
+                <FieldError
+                  errors={[{ message: t(errors.headerLink.message!) }]}
+                />
+              )}
+            </>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-body">{t('templates.create.body')}</FieldLabel>
+          <FieldLabel htmlFor="tpl-body">
+            {t('templates.create.body')}
+          </FieldLabel>
           <Textarea
             id="tpl-body"
             rows={5}
@@ -425,6 +579,35 @@ export function TemplateEditorForm({
           </p>
           {errors.bodyText && (
             <FieldError errors={[{ message: t(errors.bodyText.message!) }]} />
+          )}
+
+          {bodyVariables.length > 0 && (
+            <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
+              <p className="text-xs font-semibold">
+                {t('templates.create.sampleValuesTitle')}
+              </p>
+              {bodyVariables.map((n) => (
+                <div key={n} className="flex flex-col gap-1">
+                  <FieldLabel htmlFor={`tpl-sample-${n}`} className="text-xs">
+                    {t('templates.create.sampleFor', 'Sample for {{n}}', {
+                      n: `{{${n}}}`,
+                    })}
+                  </FieldLabel>
+                  <Input
+                    id={`tpl-sample-${n}`}
+                    className="h-8 text-xs"
+                    value={bodySamples[n] ?? ''}
+                    onChange={(e) => updateBodySample(n, e.target.value)}
+                  />
+                </div>
+              ))}
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.sampleHint')}
+              </p>
+              {bodySampleError && (
+                <FieldError errors={[{ message: bodySampleError }]} />
+              )}
+            </div>
           )}
         </div>
 
@@ -488,7 +671,10 @@ export function TemplateEditorForm({
                   size="icon"
                   className="size-6"
                   onClick={() => removeButton(idx)}
-                  aria-label={t('templates.create.buttons.remove', 'Remove button')}
+                  aria-label={t(
+                    'templates.create.buttons.remove',
+                    'Remove button',
+                  )}
                 >
                   <Trash2 className="size-3.5 text-destructive" />
                 </Button>
@@ -587,8 +773,8 @@ export function TemplateEditorForm({
 
       <aside className="hidden w-72 shrink-0 lg:sticky lg:top-0 lg:block lg:self-start">
         <WaMessagePreview
-          headerText={headerText}
-          bodyText={bodyText}
+          headerText={previewHeaderText}
+          bodyText={previewBodyText}
           footerText={footerText}
           templateName={name}
           buttonLabels={buttonLabels}

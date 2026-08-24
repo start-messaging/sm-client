@@ -63,6 +63,22 @@ export function useConversations(
   });
 }
 
+/**
+ * Total unread-conversation count, for the sidebar Inbox badge. Polls every
+ * 30s as a floor and is invalidated by `useInboxRealtime`'s `inbox.updated`
+ * handler, so it stays current without a second SSE connection.
+ */
+export function useUnreadCount(slug: string, opts?: { enabled?: boolean }) {
+  const enabled = (opts?.enabled ?? true) && slug.length > 0;
+  return useQuery({
+    queryKey: queryKeys.messages.unreadCount(slug),
+    queryFn: () => messagesApi.getUnreadCount(slug),
+    enabled,
+    staleTime: STALE.STANDARD,
+    refetchInterval: enabled ? 30_000 : false,
+  });
+}
+
 /** PATCH a conversation (assign, resolve, mark-read, claim). */
 export function usePatchConversation(slug: string) {
   const qc = useQueryClient();

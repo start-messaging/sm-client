@@ -5,6 +5,7 @@ import { env } from '@/config/env';
 import { endpoints } from '@/api/endpoints';
 import { queryKeys } from '@/api/query-keys';
 import { authStore } from '@/stores/auth.store';
+import { useNotificationStore } from '@/stores/notification.store';
 
 type InboxSsePayload = {
   type?: string;
@@ -112,10 +113,14 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
             t('inbox.notifications.newMessageBody'),
             payload,
           );
+          useNotificationStore.getState().setHasUpdate('inbox', true);
         }
 
         void qc.invalidateQueries({
           queryKey: queryKeys.messages.conversationsAll(slug),
+        });
+        void qc.invalidateQueries({
+          queryKey: queryKeys.messages.unreadCount(slug),
         });
         if (payload.conversationId) {
           void qc.invalidateQueries({
@@ -132,7 +137,7 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
       // Some browsers only fire generic `message` if `type` isn't used as event name.
       es.onmessage = (ev) => {
         if (cancelled) return;
-        let payload: InboxSsePayload = {};
+        let payload: InboxSsePayload;
         try {
           payload = JSON.parse(ev.data as string) as InboxSsePayload;
         } catch {
@@ -150,9 +155,13 @@ export function useInboxRealtime(slug: string): { connected: boolean } {
               t('inbox.notifications.newMessageBody'),
               payload,
             );
+            useNotificationStore.getState().setHasUpdate('inbox', true);
           }
           void qc.invalidateQueries({
             queryKey: queryKeys.messages.conversationsAll(slug),
+          });
+          void qc.invalidateQueries({
+            queryKey: queryKeys.messages.unreadCount(slug),
           });
           if (payload.conversationId) {
             void qc.invalidateQueries({

@@ -18,12 +18,15 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { InfoTip } from '@/components/shared/info-tip';
 import { UserMenu } from '@/components/layout/user-menu';
 import { useMyWorkspaces } from '@/api/hooks/use-workspaces';
+import { useUnreadCount } from '@/api/hooks/use-messages';
+import { useNotificationStore } from '@/stores/notification.store';
 import { COMMON_NAV, navForService } from '@/config/service-nav';
 import { APP_NAME } from '@/config/app';
 import type { CurrentWorkspace } from '@/types/api';
@@ -91,6 +94,25 @@ function NavItem({
 }) {
   const { t } = useTranslation();
   const Icon = item.icon;
+  const isInbox = item.segment === 'inbox';
+  const { data: unread } = useUnreadCount(workspace.slug, {
+    enabled: isInbox,
+  });
+  const hasUpdate = useNotificationStore(
+    (s) => s.hasUpdate[item.segment] ?? false,
+  );
+
+  const icon = (
+    <span className="relative inline-flex">
+      <Icon />
+      {hasUpdate && (
+        <span className="absolute -right-0.5 -top-0.5 flex size-1.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
+        </span>
+      )}
+    </span>
+  );
 
   if (item.comingSoon) {
     return (
@@ -101,7 +123,7 @@ function NavItem({
             className="cursor-default opacity-50"
             aria-disabled="true"
           >
-            <Icon />
+            {icon}
             <span>{t(item.labelKey)}</span>
           </SidebarMenuButton>
         </InfoTip>
@@ -118,12 +140,17 @@ function NavItem({
         {({ isActive }) => (
           <SidebarMenuButton asChild isActive={isActive}>
             <span>
-              <Icon />
+              {icon}
               <span>{t(item.labelKey)}</span>
             </span>
           </SidebarMenuButton>
         )}
       </NavLink>
+      {isInbox && (unread?.total ?? 0) > 0 && (
+        <SidebarMenuBadge className="rounded-full bg-red-500 text-white">
+          {unread?.total}
+        </SidebarMenuBadge>
+      )}
     </SidebarMenuItem>
   );
 }

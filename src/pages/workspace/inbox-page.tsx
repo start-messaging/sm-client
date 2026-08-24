@@ -32,6 +32,9 @@ import { ConversationThread } from './components/conversation-thread';
 import { NewConversationDialog } from './components/new-conversation-dialog';
 import { InboxContactRail } from './components/inbox-contact-rail';
 import { cn } from '@/lib/utils';
+import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
+import { formatRelativeShort } from '@/lib/relative-time';
+import { useNotificationStore } from '@/stores/notification.store';
 
 /** Radix Select forbids Item value=""; these sentinels mean "no filter". */
 const FILTER_WINDOW_ALL = '__all__';
@@ -81,7 +84,16 @@ function ConvItem({
   isSelected: boolean;
   onSelect: (c: WaConversation) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const initials = getInitials(conv.contactName, conv.contactPhone);
+  const { bg, text } = getAvatarColors(conv.contactName ?? conv.contactPhone);
+  const timestamp = formatRelativeShort(
+    conv.lastMessage?.timestamp ?? conv.updatedAt,
+    { locale: i18n.language, nowLabel: t('inbox.now') },
+  );
+  const tags = conv.tags ?? [];
+  const visibleTags = tags.slice(0, 2);
+  const extraTagCount = tags.length - visibleTags.length;
 
   return (
     <button
@@ -92,19 +104,30 @@ function ConvItem({
         isSelected && 'bg-muted/60',
       )}
     >
-      <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-full">
-        <MessageSquare className="text-muted-foreground size-4" />
+      <div
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+          bg,
+          text,
+        )}
+      >
+        {initials}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1">
           <span className="truncate font-medium text-sm">
             {conv.contactName ?? conv.contactPhone}
           </span>
-          {conv.unreadCount > 0 && (
-            <Badge className="rounded-full px-1.5 py-0.5 text-xs tabular-nums shrink-0 h-auto">
-              {conv.unreadCount}
-            </Badge>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] text-muted-foreground">
+              {timestamp}
+            </span>
+            {conv.unreadCount > 0 && (
+              <Badge className="rounded-full px-1.5 py-0.5 text-xs tabular-nums shrink-0 h-auto">
+                {conv.unreadCount}
+              </Badge>
+            )}
+          </div>
         </div>
         <p className="text-muted-foreground truncate text-xs mt-0.5">
           {conv.lastMessage
@@ -124,6 +147,20 @@ function ConvItem({
             </span>
           )}
         </div>
+        {tags.length > 0 && (
+          <div className="flex items-center gap-1 mt-1">
+            {visibleTags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {extraTagCount > 0 && (
+              <Badge variant="outline" className="text-xs">
+                +{extraTagCount}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -137,6 +174,11 @@ export function InboxPage() {
   const { connected: sseConnected } = useInboxRealtime(ws.slug);
   const [activeTab, setActiveTab] = useState<ConversationTab>('all');
   const [search, setSearch] = useState('');
+
+  // Viewing the inbox clears its "unviewed update" nav dot.
+  useEffect(() => {
+    useNotificationStore.getState().clearHasUpdate('inbox');
+  }, []);
 
   // ── Server-side filters ──────────────────────────────────────────────────
   const [filterUnread, setFilterUnread] = useState(false);

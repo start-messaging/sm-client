@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;line-height:1.5;color:#18181b;background:#fafafa;}
+input,textarea,select,button{font-family:inherit;font-size:inherit;line-height:inherit;}
+[data-lucide]{display:block;flex-shrink:0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:99px;}
+::-webkit-scrollbar-track{background:transparent;}
+@keyframes pd{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);}}
+a{color:inherit;text-decoration:none;}
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;overflow:hidden;background:#fafafa;font-family:'Geist',-apple-system,sans-serif;color:#18181b;">
+
+<!-- SIDEBAR -->
+<aside style="width:240px;min-width:240px;background:#fff;border-right:1px solid #e4e4e7;display:flex;flex-direction:column;height:100%;overflow:hidden;">
+  <div style="padding:10px;border-bottom:1px solid #e4e4e7;">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;" style-hover="background:#f4f4f5">
+      <div style="width:28px;height:28px;background:#18181b;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;">AC</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Acme Corp</div>
+        <div style="font-size:11px;color:#71717a;line-height:1.2;">workspace</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <span style="font-size:10px;font-weight:600;padding:1px 5px;background:#18181b;color:#fff;border-radius:3px;letter-spacing:0.02em;">PRO</span>
+        <i data-lucide="chevrons-up-down" style="width:13px;height:13px;color:#a1a1aa;"></i>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:6px;">
+    <div style="font-size:10px;font-weight:500;color:#a1a1aa;letter-spacing:0.08em;text-transform:uppercase;padding:6px 8px 3px;">WhatsApp</div>
+    <div style="{{ nDB.s }}" style-hover="{{ nDB.h }}" onClick="{{ nDB.c }}">
+      <i data-lucide="layout-dashboard" style="width:15px;height:15px;"></i><span style="flex:1;">Dashboard</span>
+    </div>
+    <div style="{{ nCN.s }}" style-hover="{{ nCN.h }}" onClick="{{ nCN.c }}">
+      <i data-lucide="link-2" style="width:15px;height:15px;"></i><span style="flex:1;">Connect</span>
+    </div>
+    <div style="{{ nIB.s }}" style-hover="{{ nIB.h }}" onClick="{{ nIB.c }}">
+      <i data-lucide="inbox" style="width:15px;height:15px;"></i>
+      <span style="flex:1;">Inbox</span>
+      <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;flex-shrink:0;">12</span>
+    </div>
+    <div style="{{ nTM.s }}" style-hover="{{ nTM.h }}" onClick="{{ nTM.c }}">
+      <i data-lucide="layout-template" style="width:15px;height:15px;"></i><span style="flex:1;">Templates</span>
+    </div>
+    <div style="{{ nCT.s }}" style-hover="{{ nCT.h }}" onClick="{{ nCT.c }}">
+      <i data-lucide="user-round" style="width:15px;height:15px;"></i><span style="flex:1;">Contacts</span>
+    </div>
+    <div style="{{ nLD.s }}" style-hover="{{ nLD.h }}" onClick="{{ nLD.c }}">
+      <i data-lucide="kanban" style="width:15px;height:15px;"></i><span style="flex:1;">Leads</span>
+    </div>
+    <div style="{{ nCA.s }}" style-hover="{{ nCA.h }}" onClick="{{ nCA.c }}">
+      <div style="position:relative;width:15px;height:15px;flex-shrink:0;">
+        <i data-lucide="megaphone" style="width:15px;height:15px;"></i>
+        <span style="position:absolute;top:-2px;right:-2px;width:6px;height:6px;background:#22c55e;border-radius:50%;border:1.5px solid #fff;animation:pd 2s ease-in-out infinite;"></span>
+      </div>
+      <span style="flex:1;">Campaigns</span>
+    </div>
+    <div style="margin:6px 0;border-top:1px solid #f4f4f5;"></div>
+    <div style="font-size:10px;font-weight:500;color:#a1a1aa;letter-spacing:0.08em;text-transform:uppercase;padding:6px 8px 3px;">Common</div>
+    <div style="{{ nMB.s }}" style-hover="{{ nMB.h }}" onClick="{{ nMB.c }}">
+      <i data-lucide="users" style="width:15px;height:15px;"></i><span style="flex:1;">Members</span>
+    </div>
+    <div style="{{ nBL.s }}" style-hover="{{ nBL.h }}" onClick="{{ nBL.c }}">
+      <i data-lucide="credit-card" style="width:15px;height:15px;"></i><span style="flex:1;">Billing</span>
+    </div>
+    <div style="{{ nST.s }}" style-hover="{{ nST.h }}" onClick="{{ nST.c }}">
+      <i data-lucide="settings" style="width:15px;height:15px;"></i><span style="flex:1;">Settings</span>
+    </div>
+  </div>
+
+  <div style="padding:8px;border-top:1px solid #e4e4e7;">
+    <div style="background:#f4f4f5;border-radius:8px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:600;">FREE plan</span>
+        <span style="font-size:11px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onClick="{{ nBL.c }}">Upgrade</span>
+      </div>
+      <div style="font-size:11px;color:#71717a;margin-bottom:6px;">142 / 200 contacts</div>
+      <div style="height:3px;background:#e4e4e7;border-radius:99px;overflow:hidden;">
+        <div style="height:100%;width:71%;background:#18181b;border-radius:99px;"></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
+  <header style="height:52px;min-height:52px;background:#fff;border-bottom:1px solid #e4e4e7;display:flex;align-items:center;padding:0 24px;gap:12px;">
+    <h1 style="font-size:15px;font-weight:600;flex:1;">{{ pageTitle }}</h1>
+    <div style="display:flex;align-items:center;gap:2px;">
+      <button style="width:32px;height:32px;background:transparent;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5">
+        <i data-lucide="bell" style="width:16px;height:16px;"></i>
+      </button>
+      <button style="width:32px;height:32px;background:transparent;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5">
+        <i data-lucide="grid-3x3" style="width:16px;height:16px;"></i>
+      </button>
+      <div style="width:28px;height:28px;background:#18181b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;cursor:pointer;margin-left:6px;">RK</div>
+    </div>
+  </header>
+
+  <main style="flex:1;overflow:hidden;position:relative;">
+
+    <!-- ════ DASHBOARD ════ -->
+    <sc-if value="{{ s_dashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:18px;font-weight:600;">Good morning, Rohan</h2>
+              <p style="font-size:13px;color:#71717a;margin-top:2px;">Here's what's happening with your workspace.</p>
+            </div>
+            <div style="display:flex;background:#f4f4f5;border-radius:6px;padding:2px;gap:1px;">
+              <div style="{{ drt }}" onClick="{{ setDrT }}">Today</div>
+              <div style="{{ dr7 }}" onClick="{{ setDr7 }}">7 days</div>
+              <div style="{{ dr30 }}" onClick="{{ setDr30 }}">30 days</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-size:12px;font-weight:500;color:#71717a;">Conversations today</span>
+                <i data-lucide="message-square" style="width:15px;height:15px;color:#a1a1aa;"></i>
+              </div>
+              <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-0.02em;margin-bottom:6px;">48</div>
+              <div style="font-size:12px;color:#71717a;">↑ 12% vs yesterday</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-size:12px;font-weight:500;color:#71717a;">Resolved today</span>
+                <i data-lucide="check-circle-2" style="width:15px;height:15px;color:#a1a1aa;"></i>
+              </div>
+              <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-0.02em;margin-bottom:6px;">31</div>
+              <div style="font-size:12px;color:#71717a;">Resolution rate 64%</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-size:12px;font-weight:500;color:#71717a;">Avg first response</span>
+                <i data-lucide="timer" style="width:15px;height:15px;color:#a1a1aa;"></i>
+              </div>
+              <div style="font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.02em;margin-bottom:6px;">4m 22s</div>
+              <div style="font-size:12px;color:#71717a;">Target: under 5 min ✓</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-size:12px;font-weight:500;color:#71717a;">Open conversations</span>
+                <i data-lucide="inbox" style="width:15px;height:15px;color:#a1a1aa;"></i>
+              </div>
+              <div style="font-size:30px;font-weight:700;line-height:1;letter-spacing:-0.02em;margin-bottom:6px;color:#d97706;">17</div>
+              <div style="font-size:12px;color:#d97706;">3 unassigned</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;">
+            <div style="flex:0 0 60%;min-width:0;background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+              <div style="padding:14px 18px;border-bottom:1px solid #f4f4f5;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:14px;font-weight:600;">Agent performance</span>
+                <span style="font-size:12px;color:#71717a;cursor:pointer;" style-hover="color:#18181b">View all →</span>
+              </div>
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#fafafa;">
+                    <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:9px 18px;border-bottom:1px solid #f4f4f5;">Agent</th>
+                    <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:9px 12px;border-bottom:1px solid #f4f4f5;">Handled</th>
+                    <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:9px 12px;border-bottom:1px solid #f4f4f5;">Resolved</th>
+                    <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:9px 12px;border-bottom:1px solid #f4f4f5;">Avg resp.</th>
+                    <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:9px 18px;border-bottom:1px solid #f4f4f5;">FRR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style-hover="background:#fafafa">
+                    <td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">RK</div><span style="font-size:13px;font-weight:500;">Rohan K.</span></div></td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">18</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">12</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;color:#71717a;border-bottom:1px solid #f4f4f5;">3m 12s</td>
+                    <td style="padding:10px 18px;text-align:right;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">87%</span></td>
+                  </tr>
+                  <tr style-hover="background:#fafafa">
+                    <td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">PS</div><span style="font-size:13px;font-weight:500;">Priya S.</span></div></td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">14</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">9</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;color:#71717a;border-bottom:1px solid #f4f4f5;">5m 44s</td>
+                    <td style="padding:10px 18px;text-align:right;border-bottom:1px solid #f4f4f5;"><span style="background:#fef9c3;color:#ca8a04;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">71%</span></td>
+                  </tr>
+                  <tr style-hover="background:#fafafa">
+                    <td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">AM</div><span style="font-size:13px;font-weight:500;">Arjun M.</span></div></td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">11</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">8</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;color:#71717a;border-bottom:1px solid #f4f4f5;">4m 01s</td>
+                    <td style="padding:10px 18px;text-align:right;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">82%</span></td>
+                  </tr>
+                  <tr style-hover="background:#fafafa">
+                    <td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">NR</div><span style="font-size:13px;font-weight:500;">Neha R.</span></div></td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">8</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;border-bottom:1px solid #f4f4f5;">5</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;color:#71717a;border-bottom:1px solid #f4f4f5;">7m 22s</td>
+                    <td style="padding:10px 18px;text-align:right;border-bottom:1px solid #f4f4f5;"><span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">63%</span></td>
+                  </tr>
+                  <tr style-hover="background:#fafafa">
+                    <td style="padding:10px 18px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">VT</div><span style="font-size:13px;font-weight:500;">Vikram T.</span></div></td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;">5</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;">3</td>
+                    <td style="padding:10px 12px;text-align:right;font-size:13px;color:#71717a;">9m 15s</td>
+                    <td style="padding:10px 18px;text-align:right;"><span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">55%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="flex:1;min-width:0;background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+              <div style="padding:14px 18px;border-bottom:1px solid #f4f4f5;">
+                <span style="font-size:14px;font-weight:600;">Recent activity</span>
+              </div>
+              <div style="padding:0 18px;">
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f4f4f5;"><div style="width:26px;height:26px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">PS</div><div><span style="font-size:13px;font-weight:500;">Priya Sharma</span><span style="font-size:13px;color:#71717a;"> conversation resolved</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">2 min ago</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f4f4f5;"><div style="width:26px;height:26px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">RK</div><div><span style="font-size:13px;font-weight:500;">Rajesh Kumar</span><span style="font-size:13px;color:#71717a;"> sent a template</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">8 min ago</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f4f4f5;"><div style="width:26px;height:26px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">AP</div><div><span style="font-size:13px;font-weight:500;">Aisha Patel</span><span style="font-size:13px;color:#71717a;"> new conversation opened</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">14 min ago</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f4f4f5;"><div style="width:26px;height:26px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">VS</div><div><span style="font-size:13px;font-weight:500;">Vikram Singh</span><span style="font-size:13px;color:#71717a;"> assigned to Rohan K.</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">22 min ago</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f4f4f5;"><div style="width:26px;height:26px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">SG</div><div><span style="font-size:13px;font-weight:500;">Sneha Gupta</span><span style="font-size:13px;color:#71717a;"> left a note</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">35 min ago</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;"><div style="width:26px;height:26px;border-radius:50%;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;">AK</div><div><span style="font-size:13px;font-weight:500;">Arjun Kumar</span><span style="font-size:13px;color:#71717a;"> stage updated to Customer</span><div style="font-size:11px;color:#a1a1aa;margin-top:1px;">1 hr ago</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ CONNECT ════ -->
+    <sc-if value="{{ s_connect }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;max-width:720px;">
+          <div style="margin-bottom:20px;">
+            <h2 style="font-size:18px;font-weight:600;">Connect WhatsApp</h2>
+            <p style="font-size:13px;color:#71717a;margin-top:2px;">Manage your WhatsApp Business connection and settings.</p>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="check-circle-2" style="width:20px;height:20px;color:#16a34a;"></i>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px;">WhatsApp Business Connected</div>
+              <div style="font-size:13px;color:#71717a;margin-bottom:2px;">+91 98765 00000 · Acme Corp WABA</div>
+              <div style="font-size:12px;color:#a1a1aa;">Connected Aug 1, 2026 · ID: 123456789012345</div>
+            </div>
+            <button style="background:transparent;color:#71717a;padding:6px 12px;border-radius:6px;border:1px solid #e4e4e7;font-size:12px;font-weight:500;cursor:pointer;" style-hover="background:#f4f4f5">Manage</button>
+          </div>
+          <div style="background:#fff;border:1px solid #fcd34d;border-radius:10px;padding:20px;display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="alert-triangle" style="width:20px;height:20px;color:#d97706;"></i>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Payment method required</div>
+              <div style="font-size:13px;color:#71717a;margin-bottom:12px;">Attach a payment method in Meta Business Manager to start sending campaigns and responding to customers. Without it, outbound messages will fail.</div>
+              <button style="background:transparent;color:#18181b;padding:6px 12px;border-radius:6px;border:1px solid #e4e4e7;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:#fafafa">
+                Open Meta Business Manager
+                <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ INBOX ════ -->
+    <sc-if value="{{ s_inbox }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;overflow:hidden;">
+
+        <!-- Left pane: conversation list -->
+        <div style="width:288px;min-width:288px;border-right:1px solid #e4e4e7;display:flex;flex-direction:column;background:#fff;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid #e4e4e7;display:flex;align-items:center;justify-content:space-between;">
+            <h3 style="font-size:14px;font-weight:600;">Inbox</h3>
+            <div style="display:flex;gap:2px;">
+              <button style="width:28px;height:28px;background:transparent;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;"></i></button>
+              <button style="width:28px;height:28px;background:transparent;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="edit-3" style="width:14px;height:14px;"></i></button>
+            </div>
+          </div>
+          <div style="padding:8px 10px;border-bottom:1px solid #f4f4f5;display:flex;gap:12px;">
+            <div style="{{ itAll }}" onClick="{{ setItAll }}">All</div>
+            <div style="{{ itActive }}" onClick="{{ setItActive }}">Active</div>
+            <div style="{{ itMine }}" onClick="{{ setItMine }}">Mine</div>
+          </div>
+          <div style="padding:8px 10px;border-bottom:1px solid #f4f4f5;">
+            <div style="display:flex;align-items:center;gap:6px;background:#f4f4f5;border-radius:6px;padding:6px 10px;">
+              <i data-lucide="search" style="width:13px;height:13px;color:#a1a1aa;flex-shrink:0;"></i>
+              <input type="text" placeholder="Search conversations…" style="border:none;background:transparent;outline:none;font-size:12px;color:#18181b;width:100%;">
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;">
+
+            <!-- Conv 0: Priya Sharma (selected) -->
+            <div style="{{ c0s }}" style-hover="{{ c0h }}" onClick="{{ c0c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#22c55e;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">PS</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Priya Sharma</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">2 min</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">Can I also change my delivery address?</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;gap:4px;">
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">VIP</span>
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Support</span>
+                  </div>
+                  <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;">3</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conv 1: Rajesh Kumar (amber window) -->
+            <div style="{{ c1s }}" style-hover="{{ c1h }}" onClick="{{ c1c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#f59e0b;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">RK</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Rajesh Kumar</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">8 min</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">📋 Template: Order confirmation</div>
+                <div style="display:flex;align-items:center;">
+                  <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Customer</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conv 2: Aisha Patel -->
+            <div style="{{ c2s }}" style-hover="{{ c2h }}" onClick="{{ c2c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#22c55e;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">AP</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Aisha Patel</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">14 min</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">Could you help me with my order?</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Support</span>
+                  <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;">1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conv 3: Vikram Singh (window closed) -->
+            <div style="{{ c3s }}" style-hover="{{ c3h }}" onClick="{{ c3c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#ef4444;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">VS</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Vikram Singh</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">1 hr</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">When will my refund be processed?</div>
+              </div>
+            </div>
+
+            <!-- Conv 4: Sneha Gupta (5 unread) -->
+            <div style="{{ c4s }}" style-hover="{{ c4h }}" onClick="{{ c4c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#22c55e;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">SG</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Sneha Gupta</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">1 hr</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">The product arrived! Love it!</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;gap:4px;">
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">VIP</span>
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Marketing</span>
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">+1</span>
+                  </div>
+                  <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;">5</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conv 5: Arjun Kumar -->
+            <div style="{{ c5s }}" style-hover="{{ c5h }}" onClick="{{ c5c }}">
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;border-radius:0 2px 2px 0;background:#22c55e;"></div>
+              <div style="width:36px;height:36px;border-radius:50%;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">AK</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">Arjun Kumar</span>
+                  <span style="font-size:11px;color:#a1a1aa;flex-shrink:0;margin-left:4px;">Mon</span>
+                </div>
+                <div style="font-size:12px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Please send me your latest catalogue</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Middle pane: conversation thread -->
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fafafa;overflow:hidden;">
+          <!-- Thread header -->
+          <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #e4e4e7;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:600;">Priya Sharma</div>
+              <div style="font-size:12px;color:#71717a;">+91 98765 43210</div>
+            </div>
+            <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;white-space:nowrap;">Window open · 18h remaining</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="display:flex;align-items:center;gap:6px;background:#f4f4f5;border-radius:6px;padding:4px 8px;">
+                <div style="width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;">RK</div>
+                <span style="font-size:12px;color:#71717a;">Rohan K.</span>
+              </div>
+              <button style="width:28px;height:28px;background:transparent;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <!-- Inbound -->
+            <div style="display:flex;justify-content:flex-start;">
+              <div style="max-width:72%;background:#fff;border:1px solid #e4e4e7;border-radius:0 10px 10px 10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="font-size:13px;line-height:1.5;margin-bottom:4px;">Hi, I placed an order yesterday and haven't received any confirmation yet.</div>
+                <div style="font-size:11px;color:#a1a1aa;text-align:right;">10:23 AM</div>
+              </div>
+            </div>
+            <!-- Outbound -->
+            <div style="display:flex;justify-content:flex-end;">
+              <div style="max-width:72%;background:#18181b;color:#fff;border-radius:10px 0 10px 10px;padding:10px 12px;">
+                <div style="font-size:13px;line-height:1.5;margin-bottom:4px;">Hello Priya! Let me check that for you right away.</div>
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">
+                  <span style="font-size:11px;color:#a1a1aa;">10:24 AM</span>
+                  <i data-lucide="check-check" style="width:12px;height:12px;color:#a1a1aa;"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Inbound -->
+            <div style="display:flex;justify-content:flex-start;">
+              <div style="max-width:72%;background:#fff;border:1px solid #e4e4e7;border-radius:0 10px 10px 10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="font-size:13px;line-height:1.5;margin-bottom:4px;">My order number is #45892</div>
+                <div style="font-size:11px;color:#a1a1aa;text-align:right;">10:24 AM</div>
+              </div>
+            </div>
+            <!-- Outbound template bubble -->
+            <div style="display:flex;justify-content:flex-end;">
+              <div style="max-width:72%;background:#18181b;border-radius:10px 0 10px 10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                <div style="background:#2d2d2d;padding:10px 12px;border-bottom:1px solid #3d3d3d;">
+                  <div style="font-size:11px;color:#a1a1aa;margin-bottom:2px;">Order Confirmed</div>
+                  <div style="font-size:13px;font-weight:600;color:#fff;">Your order #45892 is confirmed!</div>
+                </div>
+                <div style="padding:10px 12px;color:#d4d4d4;font-size:13px;line-height:1.5;border-bottom:1px solid #3d3d3d;">Expected delivery by Aug 25, 2026. Track your order using the link below.</div>
+                <div style="padding:6px 12px;border-bottom:1px solid #3d3d3d;text-align:center;color:#60a5fa;font-size:13px;cursor:pointer;">Track Order</div>
+                <div style="padding:6px 12px;display:flex;align-items:center;justify-content:flex-end;gap:4px;">
+                  <span style="font-size:11px;color:#a1a1aa;">10:26 AM</span>
+                  <i data-lucide="check-check" style="width:12px;height:12px;color:#a1a1aa;"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Inbound (unread) -->
+            <div style="display:flex;justify-content:flex-start;">
+              <div style="max-width:72%;background:#fff;border:1px solid #e4e4e7;border-radius:0 10px 10px 10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="font-size:13px;line-height:1.5;margin-bottom:4px;">Thanks! One more thing — can I change my delivery address?</div>
+                <div style="font-size:11px;color:#a1a1aa;text-align:right;">10:31 AM</div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-start;">
+              <div style="max-width:72%;background:#fff;border:1px solid #bfdbfe;border-radius:0 10px 10px 10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="font-size:13px;line-height:1.5;margin-bottom:4px;">It's urgent, I need it by tomorrow 🙏</div>
+                <div style="font-size:11px;color:#a1a1aa;text-align:right;">10:32 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Composer -->
+          <div style="background:#fff;border-top:1px solid #e4e4e7;">
+            <div style="display:flex;gap:2px;padding:8px 12px 0;border-bottom:1px solid #f4f4f5;">
+              <div style="font-size:12px;font-weight:500;padding:5px 10px;border-bottom:2px solid #18181b;color:#18181b;cursor:pointer;margin-bottom:-1px;">Text</div>
+              <div style="font-size:12px;color:#71717a;padding:5px 10px;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;" style-hover="color:#18181b">Template</div>
+            </div>
+            <div style="padding:10px 12px;">
+              <textarea placeholder="Type a message…" rows="3" style="width:100%;border:none;outline:none;resize:none;font-size:13px;color:#18181b;background:transparent;line-height:1.5;"></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                <div style="display:flex;gap:4px;">
+                  <button style="width:28px;height:28px;background:transparent;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="paperclip" style="width:14px;height:14px;"></i></button>
+                  <button style="width:28px;height:28px;background:transparent;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="smile" style="width:14px;height:14px;"></i></button>
+                </div>
+                <button style="background:#18181b;color:#fff;padding:6px 14px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                  Send <i data-lucide="send" style="width:12px;height:12px;"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right pane: CRM rail -->
+        <div style="width:256px;min-width:256px;border-left:1px solid #e4e4e7;background:#fff;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:14px;border-bottom:1px solid #e4e4e7;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;">PS</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;">Priya Sharma</div>
+                <div style="font-size:12px;color:#71717a;">+91 98765 43210</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button style="flex:1;background:transparent;color:#18181b;padding:5px;border-radius:6px;border:1px solid #e4e4e7;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;" style-hover="background:#fafafa">Open convo</button>
+              <button style="flex:1;background:transparent;color:#18181b;padding:5px;border-radius:6px;border:1px solid #e4e4e7;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;" style-hover="background:#fafafa">New convo</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:0;">
+            <!-- Details section -->
+            <div style="border-bottom:1px solid #f4f4f5;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;" style-hover="background:#fafafa">
+                <span style="font-size:12px;font-weight:600;color:#18181b;">Details</span>
+                <i data-lucide="chevron-down" style="width:13px;height:13px;color:#71717a;"></i>
+              </div>
+              <div style="padding:0 14px 12px;">
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:4px;">Tags</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                    <span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;">VIP</span>
+                    <span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;">Support</span>
+                    <span style="font-size:11px;color:#71717a;cursor:pointer;padding:2px 6px;border:1px dashed #d4d4d8;border-radius:99px;" style-hover="border-color:#71717a">+ add</span>
+                  </div>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:3px;">Pipeline stage</div>
+                  <select style="width:100%;padding:5px 8px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#18181b;cursor:pointer;"><option>Lead</option><option>Prospect</option><option>Customer</option></select>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:3px;">Assignee</div>
+                  <select style="width:100%;padding:5px 8px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#18181b;cursor:pointer;"><option>Rohan K.</option><option>Priya S.</option><option>Arjun M.</option></select>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:3px;">Follow-up date</div>
+                  <input type="date" value="2026-08-25" style="width:100%;padding:5px 8px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#18181b;">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:3px;">Opted-in</div>
+                  <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Yes</span>
+                </div>
+              </div>
+            </div>
+            <!-- Notes section -->
+            <div style="border-bottom:1px solid #f4f4f5;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;" style-hover="background:#fafafa">
+                <span style="font-size:12px;font-weight:600;">Notes</span>
+                <i data-lucide="chevron-down" style="width:13px;height:13px;color:#71717a;"></i>
+              </div>
+              <div style="padding:0 14px 12px;">
+                <div style="font-size:12px;color:#71717a;margin-bottom:8px;padding:8px;background:#fafafa;border-radius:6px;line-height:1.5;">Customer prefers morning callbacks. VIP treatment.</div>
+                <div style="font-size:11px;color:#a1a1aa;margin-bottom:10px;">Rohan K. · Aug 20</div>
+                <textarea placeholder="Add a note…" rows="2" style="width:100%;padding:6px 8px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;resize:none;outline:none;"></textarea>
+              </div>
+            </div>
+            <!-- Contact info -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;" style-hover="background:#fafafa">
+                <span style="font-size:12px;font-weight:600;">Contact info</span>
+                <i data-lucide="chevron-down" style="width:13px;height:13px;color:#71717a;"></i>
+              </div>
+              <div style="padding:0 14px 12px;">
+                <div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:2px;">Email</div><div style="font-size:12px;color:#71717a;">priya.sharma@acme.com</div></div>
+                <div><div style="font-size:11px;font-weight:500;color:#a1a1aa;margin-bottom:2px;">Source</div><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">WhatsApp import</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </sc-if>
+
+    <!-- ════ TEMPLATES ════ -->
+    <sc-if value="{{ s_templates }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <h2 style="font-size:18px;font-weight:600;">Templates</h2>
+            <div style="display:flex;gap:8px;">
+              <button style="background:transparent;color:#18181b;padding:7px 14px;border-radius:6px;border:1px solid #e4e4e7;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:#fafafa">
+                <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i>Sync from Meta
+              </button>
+              <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goTmEditor }}">+ New template</button>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e4e4e7;margin-bottom:20px;">
+            <div style="display:flex;gap:16px;">
+              <div style="{{ tmAll }}" onClick="{{ setTmAll }}">All</div>
+              <div style="{{ tmApproved }}" onClick="{{ setTmApproved }}">Approved</div>
+              <div style="{{ tmPending }}" onClick="{{ setTmPending }}">Pending</div>
+              <div style="{{ tmRejected }}" onClick="{{ setTmRejected }}">Rejected</div>
+              <div style="{{ tmPaused }}" onClick="{{ setTmPaused }}">Paused</div>
+            </div>
+            <select style="padding:5px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#18181b;cursor:pointer;margin-bottom:1px;">
+              <option>All languages</option><option>English (US)</option><option>Hindi</option>
+            </select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Approved</span>
+                    <span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Marketing</span>
+                  </div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">welcome_message</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Hi {{1}}, welcome to Acme! We're thrilled to have you on board. Get started with your first order and enjoy 10% off.</div>
+              </div>
+              <div style="margin-top:auto;padding:10px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Jul 10, 2026</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Approved</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Utility</span></div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">order_confirmation</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Your order #{{1}} has been confirmed and will be delivered by {{2}}. Track using the link below.</div>
+              </div>
+              <div style="margin-top:auto;padding:10px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Jul 14, 2026</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;"><span style="background:#fef9c3;color:#ca8a04;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Pending</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Marketing</span></div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">promo_summer_2026</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Hi {{1}}, exclusive offer just for you! Get {{2}}% off on orders above ₹999. Use code SUMMER30. Valid till Aug 31.</div>
+              </div>
+              <div style="margin-top:auto;padding:10px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Aug 18, 2026</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;"><span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Rejected</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Utility</span></div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">payment_reminder</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Your payment of ₹{{1}} is due on {{2}}. Please complete payment to avoid service interruption.</div>
+              </div>
+              <div style="background:#fef9c3;border-top:1px solid #fcd34d;padding:8px 14px;display:flex;align-items:center;gap:6px;">
+                <i data-lucide="info" style="width:12px;height:12px;color:#d97706;flex-shrink:0;"></i>
+                <span style="font-size:11px;color:#d97706;">Meta changed category to Marketing</span>
+              </div>
+              <div style="padding:8px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Aug 5, 2026</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Approved</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Utility</span></div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">delivery_update</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Great news, {{1}}! Your order is out for delivery and will reach you today between {{2}}. Our delivery partner will call you.</div>
+              </div>
+              <div style="margin-top:auto;padding:10px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Jul 28, 2026</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="padding:14px 14px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Paused</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 8px;border-radius:99px;">Marketing</span></div>
+                  <button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button>
+                </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">feedback_request</div>
+                <div style="font-size:12px;color:#71717a;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px;">Hi {{1}}! We'd love to hear about your recent experience with Acme. How would you rate your purchase?</div>
+              </div>
+              <div style="margin-top:auto;padding:10px 14px;border-top:1px solid #f4f4f5;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:#a1a1aa;">English (US)</span>
+                <span style="font-size:11px;color:#a1a1aa;">Aug 12, 2026</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ TEMPLATE EDITOR ════ -->
+    <sc-if value="{{ s_templateEditor }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;overflow:hidden;">
+
+        <!-- Left: form -->
+        <div style="flex:1;min-width:0;overflow-y:auto;border-right:1px solid #e4e4e7;">
+          <div style="padding:20px 28px 120px;">
+            <div style="margin-bottom:20px;">
+              <button style="background:transparent;border:none;font-size:12px;color:#71717a;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;" onClick="{{ goTemplates }}" style-hover="color:#18181b">
+                <i data-lucide="arrow-left" style="width:13px;height:13px;"></i>Templates
+              </button>
+            </div>
+
+            <!-- Basic info -->
+            <div style="margin-bottom:24px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f4f4f5;">Basic info</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                <div>
+                  <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Template name</label>
+                  <input type="text" value="promo_summer_2026" style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;outline:none;">
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Language</label>
+                  <select style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;cursor:pointer;"><option>English (US)</option><option>Hindi</option><option>Tamil</option></select>
+                </div>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Category <i data-lucide="info" style="width:11px;height:11px;display:inline;vertical-align:middle;color:#a1a1aa;"></i></label>
+                <select style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;cursor:pointer;"><option>Marketing</option><option>Utility</option><option>Authentication</option></select>
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div style="margin-bottom:24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f4f4f5;">
+                <span style="font-size:13px;font-weight:600;">Header <span style="font-size:11px;font-weight:400;color:#a1a1aa;">(optional)</span></span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:12px;color:#71717a;">Add header</span>
+                  <div style="width:36px;height:20px;background:#18181b;border-radius:99px;position:relative;cursor:pointer;">
+                    <div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:12px;">
+                <button style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:#71717a;border:1px solid #e4e4e7;" style-hover="background:#f4f4f5" onClick="{{ setHdrText }}">Text</button>
+                <button style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:#18181b;color:#fff;border:1px solid #18181b;" onClick="{{ setHdrImage }}">Image</button>
+                <button style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:#71717a;border:1px solid #e4e4e7;" style-hover="background:#f4f4f5" onClick="{{ setHdrVideo }}">Video</button>
+                <button style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:#71717a;border:1px solid #e4e4e7;" style-hover="background:#f4f4f5" onClick="{{ setHdrDoc }}">Document</button>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Image URL</label>
+                <input type="text" value="https://cdn.acme.com/promo-banner.jpg" style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;outline:none;margin-bottom:6px;">
+                <div style="font-size:11px;color:#a1a1aa;margin-bottom:10px;">Must be a publicly accessible image URL. <i data-lucide="info" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i></div>
+                <div style="width:80px;height:60px;background:repeating-linear-gradient(45deg,#f4f4f5,#f4f4f5 4px,#e4e4e7 4px,#e4e4e7 8px);border-radius:6px;border:1px solid #e4e4e7;display:flex;align-items:center;justify-content:center;">
+                  <i data-lucide="image" style="width:18px;height:18px;color:#a1a1aa;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div style="margin-bottom:24px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f4f4f5;">Body <span style="font-size:11px;font-weight:400;color:#ef4444;">required</span></div>
+              <div style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #f4f4f5;display:flex;gap:4px;background:#fafafa;">
+                  <button style="width:26px;height:26px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;font-weight:700;font-size:13px;" style-hover="background:#f4f4f5">B</button>
+                  <button style="width:26px;height:26px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;font-style:italic;font-size:13px;" style-hover="background:#f4f4f5">I</button>
+                  <button style="width:26px;height:26px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;font-size:12px;text-decoration:line-through;" style-hover="background:#f4f4f5">S</button>
+                  <div style="width:1px;background:#e4e4e7;margin:4px 2px;"></div>
+                  <button style="padding:0 8px;height:26px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;color:#71717a;font-size:11px;font-weight:500;gap:3px;" style-hover="background:#f4f4f5">
+                    <i data-lucide="plus" style="width:11px;height:11px;"></i>{{n}}
+                  </button>
+                </div>
+                <textarea rows="5" style="width:100%;padding:10px 12px;border:none;outline:none;resize:none;font-size:13px;color:#18181b;line-height:1.6;background:#fff;">Hi {{1}}, we have an exclusive offer just for you! Get *30% off* on your next order above ₹999. Use code: _SUMMER30_
+
+Offer valid till August 31, 2026.</textarea>
+                <div style="padding:6px 10px;border-top:1px solid #f4f4f5;text-align:right;font-size:11px;color:#a1a1aa;background:#fafafa;">148 / 1024</div>
+              </div>
+              <!-- Sample values -->
+              <div style="margin-top:12px;background:#f9f9f9;border:1px solid #e4e4e7;border-radius:8px;padding:12px;">
+                <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Sample values (for Meta review)</div>
+                <div style="margin-bottom:8px;">
+                  <label style="font-size:11px;font-weight:500;color:#71717a;display:block;margin-bottom:3px;">Sample for {{1}}</label>
+                  <input type="text" placeholder="e.g. John" value="John" style="width:100%;padding:6px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#18181b;outline:none;">
+                </div>
+                <div style="font-size:11px;color:#a1a1aa;">Meta requires sample text to review your template.</div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-bottom:24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f4f4f5;">
+                <span style="font-size:13px;font-weight:600;">Footer <span style="font-size:11px;font-weight:400;color:#a1a1aa;">(optional)</span></span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:12px;color:#71717a;">Add footer</span>
+                  <div style="width:36px;height:20px;background:#18181b;border-radius:99px;position:relative;cursor:pointer;">
+                    <div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;">
+                <input type="text" value="Reply STOP to unsubscribe" style="width:100%;padding:8px 12px;border:none;outline:none;font-size:13px;color:#18181b;background:#fff;">
+                <div style="padding:5px 10px;border-top:1px solid #f4f4f5;text-align:right;font-size:11px;color:#a1a1aa;background:#fafafa;">26 / 60</div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div style="margin-bottom:24px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f4f4f5;">Buttons <span style="font-size:11px;font-weight:400;color:#a1a1aa;">(optional)</span></div>
+              <div style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;">
+                  <i data-lucide="grip-vertical" style="width:14px;height:14px;color:#a1a1aa;cursor:grab;"></i>
+                  <select style="padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;color:#18181b;cursor:pointer;"><option>Quick reply</option><option>Visit website</option><option>Call phone</option></select>
+                  <input type="text" value="Claim Offer" style="flex:1;padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;color:#18181b;outline:none;">
+                  <button style="width:22px;height:22px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#ef4444"><i data-lucide="x" style="width:13px;height:13px;"></i></button>
+                </div>
+              </div>
+              <div style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;flex-wrap:wrap;">
+                  <i data-lucide="grip-vertical" style="width:14px;height:14px;color:#a1a1aa;cursor:grab;"></i>
+                  <select style="padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;color:#18181b;cursor:pointer;"><option selected>Visit website</option><option>Quick reply</option><option>Call phone</option></select>
+                  <input type="text" value="Shop Now" placeholder="Label" style="flex:1;min-width:80px;padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;color:#18181b;outline:none;">
+                  <input type="text" value="https://acme.com/sale" placeholder="URL" style="flex:2;min-width:120px;padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;color:#18181b;outline:none;">
+                  <button style="width:22px;height:22px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#ef4444"><i data-lucide="x" style="width:13px;height:13px;"></i></button>
+                </div>
+              </div>
+              <button style="background:transparent;color:#71717a;padding:6px 12px;border-radius:6px;border:1px dashed #d4d4d8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;" style-hover="border-color:#71717a;color:#18181b">
+                <i data-lucide="plus" style="width:13px;height:13px;"></i>Add button
+              </button>
+            </div>
+          </div>
+
+          <!-- Sticky action bar -->
+          <div style="position:sticky;bottom:0;background:#fff;border-top:1px solid #e4e4e7;padding:12px 28px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+            <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ goTemplates }}">Cancel</button>
+            <button style="background:transparent;color:#18181b;padding:7px 14px;border-radius:6px;border:1px solid #e4e4e7;font-size:13px;font-weight:500;cursor:pointer;" style-hover="background:#fafafa">Save as draft</button>
+            <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;">Submit to Meta</button>
+          </div>
+        </div>
+
+        <!-- Right: phone preview -->
+        <div style="width:340px;min-width:340px;background:#f4f4f5;padding:24px;display:flex;flex-direction:column;align-items:center;overflow-y:auto;">
+          <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:16px;text-align:center;">Live preview</div>
+          <div style="width:280px;background:#fff;border-radius:32px;border:2px solid #d4d4d8;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.12);">
+            <!-- Phone status bar -->
+            <div style="height:36px;background:#f4f4f5;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #e4e4e7;">
+              <span style="font-size:11px;font-weight:600;">9:41</span>
+              <div style="width:60px;height:16px;background:#d4d4d8;border-radius:99px;"></div>
+              <div style="display:flex;gap:2px;">
+                <i data-lucide="signal" style="width:12px;height:12px;color:#18181b;"></i>
+                <i data-lucide="battery" style="width:12px;height:12px;color:#18181b;"></i>
+              </div>
+            </div>
+            <!-- Chat area -->
+            <div style="background:#e8e3dc;min-height:360px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+              <!-- Template bubble -->
+              <div style="background:#fff;border-radius:2px 10px 10px 10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.1);max-width:100%;">
+                <!-- Image header placeholder -->
+                <div style="height:100px;background:repeating-linear-gradient(45deg,#e8e3dc,#e8e3dc 6px,#d4cfc8 6px,#d4cfc8 12px);display:flex;align-items:center;justify-content:center;">
+                  <div style="background:rgba(255,255,255,0.6);padding:4px 10px;border-radius:4px;font-size:10px;color:#71717a;font-weight:500;">image header</div>
+                </div>
+                <!-- Body -->
+                <div style="padding:8px 10px;font-size:12px;line-height:1.5;color:#18181b;">Hi <strong>John</strong>, we have an exclusive offer just for you! Get <strong>30% off</strong> on your next order above ₹999. Use code: <em>SUMMER30</em><br><br>Offer valid till August 31, 2026.</div>
+                <!-- Footer -->
+                <div style="padding:2px 10px 6px;font-size:11px;color:#8e8e8e;">Reply STOP to unsubscribe</div>
+                <div style="padding:2px 10px 6px;text-align:right;font-size:10px;color:#8e8e8e;">10:26 AM</div>
+                <div style="border-top:1px solid #e8e3dc;padding:7px 10px;text-align:center;font-size:12px;color:#0d9488;cursor:pointer;">Claim Offer</div>
+                <div style="border-top:1px solid #e8e3dc;padding:7px 10px;text-align:center;font-size:12px;color:#0d9488;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="external-link" style="width:11px;height:11px;"></i>Shop Now</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#a1a1aa;text-align:center;margin-top:12px;">Preview uses your sample values.</div>
+        </div>
+
+      </div>
+    </sc-if>
+
+    <!-- ════ CONTACTS ════ -->
+    <sc-if value="{{ s_contacts }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div><h2 style="font-size:18px;font-weight:600;">Contacts</h2><span style="font-size:13px;color:#71717a;">1,842 contacts</span></div>
+            <div style="display:flex;gap:8px;">
+              <button style="background:transparent;color:#71717a;padding:7px 12px;border-radius:6px;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;" style-hover="background:#f4f4f5"><i data-lucide="download" style="width:13px;height:13px;"></i>Export CSV</button>
+              <button style="background:transparent;color:#18181b;padding:7px 14px;border-radius:6px;border:1px solid #e4e4e7;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ openImport }}" style-hover="background:#fafafa">Import</button>
+              <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;">+ Add contact</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e4e4e7;border-radius:6px;padding:6px 10px;max-width:260px;flex:1;">
+              <i data-lucide="search" style="width:13px;height:13px;color:#a1a1aa;flex-shrink:0;"></i>
+              <input type="text" placeholder="Search name or phone…" style="border:none;background:transparent;outline:none;font-size:13px;color:#18181b;width:100%;">
+            </div>
+            <select style="padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#71717a;cursor:pointer;"><option>Tags</option></select>
+            <select style="padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#71717a;cursor:pointer;"><option>Stage</option></select>
+            <select style="padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#71717a;cursor:pointer;"><option>Assignee</option></select>
+            <select style="padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;color:#71717a;cursor:pointer;"><option>Opt-in</option></select>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="padding:10px 14px;border-bottom:1px solid #e4e4e7;width:36px;"><input type="checkbox" style="cursor:pointer;"></th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;white-space:nowrap;">Name</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;white-space:nowrap;">Phone</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Source</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Tags</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Stage</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Assignee</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Opt-in</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 14px;border-bottom:1px solid #f4f4f5;"><input type="checkbox" style="cursor:pointer;"></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">PS</div><span style="font-size:13px;font-weight:500;">Priya Sharma</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">+91 98765 43210</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">WhatsApp</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">VIP</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Support</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Lead</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Rohan K.</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Opted in</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 14px;border-bottom:1px solid #f4f4f5;"><input type="checkbox" style="cursor:pointer;"></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">RK</div><span style="font-size:13px;font-weight:500;">Rajesh Kumar</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">+91 87654 32109</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">Manual</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Customer</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Customer</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Priya S.</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Opted in</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 14px;border-bottom:1px solid #f4f4f5;"><input type="checkbox" style="cursor:pointer;"></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">AP</div><span style="font-size:13px;font-weight:500;">Aisha Patel</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">+91 76543 21098</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">Import</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Support</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Prospect</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Arjun M.</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Opted in</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 14px;border-bottom:1px solid #f4f4f5;"><input type="checkbox" style="cursor:pointer;"></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">VS</div><span style="font-size:13px;font-weight:500;">Vikram Singh</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">+91 65432 10987</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">WhatsApp</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="color:#a1a1aa;font-size:12px;">—</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">New</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Opted out</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 14px;border-bottom:1px solid #f4f4f5;"><input type="checkbox" style="cursor:pointer;"></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">SG</div><span style="font-size:13px;font-weight:500;">Sneha Gupta</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">+91 54321 09876</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">Import</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">VIP</span><span style="border:1px solid #e4e4e7;color:#71717a;font-size:10px;padding:1px 6px;border-radius:99px;">Marketing</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Customer</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;">Rohan K.</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Opted in</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Import dialog -->
+        <sc-if value="{{ showImport }}" hint-placeholder-val="{{ false }}">
+          <div style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:flex;align-items:center;justify-content:center;" onClick="{{ closeImport }}">
+            <div style="background:#fff;border-radius:12px;width:560px;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden;" onClick="{{ stopProp }}">
+              <div style="padding:20px 24px;border-bottom:1px solid #f4f4f5;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <div style="font-size:15px;font-weight:600;">Import contacts</div>
+                  <div style="font-size:12px;color:#71717a;margin-top:1px;">Step {{ istep }} of 3</div>
+                </div>
+                <button style="width:28px;height:28px;background:transparent;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" onClick="{{ closeImport }}" style-hover="background:#f4f4f5"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+              </div>
+              <!-- Step indicators -->
+              <div style="display:flex;gap:0;padding:0 24px;padding-top:16px;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;flex:1;">
+                  <div style="width:22px;height:22px;border-radius:50%;background:#18181b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;">1</div>
+                  <div style="flex:1;height:2px;background:#18181b;"></div>
+                </div>
+                <div style="display:flex;align-items:center;flex:1;">
+                  <div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;" style="{{ is2Style }}">2</div>
+                  <div style="flex:1;height:2px;" style="{{ is2Line }}"></div>
+                </div>
+                <div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;" style="{{ is3Style }}">3</div>
+              </div>
+              <!-- Step 1: Upload -->
+              <sc-if value="{{ isIS1 }}" hint-placeholder-val="{{ true }}">
+                <div style="padding:0 24px 24px;">
+                  <div style="border:2px dashed #d4d4d8;border-radius:10px;padding:40px;text-align:center;cursor:pointer;background:#fafafa;" style-hover="border-color:#a1a1aa;background:#f4f4f5">
+                    <i data-lucide="upload" style="width:32px;height:32px;color:#a1a1aa;margin:0 auto 10px;"></i>
+                    <div style="font-size:13px;font-weight:500;color:#18181b;margin-bottom:4px;">Drop your CSV file here or click to browse</div>
+                    <div style="font-size:12px;color:#71717a;">Supports CSV files up to 50MB</div>
+                  </div>
+                  <div style="margin-top:10px;text-align:center;"><span style="font-size:12px;color:#71717a;cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Download template CSV</span></div>
+                  <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:8px;">
+                    <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ closeImport }}">Cancel</button>
+                    <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goIS2 }}">Next →</button>
+                  </div>
+                </div>
+              </sc-if>
+              <!-- Step 2: Map fields -->
+              <sc-if value="{{ isIS2 }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:0 24px 24px;">
+                  <div style="font-size:13px;color:#71717a;margin-bottom:14px;">Match your CSV columns to contact fields.</div>
+                  <table style="width:100%;border-collapse:collapse;border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;">
+                    <thead><tr style="background:#fafafa;"><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:9px 12px;border-bottom:1px solid #e4e4e7;">Your CSV column</th><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:9px 12px;border-bottom:1px solid #e4e4e7;">Maps to</th></tr></thead>
+                    <tbody>
+                      <tr><td style="padding:9px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;font-family:monospace;">phone</td><td style="padding:9px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><select style="padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;"><option>Phone number</option></select><span style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;">Required</span></div></td></tr>
+                      <tr><td style="padding:9px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;font-family:monospace;">full_name</td><td style="padding:9px 12px;border-bottom:1px solid #f4f4f5;"><select style="padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;"><option>Name</option><option>—skip—</option></select></td></tr>
+                      <tr><td style="padding:9px 12px;font-size:13px;font-family:monospace;">email_address</td><td style="padding:9px 12px;"><select style="padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;"><option>Email</option><option>—skip—</option></select></td></tr>
+                    </tbody>
+                  </table>
+                  <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:8px;">
+                    <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ goIS1 }}">← Back</button>
+                    <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goIS3 }}">Next →</button>
+                  </div>
+                </div>
+              </sc-if>
+              <!-- Step 3: Preview -->
+              <sc-if value="{{ isIS3 }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:0 24px 24px;">
+                  <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;display:flex;gap:8px;align-items:flex-start;margin-bottom:14px;">
+                    <i data-lucide="alert-triangle" style="width:14px;height:14px;color:#d97706;flex-shrink:0;margin-top:1px;"></i>
+                    <span style="font-size:12px;color:#92400e;">All imported contacts will be marked as opted-in. Ensure you have their consent.</span>
+                  </div>
+                  <table style="width:100%;border-collapse:collapse;border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;font-size:12px;margin-bottom:10px;">
+                    <thead><tr style="background:#fafafa;"><th style="text-align:left;padding:8px 12px;border-bottom:1px solid #e4e4e7;font-weight:500;color:#71717a;">Phone</th><th style="text-align:left;padding:8px 12px;border-bottom:1px solid #e4e4e7;font-weight:500;color:#71717a;">Name</th><th style="text-align:left;padding:8px 12px;border-bottom:1px solid #e4e4e7;font-weight:500;color:#71717a;">Email</th></tr></thead>
+                    <tbody>
+                      <tr><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">+91 99887 76655</td><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">Meera Joshi</td><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">meera@example.com</td></tr>
+                      <tr><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">+91 88776 65544</td><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">Suresh Rao</td><td style="padding:8px 12px;border-bottom:1px solid #f4f4f5;">—</td></tr>
+                      <tr><td style="padding:8px 12px;">+91 77665 54433</td><td style="padding:8px 12px;">Anita Desai</td><td style="padding:8px 12px;">anita@work.com</td></tr>
+                    </tbody>
+                  </table>
+                  <div style="font-size:12px;color:#71717a;margin-bottom:20px;">248 contacts will be imported. 3 rows skipped (invalid phone).</div>
+                  <div style="display:flex;justify-content:flex-end;gap:8px;">
+                    <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ goIS2b }}">← Back</button>
+                    <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ closeImport }}">Import 248 contacts</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ════ CAMPAIGNS ════ -->
+    <sc-if value="{{ s_campaigns }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <h2 style="font-size:18px;font-weight:600;">Campaigns</h2>
+            <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goCampaignNew }}">+ New campaign</button>
+          </div>
+          <div style="display:flex;gap:16px;border-bottom:1px solid #e4e4e7;margin-bottom:18px;">
+            <div style="{{ caAll }}" onClick="{{ setCaAll }}">All</div>
+            <div style="{{ caDraft }}" onClick="{{ setCaDraft }}">Draft</div>
+            <div style="{{ caRunning }}" onClick="{{ setCaRunning }}">Running</div>
+            <div style="{{ caCompleted }}" onClick="{{ setCaCompleted }}">Completed</div>
+            <div style="{{ caPaused }}" onClick="{{ setCaPaused }}">Paused</div>
+            <div style="{{ caFailed }}" onClick="{{ setCaFailed }}">Failed</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 16px;border-bottom:1px solid #e4e4e7;">Name</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Template</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Audience</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Status</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Sent</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Delivered</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Read</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:right;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Failed</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 16px;border-bottom:1px solid #e4e4e7;">Launched</th>
+                  <th style="border-bottom:1px solid #e4e4e7;padding:10px 12px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style-hover="background:#fafafa" style="cursor:pointer;" onClick="{{ goCampaignInsights }}">
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:13px;font-weight:500;">Summer Sale 2026</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;font-family:monospace;">promo_summer_2026</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">1,240</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Completed</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">1,240</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">1,181 <span style="font-size:11px;">(95%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">632 <span style="font-size:11px;">(51%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#dc2626;">59 <span style="font-size:11px;">(5%)</span></td>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Jul 15</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:13px;font-weight:500;">Product Launch Aug</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;font-family:monospace;">welcome_message</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">892</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dbeafe;color:#2563eb;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Running</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">654</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">620 <span style="font-size:11px;">(95%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">312 <span style="font-size:11px;">(48%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#dc2626;">34 <span style="font-size:11px;">(5%)</span></td>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Aug 20</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:13px;font-weight:500;">Diwali Campaign</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;font-family:monospace;">promo_summer_2026</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Draft</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#a1a1aa;">—</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+                <tr style-hover="background:#fafafa">
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:13px;font-weight:500;">Customer Feedback</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;font-family:monospace;">feedback_request</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">456</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#fef3c7;color:#d97706;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Paused</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;">380</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">361 <span style="font-size:11px;">(95%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#71717a;">178 <span style="font-size:11px;">(47%)</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:13px;text-align:right;color:#dc2626;">19 <span style="font-size:11px;">(5%)</span></td>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Aug 10</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ CAMPAIGN NEW ════ -->
+    <sc-if value="{{ s_campaignNew }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 80px;">
+          <button style="background:transparent;border:none;font-size:12px;color:#71717a;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;margin-bottom:16px;" onClick="{{ goCampaigns }}" style-hover="color:#18181b">
+            <i data-lucide="arrow-left" style="width:13px;height:13px;"></i>Campaigns
+          </button>
+          <!-- Step indicator -->
+          <div style="display:flex;align-items:center;margin-bottom:28px;max-width:480px;">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#18181b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">{{ csNum1 }}</div>
+              <span style="font-size:13px;font-weight:500;white-space:nowrap;">Message</span>
+              <div style="flex:1;height:2px;background:#e4e4e7;margin:0 8px;"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex:1;">
+              <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;" style="{{ csN2Style }}">2</div>
+              <span style="font-size:13px;white-space:nowrap;" style="{{ csN2Text }}">Audience</span>
+              <div style="flex:1;height:2px;background:#e4e4e7;margin:0 8px;"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;" style="{{ csN3Style }}">3</div>
+              <span style="font-size:13px;white-space:nowrap;" style="{{ csN3Text }}">Review</span>
+            </div>
+          </div>
+
+          <!-- Step 1: Message -->
+          <sc-if value="{{ isCS1 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:24px;">
+              <div style="flex:1;min-width:0;">
+                <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;margin-bottom:16px;">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">Campaign details</div>
+                  <div style="margin-bottom:14px;">
+                    <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Campaign name</label>
+                    <input type="text" placeholder="e.g. Diwali Sale 2026" style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;outline:none;">
+                  </div>
+                  <div style="margin-bottom:14px;">
+                    <label style="font-size:12px;font-weight:500;color:#71717a;display:block;margin-bottom:4px;">Template</label>
+                    <select style="width:100%;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;cursor:pointer;"><option>promo_summer_2026 · English (US)</option><option>welcome_message · English (US)</option><option>order_confirmation · English (US)</option></select>
+                  </div>
+                  <div style="background:#f9f9f9;border:1px solid #e4e4e7;border-radius:8px;padding:14px;">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Variable mapping</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                      <span style="font-size:12px;color:#71717a;width:60px;flex-shrink:0;">{{1}}</span>
+                      <select style="flex:1;padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;cursor:pointer;"><option>Contact name</option><option>Contact phone</option><option>Fixed text</option></select>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-size:12px;color:#71717a;width:60px;flex-shrink:0;">{{2}}</span>
+                      <select style="flex:1;padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;cursor:pointer;"><option>Fixed text</option><option>Contact name</option></select>
+                      <input type="text" placeholder="e.g. 30%" style="flex:1;padding:5px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;color:#18181b;outline:none;">
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;">
+                  <button style="background:#18181b;color:#fff;padding:7px 16px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goCS2 }}">Next: Audience →</button>
+                </div>
+              </div>
+              <!-- Preview -->
+              <div style="width:240px;flex-shrink:0;">
+                <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:12px;text-align:center;">Message preview</div>
+                <div style="background:#e8e3dc;border-radius:16px;padding:12px;min-height:200px;">
+                  <div style="background:#fff;border-radius:2px 10px 10px 10px;padding:8px 10px;font-size:12px;line-height:1.5;box-shadow:0 1px 2px rgba(0,0,0,0.08);">Hi <strong>[Contact name]</strong>, we have an exclusive offer just for you! Get <strong>[30%]</strong> off on orders above ₹999. Use code SUMMER30.</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Step 2: Audience -->
+          <sc-if value="{{ isCS2 }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;max-width:700px;">
+              <div style="display:flex;gap:0;border-bottom:1px solid #e4e4e7;">
+                <div style="padding:10px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid #18181b;font-weight:500;" style-hover="background:#fafafa" onClick="{{ setCS2Contacts }}">From contacts</div>
+                <div style="padding:10px 16px;font-size:13px;color:#71717a;cursor:pointer;border-bottom:2px solid transparent;" style-hover="background:#fafafa" onClick="{{ setCS2Csv }}">Upload CSV</div>
+              </div>
+              <div style="padding:16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:6px;background:#f4f4f5;border-radius:6px;padding:6px 10px;flex:1;">
+                    <i data-lucide="search" style="width:13px;height:13px;color:#a1a1aa;"></i>
+                    <input type="text" placeholder="Search contacts…" style="border:none;background:transparent;outline:none;font-size:12px;width:100%;">
+                  </div>
+                  <select style="padding:6px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:12px;background:#fff;cursor:pointer;"><option>All tags</option></select>
+                </div>
+                <div style="border:1px solid #f4f4f5;border-radius:8px;overflow:hidden;max-height:280px;overflow-y:auto;">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f4f4f5;cursor:pointer;" style-hover="background:#f9f9f9"><input type="checkbox" checked style="cursor:pointer;"><div style="width:24px;height:24px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">PS</div><span style="font-size:13px;flex:1;">Priya Sharma</span><span style="font-size:12px;color:#71717a;">+91 98765 43210</span><span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;">Opted in</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f4f4f5;cursor:pointer;" style-hover="background:#f9f9f9"><input type="checkbox" checked style="cursor:pointer;"><div style="width:24px;height:24px;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">RK</div><span style="font-size:13px;flex:1;">Rajesh Kumar</span><span style="font-size:12px;color:#71717a;">+91 87654 32109</span><span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;">Opted in</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f4f4f5;cursor:pointer;" style-hover="background:#f9f9f9"><input type="checkbox" style="cursor:pointer;"><div style="width:24px;height:24px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">VS</div><span style="font-size:13px;flex:1;">Vikram Singh</span><span style="font-size:12px;color:#71717a;">+91 65432 10987</span><span style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;">Opted out</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;" style-hover="background:#f9f9f9"><input type="checkbox" checked style="cursor:pointer;"><div style="width:24px;height:24px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">SG</div><span style="font-size:13px;flex:1;">Sneha Gupta</span><span style="font-size:12px;color:#71717a;">+91 54321 09876</span><span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:500;padding:1px 6px;border-radius:99px;">Opted in</span></div>
+                </div>
+                <div style="margin-top:10px;font-size:12px;color:#71717a;">3 contacts selected (3 opted-in) · <span style="color:#18181b;cursor:pointer;font-weight:500;">Select all opted-in</span></div>
+              </div>
+              <div style="padding:12px 16px;border-top:1px solid #e4e4e7;display:flex;justify-content:flex-end;gap:8px;">
+                <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ goCS1 }}">← Back</button>
+                <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;" onClick="{{ goCS3 }}">Next: Review →</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Step 3: Review -->
+          <sc-if value="{{ isCS3 }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:600px;">
+              <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;margin-bottom:14px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">Campaign summary</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div><div style="font-size:11px;font-weight:500;color:#71717a;margin-bottom:3px;">Campaign name</div><div style="font-size:13px;">Diwali Campaign</div></div>
+                  <div><div style="font-size:11px;font-weight:500;color:#71717a;margin-bottom:3px;">Template</div><div style="font-size:13px;font-family:monospace;">promo_summer_2026</div></div>
+                  <div><div style="font-size:11px;font-weight:500;color:#71717a;margin-bottom:3px;">Audience</div><div style="font-size:13px;font-weight:500;">3 contacts (3 opted-in)</div></div>
+                  <div><div style="font-size:11px;font-weight:500;color:#71717a;margin-bottom:3px;">Schedule</div><div style="font-size:13px;color:#71717a;">Send immediately</div></div>
+                </div>
+              </div>
+              <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:14px;margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:8px;">Schedule (optional)</div>
+                <div style="display:flex;gap:8px;">
+                  <input type="date" style="flex:1;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;">
+                  <input type="time" style="flex:1;padding:7px 10px;border:1px solid #e4e4e7;border-radius:6px;font-size:13px;background:#fff;color:#18181b;">
+                </div>
+              </div>
+              <div style="background:#f4f4f5;border:1px solid #e4e4e7;border-radius:8px;padding:12px 14px;display:flex;gap:8px;align-items:flex-start;margin-bottom:14px;">
+                <i data-lucide="info" style="width:14px;height:14px;color:#71717a;flex-shrink:0;margin-top:1px;"></i>
+                <span style="font-size:12px;color:#71717a;">Meta will charge conversation fees to your WhatsApp account. We do not charge per message. Only send to contacts who have opted in.</span>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;">
+                <button style="background:transparent;color:#71717a;padding:7px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;" onClick="{{ goCS2 }}">← Back</button>
+                <button style="background:transparent;color:#18181b;padding:7px 14px;border-radius:6px;border:1px solid #e4e4e7;font-size:13px;font-weight:500;cursor:pointer;" style-hover="background:#fafafa">Save as draft</button>
+                <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;">Launch campaign</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ CAMPAIGN INSIGHTS ════ -->
+    <sc-if value="{{ s_campaignInsights }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;">
+        <div style="padding:20px 28px 32px;">
+          <button style="background:transparent;border:none;font-size:12px;color:#71717a;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;margin-bottom:14px;" onClick="{{ goCampaigns }}" style-hover="color:#18181b">
+            <i data-lucide="arrow-left" style="width:13px;height:13px;"></i>Campaigns
+          </button>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+            <h2 style="font-size:18px;font-weight:600;">Summer Sale 2026</h2>
+            <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;">Completed</span>
+            <span style="font-size:12px;color:#a1a1aa;">Launched Jul 15, 2026</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:12px;">Sent</div>
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;">1,240</div>
+              <div style="font-size:12px;color:#a1a1aa;">100%</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:12px;">Delivered</div>
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;">1,181</div>
+              <div style="font-size:12px;color:#22c55e;">95.2%</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:12px;">Read</div>
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;">632</div>
+              <div style="font-size:12px;color:#3b82f6;">51.0%</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+              <div style="font-size:12px;font-weight:500;color:#71717a;margin-bottom:12px;">Failed</div>
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;">59</div>
+              <div style="font-size:12px;color:#ef4444;">4.8%</div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <span style="font-size:14px;font-weight:600;">Delivery over time</span>
+              <div style="display:flex;gap:16px;align-items:center;">
+                <div style="display:flex;align-items:center;gap:5px;"><div style="width:16px;height:2px;background:#a1a1aa;border-radius:99px;"></div><span style="font-size:11px;color:#71717a;">Sent</span></div>
+                <div style="display:flex;align-items:center;gap:5px;"><div style="width:16px;height:2px;background:#18181b;border-radius:99px;"></div><span style="font-size:11px;color:#71717a;">Read</span></div>
+                <select style="padding:4px 8px;border:1px solid #e4e4e7;border-radius:5px;font-size:12px;background:#fff;cursor:pointer;"><option>7 days</option><option>Last 24h</option></select>
+              </div>
+            </div>
+            <div style="position:relative;">
+              <svg viewBox="0 0 700 160" style="width:100%;height:160px;overflow:visible;">
+                <line x1="0" y1="40" x2="700" y2="40" stroke="#f4f4f5" stroke-width="1"></line>
+                <line x1="0" y1="80" x2="700" y2="80" stroke="#f4f4f5" stroke-width="1"></line>
+                <line x1="0" y1="120" x2="700" y2="120" stroke="#f4f4f5" stroke-width="1"></line>
+                <path d="M0,150 L0,6 L100,4 L200,0 L300,12 L400,14 L500,6 L600,10 L700,66 L700,150 Z" fill="#18181b" fill-opacity="0.04"></path>
+                <path d="M0,6 L100,4 L200,0 L300,12 L400,14 L500,6 L600,10 L700,66" fill="none" stroke="#d4d4d8" stroke-width="1.5"></path>
+                <path d="M0,150 L0,83 L100,79 L200,74 L300,83 L400,85 L500,78 L600,83 L700,115 L700,150 Z" fill="#18181b" fill-opacity="0.07"></path>
+                <path d="M0,83 L100,79 L200,74 L300,83 L400,85 L500,78 L600,83 L700,115" fill="none" stroke="#18181b" stroke-width="2"></path>
+                <text x="0" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 15</text>
+                <text x="90" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 16</text>
+                <text x="190" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 17</text>
+                <text x="290" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 18</text>
+                <text x="390" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 19</text>
+                <text x="490" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 20</text>
+                <text x="590" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 21</text>
+                <text x="680" y="155" font-size="10" fill="#a1a1aa" font-family="Geist,sans-serif">Aug 22</text>
+              </svg>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:18px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Failures <span style="font-size:14px;font-weight:400;color:#71717a;">· 59</span></div>
+            <div style="font-size:13px;color:#71717a;">Failures are typically due to invalid numbers, opt-outs, or Meta delivery limits. No action required.</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ SETTINGS ════ -->
+    <sc-if value="{{ s_settings }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;overflow:hidden;">
+        <!-- Settings nav -->
+        <div style="width:200px;min-width:200px;border-right:1px solid #e4e4e7;background:#fff;padding:16px 8px;">
+          <div style="font-size:10px;font-weight:500;color:#a1a1aa;letter-spacing:0.07em;text-transform:uppercase;padding:4px 8px;margin-bottom:4px;">Settings</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;font-weight:500;background:#f4f4f5;cursor:pointer;margin-bottom:1px;">General</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;color:#71717a;cursor:pointer;margin-bottom:1px;" style-hover="background:#f4f4f5;color:#18181b">Inbox</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;color:#71717a;cursor:pointer;margin-bottom:1px;" style-hover="background:#f4f4f5;color:#18181b">Auto-replies</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;color:#71717a;cursor:pointer;margin-bottom:1px;" style-hover="background:#f4f4f5;color:#18181b">Members</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;color:#71717a;cursor:pointer;" style-hover="background:#f4f4f5;color:#18181b">Billing</div>
+        </div>
+        <!-- Settings content: General (shown by default) -->
+        <div style="flex:1;overflow-y:auto;padding:20px 28px;">
+          <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Auto-replies</div>
+          <div style="font-size:13px;color:#71717a;margin-bottom:20px;">Automatically reply when a customer message matches a keyword. Replies are sent only when no agent has responded within the delay.</div>
+
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;display:flex;gap:8px;align-items:center;margin-bottom:18px;">
+            <i data-lucide="lock" style="width:14px;height:14px;color:#d97706;flex-shrink:0;"></i>
+            <span style="font-size:12px;color:#92400e;flex:1;">Auto-replies are available on the Advanced plan.</span>
+            <span style="font-size:12px;font-weight:500;color:#d97706;cursor:pointer;text-decoration:underline;text-underline-offset:2px;">Upgrade</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:600;">Rules</span>
+            <button style="background:#18181b;color:#fff;padding:6px 12px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;opacity:0.4;display:flex;align-items:center;gap:5px;">
+              <i data-lucide="lock" style="width:11px;height:11px;"></i>Add rule
+            </button>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;opacity:0.5;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 16px;border-bottom:1px solid #e4e4e7;">Keyword(s)</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Match type</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Reply</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Delay</th>
+                  <th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Status</th>
+                  <th style="border-bottom:1px solid #e4e4e7;padding:10px 12px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;flex-wrap:wrap;"><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">hello</span><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">hi</span><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">hey</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 7px;border-radius:4px;">Contains</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Hi there! Welcome to Acme Corp...</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">30 sec</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="width:36px;height:20px;background:#18181b;border-radius:99px;position:relative;cursor:pointer;"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px;"></div></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5;color:#ef4444"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></div></td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 16px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;"><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">price</span><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">cost</span></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 7px;border-radius:4px;">Contains</span></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Template: price_inquiry</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">1 min</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="width:36px;height:20px;background:#18181b;border-radius:99px;position:relative;cursor:pointer;"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px;"></div></div></td>
+                  <td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;gap:4px;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5;color:#ef4444"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></div></td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 16px;"><div style="display:flex;gap:4px;"><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">refund</span><span style="background:#f4f4f5;color:#18181b;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace;">cancel</span></div></td>
+                  <td style="padding:10px 12px;"><span style="border:1px solid #e4e4e7;color:#71717a;font-size:11px;padding:2px 7px;border-radius:4px;">Exact match</span></td>
+                  <td style="padding:10px 12px;font-size:12px;color:#71717a;">I'll connect you with support...</td>
+                  <td style="padding:10px 12px;font-size:12px;color:#71717a;">30 sec</td>
+                  <td style="padding:10px 12px;"><div style="width:36px;height:20px;background:#d4d4d8;border-radius:99px;position:relative;cursor:pointer;"><div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;left:2px;top:2px;"></div></div></td>
+                  <td style="padding:10px 12px;"><div style="display:flex;gap:4px;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#71717a;" style-hover="background:#f4f4f5;color:#ef4444"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ LEADS ════ -->
+    <sc-if value="{{ s_leads }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;padding:20px 28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h2 style="font-size:18px;font-weight:600;">Leads</h2>
+          <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;">+ Add lead</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f4f4f5;font-size:12px;font-weight:600;color:#71717a;display:flex;justify-content:space-between;"><span>NEW</span><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:1px 6px;border-radius:99px;">3</span></div><div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;"></div></div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f4f4f5;font-size:12px;font-weight:600;color:#71717a;display:flex;justify-content:space-between;"><span>PROSPECT</span><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:1px 6px;border-radius:99px;">4</span></div><div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;"><div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:10px;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Priya Sharma</div><div style="font-size:11px;color:#71717a;">+91 98765 43210</div></div><div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:10px;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Aisha Patel</div><div style="font-size:11px;color:#71717a;">+91 76543 21098</div></div></div></div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f4f4f5;font-size:12px;font-weight:600;color:#71717a;display:flex;justify-content:space-between;"><span>LEAD</span><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:1px 6px;border-radius:99px;">5</span></div><div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;"><div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:10px;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Arjun Kumar</div><div style="font-size:11px;color:#71717a;">+91 43210 98765</div></div></div></div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f4f4f5;font-size:12px;font-weight:600;color:#71717a;display:flex;justify-content:space-between;"><span>CUSTOMER</span><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:1px 6px;border-radius:99px;">12</span></div><div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:200px;"><div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:10px;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Sneha Gupta</div><div style="font-size:11px;color:#71717a;">+91 54321 09876</div></div><div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:10px;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Rajesh Kumar</div><div style="font-size:11px;color:#71717a;">+91 87654 32109</div></div></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ MEMBERS ════ -->
+    <sc-if value="{{ s_members }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;padding:20px 28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div><h2 style="font-size:18px;font-weight:600;">Members</h2><span style="font-size:13px;color:#71717a;">5 members</span></div>
+          <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;"><i data-lucide="user-plus" style="width:13px;height:13px;"></i>Invite member</button>
+        </div>
+        <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#fafafa;"><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 18px;border-bottom:1px solid #e4e4e7;">Member</th><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Role</th><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Joined</th><th style="font-size:11px;font-weight:500;color:#71717a;text-align:left;padding:10px 12px;border-bottom:1px solid #e4e4e7;">Status</th><th style="border-bottom:1px solid #e4e4e7;padding:10px 12px;"></th></tr></thead>
+            <tbody>
+              <tr style-hover="background:#fafafa"><td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">RK</div><div><div style="font-size:13px;font-weight:500;">Rohan Kumar</div><div style="font-size:11px;color:#71717a;">rohan@acme.com</div></div></div></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#18181b;color:#fff;font-size:11px;padding:2px 7px;border-radius:99px;">Admin</span></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Aug 1, 2026</td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Active</span></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"></td></tr>
+              <tr style-hover="background:#fafafa"><td style="padding:10px 18px;border-bottom:1px solid #f4f4f5;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#fce7f3;color:#be185d;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">PS</div><div><div style="font-size:13px;font-weight:500;">Priya Sharma</div><div style="font-size:11px;color:#71717a;">priya@acme.com</div></div></div></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">Agent</span></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;font-size:12px;color:#71717a;">Aug 3, 2026</td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Active</span></td><td style="padding:10px 12px;border-bottom:1px solid #f4f4f5;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td></tr>
+              <tr style-hover="background:#fafafa"><td style="padding:10px 18px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">AM</div><div><div style="font-size:13px;font-weight:500;">Arjun Mehta</div><div style="font-size:11px;color:#71717a;">arjun@acme.com</div></div></div></td><td style="padding:10px 12px;"><span style="background:#f4f4f5;color:#71717a;font-size:11px;padding:2px 7px;border-radius:99px;">Agent</span></td><td style="padding:10px 12px;font-size:12px;color:#71717a;">Aug 5, 2026</td><td style="padding:10px 12px;"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Active</span></td><td style="padding:10px 12px;"><button style="width:24px;height:24px;background:transparent;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#a1a1aa;" style-hover="color:#18181b;background:#f4f4f5"><i data-lucide="more-horizontal" style="width:13px;height:13px;"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ BILLING ════ -->
+    <sc-if value="{{ s_billing }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;overflow-y:auto;padding:20px 28px;">
+        <h2 style="font-size:18px;font-weight:600;margin-bottom:20px;">Billing</h2>
+        <div style="max-width:640px;">
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div><div style="font-size:14px;font-weight:600;">FREE plan</div><div style="font-size:12px;color:#71717a;margin-top:2px;">142 / 200 contacts used</div></div>
+              <button style="background:#18181b;color:#fff;padding:7px 14px;border-radius:6px;border:none;font-size:13px;font-weight:500;cursor:pointer;">Upgrade to Pro</button>
+            </div>
+            <div style="height:6px;background:#f4f4f5;border-radius:99px;overflow:hidden;"><div style="height:100%;width:71%;background:#18181b;border-radius:99px;"></div></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:20px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:14px;">Payment method</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#fafafa;border:1px solid #e4e4e7;border-radius:8px;margin-bottom:12px;">
+              <i data-lucide="credit-card" style="width:20px;height:20px;color:#71717a;"></i>
+              <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Visa ending in 4242</div><div style="font-size:12px;color:#71717a;">Expires 12/27</div></div>
+              <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;">Default</span>
+            </div>
+            <button style="background:transparent;color:#18181b;padding:6px 12px;border-radius:6px;border:1px solid #e4e4e7;font-size:12px;font-weight:500;cursor:pointer;" style-hover="background:#fafafa">+ Add payment method</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'dashboard',
+    conv: 0,
+    dashRange: 'today',
+    itab: 'all',
+    tmtab: 'all',
+    catab: 'all',
+    castep: 1,
+    istep: 1,
+    showImport: false,
+  };
+
+  componentDidMount() { this._i(); }
+  componentDidUpdate() { this._i(); }
+  _i() { if (window.lucide) window.lucide.createIcons(); }
+
+  n(s) {
+    const a = this.state.screen === s;
+    return {
+      s: { display:'flex', alignItems:'center', gap:'8px', padding:'0 8px', height:'34px', borderRadius:'6px', cursor:'pointer', userSelect:'none', marginBottom:'1px', background: a ? '#f4f4f5' : 'transparent', color: a ? '#18181b' : '#71717a', fontWeight: a ? 500 : 400, fontSize:'14px', position:'relative' },
+      h: { background:'#f4f4f5', color:'#18181b' },
+      c: () => this.setState({ screen: s }),
+    };
+  }
+
+  ut(a) {
+    return { padding:'8px 0', fontSize:'13px', fontWeight: a ? 500 : 400, color: a ? '#18181b' : '#71717a', cursor:'pointer', userSelect:'none', borderBottom: a ? '2px solid #18181b' : '2px solid transparent', marginBottom:'-1px', whiteSpace:'nowrap' };
+  }
+
+  tb(a) {
+    return { padding:'5px 12px', fontSize:'13px', fontWeight: a ? 500 : 400, color: a ? '#18181b' : '#71717a', background: a ? '#fff' : 'transparent', border:'1px solid', borderColor: a ? '#e4e4e7' : 'transparent', borderRadius:'6px', cursor:'pointer', userSelect:'none', boxShadow: a ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' };
+  }
+
+  cs(i) {
+    const a = this.state.conv === i;
+    return {
+      s: { display:'flex', gap:'10px', padding:'11px 12px 11px 16px', cursor:'pointer', borderBottom:'1px solid #f4f4f5', position:'relative', background: a ? '#f4f4f5' : '#fff', alignItems:'flex-start' },
+      h: { background: a ? '#ebebeb' : '#f9f9f9' },
+      c: () => this.setState({ conv: i }),
+    };
+  }
+
+  renderVals() {
+    const { screen, conv, dashRange, itab, tmtab, catab, castep, istep, showImport } = this.state;
+    const titles = { dashboard:'Dashboard', connect:'Connect', inbox:'Inbox', templates:'Templates', 'template-editor':'New Template', contacts:'Contacts', leads:'Leads', campaigns:'Campaigns', 'campaign-new':'New Campaign', 'campaign-insights':'Campaign Insights', members:'Members', billing:'Billing', settings:'Settings' };
+    const c = (i) => this.cs(i);
+    const c0 = c(0), c1 = c(1), c2 = c(2), c3 = c(3), c4 = c(4), c5 = c(5);
+    const csActive = { background:'#18181b', color:'#fff', border:'1px solid #18181b' };
+    const csFuture = { background:'transparent', color:'#a1a1aa', border:'1px solid #d4d4d8' };
+    const csActiveText = { fontWeight:500, color:'#18181b' };
+    const csFutureText = { color:'#a1a1aa' };
+
+    return {
+      nDB: this.n('dashboard'), nCN: this.n('connect'), nIB: this.n('inbox'),
+      nTM: this.n('templates'), nCT: this.n('contacts'), nLD: this.n('leads'),
+      nCA: this.n('campaigns'), nMB: this.n('members'), nBL: this.n('billing'),
+      nST: this.n('settings'),
+
+      s_dashboard: screen === 'dashboard',
+      s_connect: screen === 'connect',
+      s_inbox: screen === 'inbox',
+      s_templates: screen === 'templates',
+      s_templateEditor: screen === 'template-editor',
+      s_contacts: screen === 'contacts',
+      s_leads: screen === 'leads',
+      s_campaigns: screen === 'campaigns',
+      s_campaignNew: screen === 'campaign-new',
+      s_campaignInsights: screen === 'campaign-insights',
+      s_members: screen === 'members',
+      s_billing: screen === 'billing',
+      s_settings: screen === 'settings',
+
+      pageTitle: titles[screen] || 'Dashboard',
+
+      goConnect: () => this.setState({ screen:'connect' }),
+      goInbox: () => this.setState({ screen:'inbox' }),
+      goTemplates: () => this.setState({ screen:'templates' }),
+      goTmEditor: () => this.setState({ screen:'template-editor' }),
+      goCampaigns: () => this.setState({ screen:'campaigns' }),
+      goCampaignNew: () => this.setState({ screen:'campaign-new' }),
+      goCampaignInsights: () => this.setState({ screen:'campaign-insights' }),
+
+      // Dashboard range
+      drt: this.tb(dashRange === 'today'),
+      dr7: this.tb(dashRange === '7d'),
+      dr30: this.tb(dashRange === '30d'),
+      setDrT: () => this.setState({ dashRange:'today' }),
+      setDr7: () => this.setState({ dashRange:'7d' }),
+      setDr30: () => this.setState({ dashRange:'30d' }),
+
+      // Inbox conversations
+      c0s: c0.s, c0h: c0.h, c0c: c0.c,
+      c1s: c1.s, c1h: c1.h, c1c: c1.c,
+      c2s: c2.s, c2h: c2.h, c2c: c2.c,
+      c3s: c3.s, c3h: c3.h, c3c: c3.c,
+      c4s: c4.s, c4h: c4.h, c4c: c4.c,
+      c5s: c5.s, c5h: c5.h, c5c: c5.c,
+
+      // Inbox tabs
+      itAll: this.ut(itab === 'all'), itActive: this.ut(itab === 'active'), itMine: this.ut(itab === 'mine'),
+      setItAll: () => this.setState({ itab:'all' }),
+      setItActive: () => this.setState({ itab:'active' }),
+      setItMine: () => this.setState({ itab:'mine' }),
+
+      // Templates tabs
+      tmAll: this.ut(tmtab === 'all'), tmApproved: this.ut(tmtab === 'approved'),
+      tmPending: this.ut(tmtab === 'pending'), tmRejected: this.ut(tmtab === 'rejected'), tmPaused: this.ut(tmtab === 'paused'),
+      setTmAll: () => this.setState({ tmtab:'all' }),
+      setTmApproved: () => this.setState({ tmtab:'approved' }),
+      setTmPending: () => this.setState({ tmtab:'pending' }),
+      setTmRejected: () => this.setState({ tmtab:'rejected' }),
+      setTmPaused: () => this.setState({ tmtab:'paused' }),
+
+      // Campaigns tabs
+      caAll: this.ut(catab === 'all'), caDraft: this.ut(catab === 'draft'),
+      caRunning: this.ut(catab === 'running'), caCompleted: this.ut(catab === 'completed'),
+      caPaused: this.ut(catab === 'paused'), caFailed: this.ut(catab === 'failed'),
+      setCaAll: () => this.setState({ catab:'all' }),
+      setCaDraft: () => this.setState({ catab:'draft' }),
+      setCaRunning: () => this.setState({ catab:'running' }),
+      setCaCompleted: () => this.setState({ catab:'completed' }),
+      setCaPaused: () => this.setState({ catab:'paused' }),
+      setCaFailed: () => this.setState({ catab:'failed' }),
+
+      // Campaign wizard
+      castep,
+      isCS1: castep === 1, isCS2: castep === 2, isCS3: castep === 3,
+      csNum1: castep > 1 ? '✓' : '1',
+      csN2Style: castep >= 2 ? csActive : csFuture,
+      csN3Style: castep >= 3 ? csActive : csFuture,
+      csN2Text: castep >= 2 ? csActiveText : csFutureText,
+      csN3Text: castep >= 3 ? csActiveText : csFutureText,
+      goCS1: () => this.setState({ castep:1 }),
+      goCS2: () => this.setState({ castep:2 }),
+      goCS3: () => this.setState({ castep:3 }),
+      setCS2Contacts: () => {},
+      setCS2Csv: () => {},
+
+      // Import dialog
+      showImport, istep,
+      isIS1: istep === 1, isIS2: istep === 2, isIS3: istep === 3,
+      is2Style: istep >= 2 ? csActive : csFuture,
+      is2Line: istep >= 2 ? { background:'#18181b' } : { background:'#e4e4e7' },
+      is3Style: istep >= 3 ? csActive : csFuture,
+      openImport: () => this.setState({ showImport:true, istep:1 }),
+      closeImport: () => this.setState({ showImport:false }),
+      goIS2: () => this.setState({ istep:2 }),
+      goIS3: () => this.setState({ istep:3 }),
+      goIS1: () => this.setState({ istep:1 }),
+      goIS2b: () => this.setState({ istep:2 }),
+      stopProp: (e) => { if (e) e.stopPropagation(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

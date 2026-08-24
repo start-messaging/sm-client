@@ -4,7 +4,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FieldError, FieldLabel } from '@/components/ui/field';
@@ -18,6 +18,15 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useTemplates } from '@/api/hooks/use-templates';
@@ -25,12 +34,16 @@ import { useContacts } from '@/api/hooks/use-contacts';
 import {
   useCreateCampaign,
   useLaunchCampaign,
+  useUploadCampaignAudienceCsv,
 } from '@/api/hooks/use-campaigns';
 import { useWabaStatus } from '@/api/hooks/use-whatsapp';
+import { parseCsv, readFileAsText } from '@/lib/csv';
 import { toast } from '@/lib/toast';
 import type { Campaign } from '@/api/campaigns.api';
 import type { TemplateComponent, WaTemplate } from '@/api/templates.api';
 import type { WaContact } from '@/api/contacts.api';
+
+type AudienceMode = 'contacts' | 'csv';
 
 function extractBodyVars(components: TemplateComponent[]): number[] {
   const body = components.find((c) => c.type === 'BODY');
@@ -111,8 +124,7 @@ function VarMappingRow({
           }
           onChange({
             type: v,
-            attrKey:
-              v === 'attr' || v === 'text' ? (value?.attrKey ?? '') : '',
+            attrKey: v === 'attr' || v === 'text' ? (value?.attrKey ?? '') : '',
           });
         }}
       >
@@ -121,7 +133,9 @@ function VarMappingRow({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="name">{t('campaigns.create.varName')}</SelectItem>
-          <SelectItem value="phone">{t('campaigns.create.varPhone')}</SelectItem>
+          <SelectItem value="phone">
+            {t('campaigns.create.varPhone')}
+          </SelectItem>
           <SelectItem value="text">{t('campaigns.create.varText')}</SelectItem>
           <SelectItem value="attr">{t('campaigns.create.varAttr')}</SelectItem>
         </SelectContent>
@@ -153,16 +167,24 @@ export function CreateCampaignPage() {
   const { data: wabaStatus } = useWabaStatus(ws.slug);
   const createMutation = useCreateCampaign(ws.slug);
   const launchMutation = useLaunchCampaign(ws.slug);
+  const uploadAudienceCsvMutation = useUploadCampaignAudienceCsv(ws.slug);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [tagFilter, setTagFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showOptedOut, setShowOptedOut] = useState(false);
+  const [audienceMode, setAudienceMode] = useState<AudienceMode>('contacts');
+  const [csvFileName, setCsvFileName] = useState('');
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvRows, setCsvRows] = useState<Record<string, string>[]>([]);
+  const [csvError, setCsvError] = useState('');
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [varMapping, setVarMapping] = useState<Record<string, VarMappingEntry>>(
     {},
   );
+  // Kept in sync inside writeVarMapping (the only place varMapping changes),
+  // never assigned at render time — updating a ref during render is unsafe.
   const varMappingRef = useRef(varMapping);
-  varMappingRef.current = varMapping;
   const [mappingError, setMappingError] = useState('');
 
   const launchBlocked = wabaStatus?.metaPaymentReady === false;
@@ -265,7 +287,43 @@ export function CreateCampaignPage() {
     setStep(2);
   }
 
+  async function handleCsvFile(file: File) {
+    setCsvError('');
+    let parsed: { headers: string[]; rows: Record<string, string>[] };
+    try {
+      parsed = parseCsv(await readFileAsText(file));
+    } catch {
+      setCsvHeaders([]);
+      setCsvRows([]);
+      setCsvError(t('campaigns.wizard.csv.errorParsing'));
+      return;
+    }
+    if (!parsed.headers.includes('phone')) {
+      setCsvHeaders([]);
+      setCsvRows([]);
+      setCsvError(t('campaigns.wizard.csv.missingPhoneColumn'));
+      return;
+    }
+    if (parsed.rows.length === 0) {
+      setCsvHeaders([]);
+      setCsvRows([]);
+      setCsvError(t('campaigns.wizard.csv.emptyFile'));
+      return;
+    }
+    setCsvFileName(file.name);
+    setCsvHeaders(parsed.headers);
+    setCsvRows(parsed.rows);
+  }
+
   function goNextFromAudience() {
+    if (audienceMode === 'csv') {
+      if (csvError || csvRows.length === 0) {
+        toast.error(t('campaigns.wizard.csv.rowsRequired'));
+        return;
+      }
+      setStep(3);
+      return;
+    }
     const optedInIds = audienceIds.filter(
       (id) => allContacts.find((c) => c.id === id)?.optedIn === true,
     );
@@ -279,21 +337,40 @@ export function CreateCampaignPage() {
 
   async function submit(launch: boolean) {
     if (!selectedTemplate) return;
-    const optedInIds = audienceIds.filter(
-      (id) => allContacts.find((c) => c.id === id)?.optedIn === true,
-    );
-    if (optedInIds.length === 0) {
-      toast.error(t('campaigns.create.audienceOptedInRequired'));
-      return;
+
+    let audienceIdsForCreate: string[] = [];
+    if (audienceMode === 'csv') {
+      if (csvRows.length === 0) {
+        toast.error(t('campaigns.wizard.csv.rowsRequired'));
+        return;
+      }
+    } else {
+      const optedInIds = audienceIds.filter(
+        (id) => allContacts.find((c) => c.id === id)?.optedIn === true,
+      );
+      if (optedInIds.length === 0) {
+        toast.error(t('campaigns.create.audienceOptedInRequired'));
+        return;
+      }
+      audienceIdsForCreate = optedInIds;
     }
+
     try {
       const created = (await createMutation.mutateAsync({
         name: campaignName.trim(),
         templateName: selectedTemplate.name,
         templateLanguage: selectedTemplate.language,
-        audienceIds: optedInIds,
+        audienceIds: audienceIdsForCreate,
         variableMapping: buildVarMappingPayload(),
       })) as Campaign;
+
+      if (audienceMode === 'csv') {
+        await uploadAudienceCsvMutation.mutateAsync({
+          id: created.id,
+          rows: csvRows,
+        });
+      }
+
       if (launch) {
         await launchMutation.mutateAsync(created.id);
         toast.success(t('campaigns.launched'));
@@ -306,7 +383,10 @@ export function CreateCampaignPage() {
     }
   }
 
-  const pending = createMutation.isPending || launchMutation.isPending;
+  const pending =
+    createMutation.isPending ||
+    launchMutation.isPending ||
+    uploadAudienceCsvMutation.isPending;
   const selectedContacts: WaContact[] = audienceIds
     .map((id) => allContacts.find((c) => c.id === id))
     .filter((c): c is WaContact => Boolean(c));
@@ -405,7 +485,11 @@ export function CreateCampaignPage() {
                 <FieldError>{t(errors.templateId.message ?? '')}</FieldError>
               )}
               {approvedTemplates.length === 0 && (
-                <Button variant="link" className="h-auto justify-start p-0" asChild>
+                <Button
+                  variant="link"
+                  className="h-auto justify-start p-0"
+                  asChild
+                >
                   <Link to={`/w/${ws.slug}/templates`}>
                     {t('campaigns.wizard.goTemplates', 'Go to Templates')}
                   </Link>
@@ -450,9 +534,15 @@ export function CreateCampaignPage() {
           {selectedTemplate && (
             <aside className="hidden w-72 shrink-0 lg:block">
               <WaMessagePreview
-                headerText={componentText(selectedTemplate.components, 'HEADER')}
+                headerText={componentText(
+                  selectedTemplate.components,
+                  'HEADER',
+                )}
                 bodyText={componentText(selectedTemplate.components, 'BODY')}
-                footerText={componentText(selectedTemplate.components, 'FOOTER')}
+                footerText={componentText(
+                  selectedTemplate.components,
+                  'FOOTER',
+                )}
                 templateName={selectedTemplate.name}
                 buttonLabels={templateButtonLabels(selectedTemplate)}
               />
@@ -463,116 +553,219 @@ export function CreateCampaignPage() {
 
       {step === 2 && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              className="h-8 max-w-xs text-sm"
-              placeholder={t(
-                'campaigns.wizard.searchAudience',
-                'Search name or phone…',
-              )}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {allTags.length > 0 && (
-              <Select
-                value={tagFilter || TAG_FILTER_ALL}
-                onValueChange={(v) =>
-                  setTagFilter(v === TAG_FILTER_ALL ? '' : v)
-                }
-              >
-                <SelectTrigger className="h-8 w-40 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={TAG_FILTER_ALL}>
-                    {t('campaigns.create.allTags')}
-                  </SelectItem>
-                  {allTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <label className="text-muted-foreground flex items-center gap-2 text-xs">
-              <Checkbox
-                checked={showOptedOut}
-                onCheckedChange={(v) => setShowOptedOut(Boolean(v))}
-              />
-              {t('campaigns.wizard.showOptedOut', 'Show opted-out')}
-            </label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="ml-auto h-8"
-              onClick={selectAllVisible}
-            >
-              {t('campaigns.wizard.selectAll', 'Select all opted-in')}
-            </Button>
-          </div>
+          <Tabs
+            value={audienceMode}
+            onValueChange={(v) => setAudienceMode(v as AudienceMode)}
+          >
+            <TabsList>
+              <TabsTrigger value="contacts">
+                {t('campaigns.wizard.tabContacts', 'From contacts')}
+              </TabsTrigger>
+              <TabsTrigger value="csv">
+                {t('campaigns.wizard.tabCsv', 'Upload CSV')}
+              </TabsTrigger>
+            </TabsList>
 
-          <p className="text-muted-foreground text-xs">
-            {t('campaigns.create.selectedCount', { count: audienceIds.length })}
-          </p>
+            <TabsContent value="contacts" className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  className="h-8 max-w-xs text-sm"
+                  placeholder={t(
+                    'campaigns.wizard.searchAudience',
+                    'Search name or phone…',
+                  )}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {allTags.length > 0 && (
+                  <Select
+                    value={tagFilter || TAG_FILTER_ALL}
+                    onValueChange={(v) =>
+                      setTagFilter(v === TAG_FILTER_ALL ? '' : v)
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-40 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={TAG_FILTER_ALL}>
+                        {t('campaigns.create.allTags')}
+                      </SelectItem>
+                      {allTags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                  <Checkbox
+                    checked={showOptedOut}
+                    onCheckedChange={(v) => setShowOptedOut(Boolean(v))}
+                  />
+                  {t('campaigns.wizard.showOptedOut', 'Show opted-out')}
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto h-8"
+                  onClick={selectAllVisible}
+                >
+                  {t('campaigns.wizard.selectAll', 'Select all opted-in')}
+                </Button>
+              </div>
 
-          <div className="rounded-md border">
-            {visibleContacts.length === 0 ? (
-              <p className="text-muted-foreground p-4 text-sm">
-                {t('campaigns.create.noContacts')}
+              <p className="text-muted-foreground text-xs">
+                {t('campaigns.create.selectedCount', {
+                  count: audienceIds.length,
+                })}
               </p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-muted-foreground text-left text-xs">
-                  <tr>
-                    <th className="w-10 px-3 py-2" />
-                    <th className="px-3 py-2 font-medium">
-                      {t('campaigns.wizard.colName', 'Name')}
-                    </th>
-                    <th className="px-3 py-2 font-medium">
-                      {t('campaigns.wizard.colPhone', 'Phone')}
-                    </th>
-                    <th className="px-3 py-2 font-medium">
-                      {t('campaigns.wizard.colTags', 'Tags')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleContacts.map((c) => (
-                    <tr key={c.id} className="border-t">
-                      <td className="px-3 py-2">
-                        <Checkbox
-                          checked={audienceIds.includes(c.id)}
-                          disabled={!c.optedIn}
-                          onCheckedChange={(checked) =>
-                            toggleContact(c.id, Boolean(checked))
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        {c.name ?? '—'}
-                        {!c.optedIn && (
-                          <Badge variant="outline" className="ml-2 text-[10px]">
-                            {t('campaigns.create.notOptedIn')}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="text-muted-foreground px-3 py-2 font-mono text-xs">
-                        {c.phoneE164}
-                      </td>
-                      <td className="text-muted-foreground px-3 py-2 text-xs">
-                        {c.tags.join(', ') || '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-          {errors.audienceIds && (
-            <FieldError>{t(errors.audienceIds.message ?? '')}</FieldError>
-          )}
+
+              <div className="rounded-md border">
+                {visibleContacts.length === 0 ? (
+                  <p className="text-muted-foreground p-4 text-sm">
+                    {t('campaigns.create.noContacts')}
+                  </p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-muted-foreground text-left text-xs">
+                      <tr>
+                        <th className="w-10 px-3 py-2" />
+                        <th className="px-3 py-2 font-medium">
+                          {t('campaigns.wizard.colName', 'Name')}
+                        </th>
+                        <th className="px-3 py-2 font-medium">
+                          {t('campaigns.wizard.colPhone', 'Phone')}
+                        </th>
+                        <th className="px-3 py-2 font-medium">
+                          {t('campaigns.wizard.colTags', 'Tags')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleContacts.map((c) => (
+                        <tr key={c.id} className="border-t">
+                          <td className="px-3 py-2">
+                            <Checkbox
+                              checked={audienceIds.includes(c.id)}
+                              disabled={!c.optedIn}
+                              onCheckedChange={(checked) =>
+                                toggleContact(c.id, Boolean(checked))
+                              }
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            {c.name ?? '—'}
+                            {!c.optedIn && (
+                              <Badge
+                                variant="outline"
+                                className="ml-2 text-[10px]"
+                              >
+                                {t('campaigns.create.notOptedIn')}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="text-muted-foreground px-3 py-2 font-mono text-xs">
+                            {c.phoneE164}
+                          </td>
+                          <td className="text-muted-foreground px-3 py-2 text-xs">
+                            {c.tags.join(', ') || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              {errors.audienceIds && (
+                <FieldError>{t(errors.audienceIds.message ?? '')}</FieldError>
+              )}
+            </TabsContent>
+
+            <TabsContent value="csv" className="flex flex-col gap-4">
+              <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-xs leading-relaxed">
+                {t(
+                  'campaigns.wizard.csv.hint',
+                  'CSV needs a "phone" column (E.164, e.g. +919876543210). Add an optional "name" column and "attr:<key>" columns for template variables.',
+                )}
+              </p>
+
+              <div
+                className="border-border hover:bg-muted/50 flex cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed py-8 text-center transition-colors"
+                onClick={() => csvInputRef.current?.click()}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' && csvInputRef.current?.click()
+                }
+                role="button"
+                tabIndex={0}
+              >
+                <Upload className="text-muted-foreground size-8" />
+                {csvFileName ? (
+                  <span className="text-sm font-medium">{csvFileName}</span>
+                ) : (
+                  <span className="text-muted-foreground text-sm">
+                    {t('campaigns.wizard.csv.dropzone', 'Choose a CSV file…')}
+                  </span>
+                )}
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleCsvFile(file);
+                  }}
+                />
+              </div>
+
+              {csvError && (
+                <p className="text-destructive text-xs">{csvError}</p>
+              )}
+
+              {csvRows.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-muted-foreground text-xs">
+                    {t('campaigns.wizard.csv.rowCount', {
+                      count: csvRows.length,
+                    })}
+                  </p>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {csvHeaders.map((h) => (
+                            <TableHead key={h} className="font-mono text-xs">
+                              {h}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {csvRows.slice(0, 5).map((row, i) => (
+                          <TableRow key={i}>
+                            {csvHeaders.map((h) => (
+                              <TableCell key={h} className="text-xs">
+                                {row[h] || '—'}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t(
+                      'campaigns.wizard.csv.previewNote',
+                      'Showing the first 5 rows. Phone validity and opt-out status are checked when the campaign is created.',
+                    )}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
@@ -605,9 +798,14 @@ export function CreateCampaignPage() {
                 {t('campaigns.wizard.audienceCount', 'Audience')}
               </dt>
               <dd>
-                {t('campaigns.create.selectedCount', {
-                  count: selectedContacts.length,
-                })}
+                {audienceMode === 'csv'
+                  ? t('campaigns.wizard.csv.rowCount', {
+                      count: csvRows.length,
+                      defaultValue: '{{count}} rows parsed',
+                    })
+                  : t('campaigns.create.selectedCount', {
+                      count: selectedContacts.length,
+                    })}
               </dd>
             </div>
           </dl>

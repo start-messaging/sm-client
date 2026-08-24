@@ -37,6 +37,8 @@ export interface TemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
   text?: string;
   format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  /** HEADER component only: publicly accessible media URL when format isn't TEXT. */
+  link?: string;
   example?: {
     body_text?: string[][];
     header_text?: string[];

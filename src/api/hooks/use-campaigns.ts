@@ -65,3 +65,26 @@ export function useResumeCampaign(slug: string) {
     campaignsApi.resume(slug, id),
   );
 }
+
+export function useDuplicateCampaign(slug: string) {
+  return useCampaignMutation(slug, (id: string) =>
+    campaignsApi.duplicate(slug, id),
+  );
+}
+
+export function useUploadCampaignAudienceCsv(slug: string) {
+  return useCampaignMutation(
+    slug,
+    (args: { id: string; rows: Record<string, string>[] }) =>
+      campaignsApi.uploadAudienceCsv(slug, args.id, args.rows),
+  );
+}
+
+export function useCampaignAnalytics(slug: string, id: string) {
+  return useQuery({
+    queryKey: queryKeys.campaigns.analytics(slug, id),
+    queryFn: () => campaignsApi.getAnalytics(slug, id),
+    enabled: slug.length > 0 && id.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}

@@ -42,6 +42,11 @@ export const queryKeys = {
     status: (slug: string) => ['whatsapp', 'status', slug] as const,
   },
 
+  // ── WhatsApp analytics ────────────────────────────────────────────────────
+  analytics: {
+    overview: (slug: string) => ['analytics', 'overview', slug] as const,
+  },
+
   // ── Template Examples (admin-curated gallery) ─────────────────────────────
   templateExamples: {
     list: (slug: string) => ['template-examples', slug] as const,
@@ -79,11 +84,16 @@ export const queryKeys = {
       ] as const,
     list: (slug: string, conversationId: string) =>
       ['messages', 'list', slug, conversationId] as const,
+    // Total unread-conversation count — drives the sidebar Inbox badge.
+    unreadCount: (slug: string) => ['messages', 'unread-count', slug] as const,
   },
 
   // ── Contacts ──────────────────────────────────────────────────────────────
   contacts: {
-    all: (slug: string) => ['contacts', slug] as const,
+    // search is part of the key so a new term fetches fresh instead of
+    // reading a stale cache entry for a different filter.
+    all: (slug: string, search?: string) =>
+      ['contacts', slug, search ?? null] as const,
     byId: (slug: string, id: string) => ['contacts', slug, id] as const,
     notes: (slug: string, contactId: string) =>
       ['contacts', 'notes', slug, contactId] as const,
@@ -99,6 +109,8 @@ export const queryKeys = {
   campaigns: {
     all: (slug: string) => ['campaigns', slug] as const,
     byId: (slug: string, id: string) => ['campaigns', slug, id] as const,
+    analytics: (slug: string, id: string) =>
+      ['campaigns', slug, id, 'analytics'] as const,
   },
 
   // ── Billing ───────────────────────────────────────────────────────────────

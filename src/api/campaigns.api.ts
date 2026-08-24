@@ -38,6 +38,33 @@ export interface CampaignListResult {
   total: number;
 }
 
+export interface CampaignAnalyticsPoint {
+  date: string;
+  delivered: number;
+  read: number;
+  failed: number;
+}
+
+export interface CampaignAnalytics {
+  stats: Campaign['stats'];
+  timeseries: CampaignAnalyticsPoint[];
+}
+
+/** A validated row saved onto a campaign's CSV audience (Track 5c). */
+export interface CampaignAudienceCsvEntry {
+  phoneE164: string;
+  name?: string;
+  attrs?: Record<string, string>;
+}
+
+export interface UploadAudienceCsvResult {
+  campaign: Campaign;
+  added: number;
+  skippedInvalidPhone: number;
+  skippedDuplicate: number;
+  skippedOptedOut: number;
+}
+
 export interface CreateCampaignBody {
   name: string;
   templateName: string;
@@ -79,4 +106,22 @@ export const campaignsApi = {
 
   resume: (slug: string, id: string) =>
     apiPost<Campaign>(endpoints.campaigns.resume(slug, id), {}),
+
+  duplicate: (slug: string, id: string) =>
+    apiPost<Campaign>(endpoints.campaigns.duplicate(slug, id), {}),
+
+  getAnalytics: (slug: string, id: string) =>
+    apiGet<CampaignAnalytics>(endpoints.campaigns.analytics(slug, id)),
+
+  uploadAudienceCsv: (
+    slug: string,
+    id: string,
+    rows: Record<string, string>[],
+  ) =>
+    apiPost<UploadAudienceCsvResult>(
+      endpoints.campaigns.audienceCsv(slug, id),
+      {
+        rows,
+      },
+    ),
 };

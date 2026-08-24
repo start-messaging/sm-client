@@ -62,11 +62,22 @@ export interface AddNoteBody {
   body: string;
 }
 
+export interface ImportContactsResult {
+  imported: number;
+  skipped: number;
+}
+
+/** `mapping` values: `phone` | `name` | `email` | `tag` | `attr:<key>`. */
+export interface ImportContactsMappedBody {
+  rows: Record<string, string>[];
+  mapping: Record<string, string>;
+}
+
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export const contactsApi = {
-  list: (slug: string) =>
-    apiGet<ContactListResult>(endpoints.contacts.list(slug)),
+  list: (slug: string, params?: { search?: string }) =>
+    apiGet<ContactListResult>(endpoints.contacts.list(slug, params)),
 
   getById: (slug: string, id: string) =>
     apiGet<WaContact>(endpoints.contacts.byId(slug, id)),
@@ -80,13 +91,9 @@ export const contactsApi = {
   delete: (slug: string, id: string) =>
     apiDelete<void>(endpoints.contacts.delete(slug, id)),
 
-  import: (slug: string, formData: FormData) =>
-    apiPost<{ imported: number; skipped: number }>(
-      endpoints.contacts.import(slug),
-      formData,
-      // Let the browser set multipart boundary (default json Content-Type breaks uploads).
-      { headers: { 'Content-Type': undefined } },
-    ),
+  /** Field-mapped CSV import (Track 6b): client parses the CSV, server validates + inserts. */
+  importMapped: (slug: string, body: ImportContactsMappedBody) =>
+    apiPost<ImportContactsResult>(endpoints.contacts.import(slug), body),
 
   listNotes: (slug: string, contactId: string) =>
     apiGet<ContactNoteListResult>(endpoints.contacts.notes(slug, contactId)),
