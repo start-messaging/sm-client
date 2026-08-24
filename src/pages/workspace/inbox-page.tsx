@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, BellOff, MessageSquare, Pencil, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Bell, BellOff, ChevronLeft, ChevronRight, MessageSquare, Pencil, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -169,6 +169,10 @@ export function InboxPage() {
   useEffect(() => {
     useNotificationStore.getState().clearHasUpdate('inbox');
   }, []);
+
+  // ── Panel collapse state ─────────────────────────────────────────────────
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
 
   // ── Server-side filters ──────────────────────────────────────────────────
   const [filterUnread, setFilterUnread] = useState(false);
@@ -345,11 +349,36 @@ export function InboxPage() {
       {/* 3-pane: list | thread | right rail */}
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg border">
         {/* LEFT — conversation list */}
-        <div className="flex w-[288px] min-h-0 shrink-0 flex-col border-r bg-white">
+        <div className={cn(
+          'flex min-h-0 shrink-0 flex-col border-r bg-white transition-all duration-200',
+          leftCollapsed ? 'w-9' : 'w-[288px]',
+        )}>
+          {/* Collapsed strip — just a toggle button */}
+          {leftCollapsed && (
+            <button
+              type="button"
+              onClick={() => setLeftCollapsed(false)}
+              className="flex flex-1 flex-col items-center justify-start pt-3 gap-1 text-[#a1a1aa] hover:text-[#18181b] transition-colors"
+              title={t('inbox.title')}
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          )}
+
+          {/* Expanded panel content */}
+          {!leftCollapsed && (<>
           {/* Panel header */}
           <div className="flex items-center justify-between px-[14px] py-3 border-b border-[#e4e4e7] shrink-0">
             <h3 className="text-[14px] font-semibold text-[#18181b]">{t('inbox.title')}</h3>
             <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setLeftCollapsed(true)}
+                className="flex size-7 items-center justify-center rounded-[5px] text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors"
+                title={t('inbox.collapseList')}
+              >
+                <ChevronLeft className="size-3.5" />
+              </button>
               <Popover>
                 <PopoverTrigger asChild>
                   <button
@@ -528,10 +557,11 @@ export function InboxPage() {
               />
             ))}
           </div>
+          </>)}
         </div>
 
         {/* MIDDLE — thread */}
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
           {syncedSelected ? (
             <ConversationThread
               slug={ws.slug}
@@ -553,10 +583,26 @@ export function InboxPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Right rail toggle — shown when a conversation is open */}
+          {syncedSelected && (
+            <button
+              type="button"
+              onClick={() => setRightCollapsed((v) => !v)}
+              className="absolute right-0 top-[52px] flex h-8 w-5 -translate-y-1/2 items-center justify-center rounded-l-[4px] border border-r-0 border-[#e4e4e7] bg-white text-[#a1a1aa] hover:text-[#18181b] hover:bg-[#f4f4f5] transition-colors z-10"
+              title={rightCollapsed ? t('inbox.expandRail') : t('inbox.collapseRail')}
+            >
+              {rightCollapsed ? (
+                <ChevronLeft className="size-3" />
+              ) : (
+                <ChevronRight className="size-3" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* RIGHT — CRM rail */}
-        {syncedSelected && (
+        {syncedSelected && !rightCollapsed && (
           <InboxContactRail slug={ws.slug} conversation={syncedSelected} />
         )}
       </div>

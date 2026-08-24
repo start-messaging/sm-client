@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -950,6 +950,16 @@ export function ConversationThread({
   const { data: templatesData } = useTemplates(slug);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Snapshot unread count once on open — used to place the "new messages" divider.
+  // Stored in a ref keyed by conversationId so switching conversations resets it.
+  const unreadSnapshotRef = useRef<{ convId: string; count: number } | null>(null);
+  if (
+    unreadSnapshotRef.current?.convId !== conversation.id
+  ) {
+    unreadSnapshotRef.current = { convId: conversation.id, count: conversation.unreadCount };
+  }
+  const initialUnreadCount = unreadSnapshotRef.current.count;
+
   // ── Presence + assignment events ────────────────────────────────────────
   const { viewers } = useInboxPresence(slug, conversation.id);
   const { data: eventsData } = useAssignmentEvents(slug, conversation.id);
@@ -1073,17 +1083,43 @@ export function ConversationThread({
             {t('inbox.thread.empty')}
           </p>
         )}
-        {threadItems.map((item) =>
-          item.kind === 'message' ? (
-            <MessageBubble
-              key={item.key}
-              msg={item.msg}
-              templateBodyMap={templateBodyMap}
-            />
-          ) : (
-            <SystemEventLine key={item.key} event={item.event} />
-          ),
-        )}
+        {(() => {
+          // Find the index in threadItems where unread messages begin.
+          // Count back initialUnreadCount inbound messages from the end.
+          let unreadDividerIdx = -1;
+          if (initialUnreadCount > 0) {
+            let inboundSeen = 0;
+            for (let i = threadItems.length - 1; i >= 0; i--) {
+              const item = threadItems[i];
+              if (item.kind === 'message' && item.msg.direction === 'inbound') {
+                inboundSeen++;
+                if (inboundSeen === initialUnreadCount) {
+                  unreadDividerIdx = i;
+                  break;
+                }
+              }
+            }
+          }
+
+          return threadItems.map((item, idx) => (
+            <React.Fragment key={item.key}>
+              {idx === unreadDividerIdx && (
+                <div className="flex items-center gap-2 py-1 select-none">
+                  <div className="flex-1 h-px bg-[#e4e4e7]" />
+                  <span className="text-[11px] text-[#a1a1aa] shrink-0">
+                    {t('inbox.thread.newMessages', { count: initialUnreadCount })}
+                  </span>
+                  <div className="flex-1 h-px bg-[#e4e4e7]" />
+                </div>
+              )}
+              {item.kind === 'message' ? (
+                <MessageBubble msg={item.msg} templateBodyMap={templateBodyMap} />
+              ) : (
+                <SystemEventLine event={item.event} />
+              )}
+            </React.Fragment>
+          ));
+        })()}
         <div ref={messagesEndRef} />
       </div>
 

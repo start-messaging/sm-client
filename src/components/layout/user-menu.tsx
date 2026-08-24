@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { Check, Globe, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useLogout } from '@/api/hooks/use-auth';
 import { useAuthStore } from '@/stores/auth.store';
+import { LANGUAGES } from '@/config/languages';
 
 function initials(value: string): string {
   const parts = value.trim().split(/\s+/);
@@ -21,10 +22,11 @@ function initials(value: string): string {
 }
 
 export function UserMenu() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
+  const activeLang = i18n.resolvedLanguage ?? 'en';
 
   const display = user?.fullName || user?.email || '';
 
@@ -46,6 +48,21 @@ export function UserMenu() {
             {user?.email}
           </span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="flex items-center gap-1.5 text-[11px] font-medium text-[#a1a1aa] py-1">
+          <Globe className="size-3" />
+          {t('common.language')}
+        </DropdownMenuLabel>
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => void i18n.changeLanguage(lang.code)}
+            className="flex items-center justify-between"
+          >
+            <span>{lang.label}</span>
+            {activeLang === lang.code && <Check className="size-3.5 text-[#18181b]" />}
+          </DropdownMenuItem>
+        ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() =>
