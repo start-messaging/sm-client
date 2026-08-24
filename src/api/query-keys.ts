@@ -90,6 +90,7 @@ export const queryKeys = {
 
   // ── Contacts ──────────────────────────────────────────────────────────────
   contacts: {
+    count: (slug: string) => ['contacts', slug, 'count'] as const,
     // search is part of the key so a new term fetches fresh instead of
     // reading a stale cache entry for a different filter.
     all: (slug: string, search?: string) =>

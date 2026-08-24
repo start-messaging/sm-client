@@ -60,6 +60,8 @@ export interface WaTemplate {
   components: TemplateComponent[];
   /** Reason string from Meta when status is REJECTED. */
   rejectionReason: string | null;
+  /** Meta quality signal: 'HIGH' | 'MEDIUM' | 'LOW'. Null until first quality webhook. */
+  qualityScore: string | null;
   createdAt: string;
   updatedAt: string;
 }

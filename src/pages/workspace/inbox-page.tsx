@@ -4,7 +4,6 @@ import { Bell, BellOff, MessageSquare, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -16,7 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useInboxRealtime } from '@/hooks/use-inbox-realtime';
 import { useFcmWebPush } from '@/hooks/use-fcm-web-push';
@@ -46,30 +44,16 @@ function windowMs(lastInboundAt: string | null): number {
   return Math.max(0, 24 * 60 * 60 * 1000 - elapsed);
 }
 
-function WindowBadge({ lastInboundAt }: { lastInboundAt: string | null }) {
-  const { t } = useTranslation();
+function WindowStrip({ lastInboundAt }: { lastInboundAt: string | null }) {
   const remaining = windowMs(lastInboundAt);
   const open = remaining > 0;
   const closingSoon = open && remaining < 60 * 60 * 1000;
-
-  if (!open) {
-    return (
-      <span className="text-[10px] text-muted-foreground">
-        {t('inbox.windowClosedShort')}
-      </span>
-    );
-  }
-  if (closingSoon) {
-    return (
-      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-        {t('inbox.windowClosingShort')}
-      </span>
-    );
-  }
+  const color = open ? (closingSoon ? '#f59e0b' : '#22c55e') : '#ef4444';
   return (
-    <span className="text-[10px] text-green-600 dark:text-green-400">
-      {t('inbox.windowWarningShort')}
-    </span>
+    <span
+      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-[2px]"
+      style={{ backgroundColor: color }}
+    />
   );
 }
 
@@ -95,18 +79,21 @@ function ConvItem({
   const visibleTags = tags.slice(0, 2);
   const extraTagCount = tags.length - visibleTags.length;
 
+  const unread = conv.unreadCount > 0;
+
   return (
     <button
       type="button"
       onClick={() => onSelect(conv)}
       className={cn(
-        'w-full text-left flex items-start gap-3 px-3 py-3 border-b transition-colors hover:bg-muted/40',
-        isSelected && 'bg-muted/60',
+        'relative w-full text-left flex items-start gap-[10px] py-[10px] pr-3 pl-4 border-b border-[#e4e4e7] transition-colors',
+        isSelected ? 'bg-[#f4f4f5]' : 'hover:bg-[#f9f9f9]',
       )}
     >
+      <WindowStrip lastInboundAt={conv.lastInboundAt} />
       <div
         className={cn(
-          'flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+          'flex size-9 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold',
           bg,
           text,
         )}
@@ -115,21 +102,19 @@ function ConvItem({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1">
-          <span className="truncate font-medium text-sm">
+          <span
+            className={cn(
+              'truncate max-w-[140px] text-[13px] text-[#18181b]',
+              unread ? 'font-semibold' : 'font-medium',
+            )}
+          >
             {conv.contactName ?? conv.contactPhone}
           </span>
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] text-muted-foreground">
-              {timestamp}
-            </span>
-            {conv.unreadCount > 0 && (
-              <Badge className="rounded-full px-1.5 py-0.5 text-xs tabular-nums shrink-0 h-auto">
-                {conv.unreadCount}
-              </Badge>
-            )}
-          </div>
+          <span className="text-[11px] text-[#a1a1aa] shrink-0">
+            {timestamp}
+          </span>
         </div>
-        <p className="text-muted-foreground truncate text-xs mt-0.5">
+        <p className="text-[12px] text-[#71717a] truncate mb-1">
           {conv.lastMessage
             ? (conv.lastMessage.body ??
               (conv.lastMessage.templateName
@@ -139,28 +124,28 @@ function ConvItem({
                 : '—'))
             : '—'}
         </p>
-        <div className="flex items-center justify-between gap-1 mt-0.5">
-          <WindowBadge lastInboundAt={conv.lastInboundAt} />
-          {conv.assigneeName && (
-            <span className="text-[10px] text-muted-foreground truncate max-w-[80px]">
-              {conv.assigneeName}
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
+            {visibleTags.map((tag) => (
+              <span
+                key={tag}
+                className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+            {extraTagCount > 0 && (
+              <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
+                +{extraTagCount}
+              </span>
+            )}
+          </div>
+          {unread && (
+            <span className="bg-[#ef4444] text-white text-[10px] font-semibold px-[6px] py-px rounded-full shrink-0">
+              {conv.unreadCount}
             </span>
           )}
         </div>
-        {tags.length > 0 && (
-          <div className="flex items-center gap-1 mt-1">
-            {visibleTags.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {extraTagCount > 0 && (
-              <Badge variant="outline" className="text-xs">
-                +{extraTagCount}
-              </Badge>
-            )}
-          </div>
-        )}
       </div>
     </button>
   );
@@ -296,35 +281,14 @@ export function InboxPage() {
         : 'inbox.empty.body';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-      {/* Page header */}
-      <div className="flex shrink-0 items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('inbox.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">{t('inbox.subtitle')}</p>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      {/* Action bar */}
+      <div className="flex shrink-0 items-center justify-end gap-2">
         <NewConversationDialog
           slug={ws.slug}
           onCreated={(conv) => setSelectedConv(conv)}
         />
       </div>
-
-      {!syncedSelected && (
-        <EducationSlot
-          title={t('inbox.intro.title')}
-          body={
-            <>
-              {t('inbox.intro.body')}
-              <span className="mt-1 block text-xs opacity-75">
-                {t('inbox.shortcuts.hint')}
-              </span>
-            </>
-          }
-          className="shrink-0"
-        />
-      )}
 
       {/* Notification banners */}
       {notifPermission === 'default' && (

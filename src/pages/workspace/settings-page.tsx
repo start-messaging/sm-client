@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lock, MoreHorizontal, Plus, Slash, RotateCcw } from 'lucide-react';
-import { EducationSlot } from '@/components/education/education-slot';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -301,28 +300,24 @@ function RoutingCard({ slug, isAdmin }: RoutingCardProps) {
   }
 
   return (
-    <section className="rounded-lg border">
-      <div className="border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <RotateCcw className="text-muted-foreground size-4" />
-          <h2 className="text-sm font-semibold">
-            {t('settings.routing.title')}
-          </h2>
-        </div>
-        <p className="text-muted-foreground mt-0.5 text-xs">
+    <div className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-[13px] font-semibold text-[#18181b]">
+          {t('settings.routing.title')}
+        </h2>
+        <p className="text-[12px] text-[#71717a] mt-0.5">
           {t('settings.routing.subtitle')}
         </p>
       </div>
 
-      <div className="divide-y px-4">
-        {/* Admin-only: round-robin toggle */}
+      <div className="rounded-[10px] border border-[#e4e4e7] divide-y divide-[#e4e4e7]">
         {isAdmin && (
-          <div className="flex items-start justify-between gap-4 py-4">
+          <div className="flex items-start justify-between gap-4 px-4 py-4">
             <div className="flex-1">
-              <p className="text-sm font-medium">
+              <p className="text-[13px] font-medium text-[#18181b]">
                 {t('settings.routing.roundRobin.label')}
               </p>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-[12px] text-[#71717a] mt-0.5">
                 {t('settings.routing.roundRobin.hint')}
               </p>
             </div>
@@ -334,14 +329,12 @@ function RoutingCard({ slug, isAdmin }: RoutingCardProps) {
             />
           </div>
         )}
-
-        {/* Every agent: availability toggle */}
-        <div className="flex items-start justify-between gap-4 py-4">
+        <div className="flex items-start justify-between gap-4 px-4 py-4">
           <div className="flex-1">
-            <p className="text-sm font-medium">
+            <p className="text-[13px] font-medium text-[#18181b]">
               {t('settings.routing.available.label')}
             </p>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-[12px] text-[#71717a] mt-0.5">
               {t('settings.routing.available.hint')}
             </p>
           </div>
@@ -352,15 +345,13 @@ function RoutingCard({ slug, isAdmin }: RoutingCardProps) {
             aria-label={t('settings.routing.available.label')}
           />
         </div>
+        <div className="bg-[#fafafa] rounded-b-[10px] px-4 py-3">
+          <p className="text-[11px] text-[#a1a1aa]">
+            {t('settings.routing.education')}
+          </p>
+        </div>
       </div>
-
-      {/* Education note */}
-      <div className="bg-muted/40 rounded-b-lg border-t px-4 py-3">
-        <p className="text-muted-foreground text-xs">
-          {t('settings.routing.education')}
-        </p>
-      </div>
-    </section>
+    </div>
   );
 }
 
@@ -811,104 +802,96 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
   const [deleting, setDeleting] = useState<WaAutoReplyRule | null>(null);
 
   return (
-    <section className="rounded-lg border">
-      <div className="border-b px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold">
-              {t('settings.autoReplies.title')}
-            </h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {t('settings.autoReplies.subtitle')}
-            </p>
-          </div>
-          {canWrite && (
-            <Button
-              size="sm"
-              onClick={() => setAddOpen(true)}
-              disabled={!enabled}
-            >
-              <Plus className="mr-1.5 size-4" />
-              {t('settings.autoReplies.addCta')}
-            </Button>
-          )}
+    <div className="flex flex-col gap-4">
+      {/* Sub-header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-[13px] font-semibold text-[#18181b]">
+            {t('settings.autoReplies.title')}
+          </h2>
+          <p className="text-[12px] text-[#71717a] mt-0.5">
+            {t('settings.autoReplies.subtitle')}
+          </p>
         </div>
+        {canWrite && (
+          <Button size="sm" onClick={() => setAddOpen(true)} disabled={!enabled}>
+            <Plus className="mr-1.5 size-3.5" />
+            {t('settings.autoReplies.addCta')}
+          </Button>
+        )}
       </div>
 
-      <div className="p-4">
-        {!enabled && (
-          <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800/40 dark:bg-amber-950/20">
-            <Lock className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-            <p className="flex-1 text-amber-800 dark:text-amber-300">
-              {t('settings.autoReplies.upgradeBanner')}
-            </p>
-            <InfoTip content={t('workspace.plan.upgradeSoon')}>
-              <Button size="sm" variant="outline" disabled>
-                {t('settings.autoReplies.upgrade')}
-              </Button>
-            </InfoTip>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="flex flex-col gap-2">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        ) : isError ? (
-          <p className="text-muted-foreground text-sm">
-            {t('settings.autoReplies.loadError')}
+      {!enabled && (
+        <div className="flex items-center gap-2 rounded-[8px] border border-[#fcd34d] bg-[#fef9c3] px-3 py-2">
+          <Lock className="size-3.5 shrink-0 text-[#d97706]" />
+          <p className="flex-1 text-[12px] text-[#92400e]">
+            {t('settings.autoReplies.upgradeBanner')}
           </p>
-        ) : !rules || rules.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-12 text-center">
-            <p className="font-medium">
-              {t('settings.autoReplies.emptyTitle')}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t('settings.autoReplies.emptyBody')}
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    {t('settings.autoReplies.cols.keywords')}
-                  </TableHead>
-                  <TableHead>
-                    {t('settings.autoReplies.cols.matchType')}
-                  </TableHead>
-                  <TableHead>{t('settings.autoReplies.cols.reply')}</TableHead>
-                  <TableHead className="w-20">
-                    {t('settings.autoReplies.cols.priority')}
-                  </TableHead>
-                  <TableHead className="w-16">
-                    {t('settings.autoReplies.cols.active')}
-                  </TableHead>
-                  {canWrite && <TableHead className="w-12" />}
-                </TableRow>
-              </TableHeader>
+          <InfoTip content={t('workspace.plan.upgradeSoon')}>
+            <Button size="sm" variant="outline" disabled>
+              {t('settings.autoReplies.upgrade')}
+            </Button>
+          </InfoTip>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex flex-col gap-2">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+        </div>
+      ) : isError ? (
+        <p className="text-[13px] text-[#71717a]">{t('settings.autoReplies.loadError')}</p>
+      ) : !rules || rules.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-[#e4e4e7] py-12 text-center">
+          <p className="text-[13px] font-medium text-[#18181b]">
+            {t('settings.autoReplies.emptyTitle')}
+          </p>
+          <p className="text-[12px] text-[#71717a]">
+            {t('settings.autoReplies.emptyBody')}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-[10px] border border-[#e4e4e7] overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-[#fafafa]">
+                <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.autoReplies.cols.keywords')}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.autoReplies.cols.matchType')}
+                </TableHead>
+                <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.autoReplies.cols.reply')}
+                </TableHead>
+                <TableHead className="w-20 text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.autoReplies.cols.priority')}
+                </TableHead>
+                <TableHead className="w-16 text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.autoReplies.cols.active')}
+                </TableHead>
+                {canWrite && <TableHead className="w-12" />}
+              </TableRow>
+            </TableHeader>
               <TableBody>
                 {rules.map((rule) => (
                   <TableRow key={rule.id}>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {rule.keywords.map((kw) => (
-                          <code
+                          <span
                             key={kw}
-                            className="bg-muted rounded px-1.5 py-0.5 text-xs font-mono"
+                            className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-mono font-medium px-[6px] py-px rounded-full"
                           >
                             {kw}
-                          </code>
+                          </span>
                         ))}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
+                      <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
                         {t(`settings.autoReplies.matchTypes.${rule.matchType}`)}
-                      </Badge>
+                      </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">
                       {rule.replyType === 'text'
@@ -965,12 +948,11 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
           </div>
         )}
 
-        {!canWrite && rules && rules.length > 0 && (
-          <p className="text-muted-foreground mt-3 text-xs">
-            {t('settings.autoReplies.readOnlyNotice')}
-          </p>
-        )}
-      </div>
+      {!canWrite && rules && rules.length > 0 && (
+        <p className="text-[11px] text-[#a1a1aa]">
+          {t('settings.autoReplies.readOnlyNotice')}
+        </p>
+      )}
 
       <AutoReplyRuleDialog
         open={addOpen}
@@ -1021,101 +1003,78 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </div>
   );
 }
 
-/* ------------------------------------------------------------------ page */
+/* ------------------------------------------------------------------ quick replies panel */
 
-export function SettingsPage() {
+function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean }) {
   const { t } = useTranslation();
-  const ws = useCurrentWorkspace();
-  const myRank = ROLE_RANK[ws.role];
-  const canWrite = myRank >= ROLE_RANK[WorkspaceRole.ADMIN];
-  const isAgent = myRank >= ROLE_RANK[WorkspaceRole.AGENT];
-
-  const { data: replies, isLoading, isError } = useQuickReplies(ws.slug);
-  const deleteReply = useDeleteQuickReply(ws.slug);
-
+  const { data: replies, isLoading, isError } = useQuickReplies(slug);
+  const deleteReply = useDeleteQuickReply(slug);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<QuickReply | null>(null);
   const [deleting, setDeleting] = useState<QuickReply | null>(null);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-4">
+    <div className="flex flex-col gap-4">
+      {/* Sub-header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('settings.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('settings.subtitle')}
+          <h2 className="text-[13px] font-semibold text-[#18181b]">
+            {t('settings.quickReplies.title', 'Quick replies')}
+          </h2>
+          <p className="text-[12px] text-[#71717a] mt-0.5">
+            {t('settings.quickReplies.educationBody')}
           </p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1.5 size-4" />
+            <Plus className="mr-1.5 size-3.5" />
             {t('settings.quickReplies.addCta')}
           </Button>
         )}
       </div>
 
-      {/* Routing */}
-      {isAgent && <RoutingCard slug={ws.slug} isAdmin={canWrite} />}
-
-      {/* Auto-replies */}
-      <AutoRepliesSection slug={ws.slug} canWrite={canWrite} />
-
-      {/* Education */}
-      <EducationSlot
-        title={t('settings.quickReplies.educationTitle')}
-        body={t('settings.quickReplies.educationBody')}
-      />
-
-      {/* Content */}
       {isLoading ? (
         <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       ) : isError ? (
-        <p className="text-muted-foreground text-sm">
-          {t('settings.quickReplies.loadError')}
-        </p>
+        <p className="text-[13px] text-[#71717a]">{t('settings.quickReplies.loadError')}</p>
       ) : !replies || replies.length === 0 ? (
-        /* Empty state */
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed py-16 text-center">
-          <div className="bg-muted flex size-12 items-center justify-center rounded-full">
-            <Slash className="text-muted-foreground size-6" />
+        <div className="flex flex-col items-center gap-4 rounded-[10px] border border-dashed border-[#e4e4e7] py-16 text-center">
+          <div className="flex size-10 items-center justify-center rounded-full bg-[#f4f4f5]">
+            <Slash className="size-5 text-[#a1a1aa]" />
           </div>
           <div>
-            <p className="font-medium">
+            <p className="text-[13px] font-medium text-[#18181b]">
               {t('settings.quickReplies.emptyTitle')}
             </p>
-            <p className="text-muted-foreground mt-1 text-sm">
+            <p className="text-[12px] text-[#71717a] mt-0.5">
               {t('settings.quickReplies.emptyBody')}
             </p>
           </div>
           {canWrite && (
             <Button size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="mr-1.5 size-4" />
+              <Plus className="mr-1.5 size-3.5" />
               {t('settings.quickReplies.addCta')}
             </Button>
           )}
         </div>
       ) : (
-        /* Table */
-        <div className="rounded-md border">
+        <div className="rounded-[10px] border border-[#e4e4e7] overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-32">
+              <TableRow className="bg-[#fafafa]">
+                <TableHead className="w-32 text-[11px] font-medium text-[#a1a1aa]">
                   {t('settings.quickReplies.cols.shortcut')}
                 </TableHead>
-                <TableHead>{t('settings.quickReplies.cols.title')}</TableHead>
-                <TableHead className="hidden md:table-cell">
+                <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                  {t('settings.quickReplies.cols.title')}
+                </TableHead>
+                <TableHead className="hidden md:table-cell text-[11px] font-medium text-[#a1a1aa]">
                   {t('settings.quickReplies.cols.body')}
                 </TableHead>
                 {canWrite && <TableHead className="w-12" />}
@@ -1125,12 +1084,14 @@ export function SettingsPage() {
               {replies.map((qr) => (
                 <TableRow key={qr.id}>
                   <TableCell>
-                    <code className="bg-muted rounded px-1.5 py-0.5 text-xs font-mono">
+                    <span className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-mono font-medium px-[6px] py-px rounded-full">
                       /{qr.shortcut}
-                    </code>
+                    </span>
                   </TableCell>
-                  <TableCell className="font-medium">{qr.title}</TableCell>
-                  <TableCell className="text-muted-foreground hidden max-w-xs truncate md:table-cell">
+                  <TableCell className="text-[13px] font-medium text-[#18181b]">
+                    {qr.title}
+                  </TableCell>
+                  <TableCell className="hidden max-w-xs truncate md:table-cell text-[12px] text-[#71717a]">
                     {qr.body}
                   </TableCell>
                   {canWrite && (
@@ -1140,6 +1101,7 @@ export function SettingsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="size-7 text-[#a1a1aa] hover:text-[#18181b]"
                             aria-label={t('settings.quickReplies.actions')}
                           >
                             <MoreHorizontal className="size-4" />
@@ -1149,10 +1111,7 @@ export function SettingsPage() {
                           <DropdownMenuItem onClick={() => setEditing(qr)}>
                             {t('settings.quickReplies.edit')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => setDeleting(qr)}
-                          >
+                          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(qr)}>
                             {t('settings.quickReplies.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -1166,45 +1125,28 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Read-only notice for non-admins */}
       {!canWrite && replies && replies.length > 0 && (
-        <p className="text-muted-foreground text-xs">
+        <p className="text-[11px] text-[#a1a1aa]">
           {t('settings.quickReplies.readOnlyNotice')}
         </p>
       )}
 
-      {/* Add dialog */}
-      <QuickReplyDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        slug={ws.slug}
-      />
-
-      {/* Edit dialog */}
+      <QuickReplyDialog open={addOpen} onOpenChange={setAddOpen} slug={slug} />
       {editing && (
         <QuickReplyDialog
           key={editing.id}
           open={Boolean(editing)}
           onOpenChange={(o) => !o && setEditing(null)}
           initial={editing}
-          slug={ws.slug}
+          slug={slug}
         />
       )}
-
-      {/* Delete confirm */}
-      <AlertDialog
-        open={deleting !== null}
-        onOpenChange={(o) => !o && setDeleting(null)}
-      >
+      <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('settings.quickReplies.deleteTitle')}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.quickReplies.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('settings.quickReplies.deleteBody', {
-                shortcut: deleting?.shortcut,
-              })}
+              {t('settings.quickReplies.deleteBody', { shortcut: deleting?.shortcut })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1213,8 +1155,7 @@ export function SettingsPage() {
               onClick={() => {
                 if (!deleting) return;
                 deleteReply.mutate(deleting.id, {
-                  onSuccess: () =>
-                    toast.success(t('settings.quickReplies.deleted')),
+                  onSuccess: () => toast.success(t('settings.quickReplies.deleted')),
                   onError: (err) => toast.error(err),
                 });
                 setDeleting(null);
@@ -1225,6 +1166,70 @@ export function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ page */
+
+type SettingsSection = 'general' | 'inbox' | 'autoreplies';
+
+const NAV_ITEMS: { id: SettingsSection; labelKey: string }[] = [
+  { id: 'general',     labelKey: 'settings.nav.general' },
+  { id: 'inbox',       labelKey: 'settings.nav.inbox' },
+  { id: 'autoreplies', labelKey: 'settings.nav.autoreplies' },
+];
+
+export function SettingsPage() {
+  const { t } = useTranslation();
+  const ws = useCurrentWorkspace();
+  const myRank = ROLE_RANK[ws.role];
+  const canWrite = myRank >= ROLE_RANK[WorkspaceRole.ADMIN];
+  const isAgent = myRank >= ROLE_RANK[WorkspaceRole.AGENT];
+
+  const [section, setSection] = useState<SettingsSection>('general');
+
+  return (
+    <div className="flex min-h-0 flex-1 gap-8">
+      {/* Left sub-nav */}
+      <nav className="w-40 shrink-0">
+        <ul className="flex flex-col gap-0.5">
+          {NAV_ITEMS.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={() => setSection(item.id)}
+                className={cn(
+                  'w-full text-left px-3 py-2 rounded-[6px] text-[13px] transition-colors',
+                  section === item.id
+                    ? 'bg-[#f4f4f5] font-medium text-[#18181b]'
+                    : 'text-[#71717a] hover:text-[#18181b] hover:bg-[#f9f9f9]',
+                )}
+              >
+                {t(item.labelKey, item.id)}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {section === 'general' && (
+          <QuickRepliesPanel slug={ws.slug} canWrite={canWrite} />
+        )}
+        {section === 'inbox' && isAgent && (
+          <RoutingCard slug={ws.slug} isAdmin={canWrite} />
+        )}
+        {section === 'inbox' && !isAgent && (
+          <p className="text-[13px] text-[#71717a]">
+            {t('settings.routing.agentOnly', 'Inbox settings are available to agents and above.')}
+          </p>
+        )}
+        {section === 'autoreplies' && (
+          <AutoRepliesSection slug={ws.slug} canWrite={canWrite} />
+        )}
+      </div>
     </div>
   );
 }

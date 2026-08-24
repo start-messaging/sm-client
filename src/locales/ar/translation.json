@@ -103,7 +103,27 @@
   },
   "dashboard": {
     "title": "الرئيسية",
-    "welcome": "مرحبًا، {{name}}"
+    "welcome": "مرحبًا، {{name}}",
+    "subtitle": "إليك ما يحدث في مساحة عملك.",
+    "greeting": {
+      "morning": "صباح الخير، {{name}}",
+      "afternoon": "مساء الخير، {{name}}",
+      "evening": "مساء الخير، {{name}}"
+    },
+    "range": {
+      "today": "اليوم",
+      "7d": "آخر 7 أيام",
+      "30d": "آخر 30 يومًا"
+    },
+    "openConversations": "المحادثات المفتوحة",
+    "openConversationsHint": "محادثات غير معيّنة تحتاج للانتباه",
+    "frr": "FRR",
+    "setupComplete": "الإعداد مكتمل — أنت جاهز للنمو."
+  },
+  "sidebar": {
+    "plan": "خطة",
+    "upgrade": "ترقية",
+    "contacts": "جهة اتصال"
   },
   "home": {
     "chooseService": "اختر خدمة لبدء مساحة عملك الأولى.",
@@ -144,7 +164,11 @@
     "billing": "الفوترة",
     "settings": "الإعدادات",
     "workspaceGroup": "مساحة العمل",
-    "comingSoon": "قريبًا — هذه الوحدة في الطريق."
+    "comingSoon": "قريبًا — هذه الوحدة في الطريق.",
+    "serviceGroup": {
+      "whatsapp": "WHATSAPP"
+    },
+    "commonGroup": "COMMON"
   },
   "createWorkspace": {
     "back": "كل الخدمات",
@@ -664,7 +688,13 @@
   "settings": {
     "title": "الإعدادات",
     "subtitle": "إدارة إعدادات مساحة العمل والردود السريعة.",
+    "nav": {
+      "general": "عام",
+      "inbox": "البريد الوارد",
+      "autoreplies": "الردود التلقائية"
+    },
     "quickReplies": {
+      "title": "الردود السريعة",
       "educationTitle": "الردود السريعة",
       "educationBody": "احفظ ردوداً جاهزة مع اختصار (مثل /thanks) حتى يتمكن الوكلاء من إدراجها فوراً في المحادثة. تُسرّع الردود السريعة الإجابة على الأسئلة الشائعة. الاختصارات مشتركة عبر مساحة العمل — يديرها المشرفون هنا.",
       "addCta": "إضافة رد سريع",

@@ -324,7 +324,7 @@ function TextComposer({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex items-end gap-2 border-t p-3"
+      className="flex flex-col gap-2 px-3 py-3"
     >
       {/* Hidden file input */}
       <input
@@ -335,26 +335,6 @@ function TextComposer({
         onChange={handleFileChange}
       />
 
-      {/* Paperclip — hidden for VIEWER (canAttach=false) */}
-      {canAttach && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="shrink-0"
-              disabled={isBusy}
-              onClick={() => fileInputRef.current?.click()}
-              aria-label={t('inbox.composer.attachFile')}
-            >
-              <Paperclip className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('inbox.composer.attachFile')}</TooltipContent>
-        </Tooltip>
-      )}
-
       <QuickReplyTypeahead
         slug={slug}
         value={text}
@@ -362,7 +342,7 @@ function TextComposer({
           setValue('text', v, { shouldDirty: true, shouldValidate: true })
         }
         placeholder={t('inbox.composer.textPlaceholder')}
-        className="min-h-15 max-h-40 resize-none flex-1"
+        className="min-h-[60px] max-h-40 resize-none flex-1 border-0 bg-transparent p-0 text-[13px] shadow-none focus-visible:ring-0 placeholder:text-[#a1a1aa]"
         disabled={isBusy}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
@@ -371,14 +351,42 @@ function TextComposer({
           }
         }}
       />
-      <Button
-        type="submit"
-        size="icon"
-        disabled={isBusy || !formState.isDirty}
-        aria-label={t('inbox.composer.send')}
-      >
-        {send.isPending ? <Spinner /> : <Send className="size-4" />}
-      </Button>
+
+      <div className="flex items-center justify-between">
+        {canAttach ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-7 text-[#71717a] hover:text-[#18181b]"
+                disabled={isBusy}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label={t('inbox.composer.attachFile')}
+              >
+                <Paperclip className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('inbox.composer.attachFile')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <span />
+        )}
+        <Button
+          type="submit"
+          size="sm"
+          disabled={isBusy || !formState.isDirty}
+          className="bg-[#18181b] text-white hover:bg-[#27272a] text-[12px] font-medium px-[14px] py-[6px] h-auto rounded-[6px]"
+        >
+          {send.isPending ? (
+            <Spinner className="mr-1.5" />
+          ) : (
+            <Send className="size-3.5 mr-1.5" />
+          )}
+          {t('inbox.composer.send')}
+        </Button>
+      </div>
     </form>
   );
 }
@@ -543,15 +551,20 @@ function MessageBubble({
   return (
     <div
       className={cn(
-        'max-w-[75%] rounded-xl px-3 py-2 text-sm shadow-sm',
+        'max-w-[75%] px-3 py-2 text-sm',
         outbound
-          ? 'self-end bg-[#dcf8c6] text-gray-800 dark:bg-[#025c4c] dark:text-gray-100'
-          : 'self-start bg-white text-gray-800 dark:bg-[#202c33] dark:text-gray-100',
-        failed && 'bg-red-100 dark:bg-red-900/40',
+          ? 'self-end bg-[#18181b] text-white rounded-[10px_0_10px_10px]'
+          : 'self-start bg-white border border-[#e4e4e7] rounded-[0_10px_10px_10px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+        failed && 'bg-red-100 border-red-200',
       )}
     >
       {msg.templateName && (
-        <p className="mb-1 text-xs font-semibold opacity-60">
+        <p
+          className={cn(
+            'mb-1 text-[11px]',
+            outbound ? 'text-[#a1a1aa]' : 'text-muted-foreground',
+          )}
+        >
           {t('inbox.templateBubble.label', { name: msg.templateName })}
         </p>
       )}
@@ -579,7 +592,7 @@ function MessageBubble({
         </p>
       )}
       <div className="mt-1 flex items-center justify-end gap-1">
-        <span className="text-[10px] opacity-50">
+        <span className={cn('text-[11px]', outbound ? 'text-[#a1a1aa]' : 'text-[#a1a1aa]')}>
           {new Date(msg.timestamp).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
@@ -813,9 +826,13 @@ function ThreadHeader({
         {windowOpen ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge
-                variant={closingSoon ? 'destructive' : 'default'}
-                className="text-xs cursor-default"
+              <span
+                className={cn(
+                  'text-[11px] font-medium px-[9px] py-[3px] rounded-full cursor-default',
+                  closingSoon
+                    ? 'bg-[#fef3c7] text-[#d97706]'
+                    : 'bg-[#dcfce7] text-[#16a34a]',
+                )}
               >
                 {closingSoon
                   ? t('inbox.thread.windowRemainingLt1h')
@@ -823,16 +840,16 @@ function ThreadHeader({
                       h: Math.floor(remaining / (60 * 60 * 1000)),
                       m: Math.floor((remaining % (60 * 60 * 1000)) / 60_000),
                     })}
-              </Badge>
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               {t('inbox.windowWarning')} — {formatRemaining(remaining)}
             </TooltipContent>
           </Tooltip>
         ) : (
-          <Badge variant="secondary" className="text-xs">
+          <span className="text-[11px] font-medium px-[9px] py-[3px] rounded-full bg-[#f4f4f5] text-[#71717a]">
             {t('inbox.windowClosedShort')}
-          </Badge>
+          </span>
         )}
 
         {/* Status badge */}
@@ -1041,7 +1058,7 @@ export function ConversationThread({
       )}
 
       {/* Messages — the only pane that should scroll */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-4 py-3 bg-[#e5ddd5] dark:bg-[#0d1417]">
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-4 py-3 bg-[#fafafa]">
         {isLoading && (
           <div className="flex justify-center py-8">
             <Spinner />
@@ -1071,12 +1088,18 @@ export function ConversationThread({
         <div className="shrink-0">
           {windowOpen ? (
             <Tabs defaultValue="text">
-              <div className="border-t px-3 pt-2">
-                <TabsList className="h-7 text-xs">
-                  <TabsTrigger value="text" className="px-2 text-xs">
+              <div className="border-t border-[#e4e4e7]">
+                <TabsList className="h-auto rounded-none bg-transparent p-0 w-full justify-start gap-0 border-b border-[#e4e4e7]">
+                  <TabsTrigger
+                    value="text"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#18181b] data-[state=active]:text-[#18181b] data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[#71717a] text-[12px] font-medium px-3 py-2 -mb-px"
+                  >
                     {t('inbox.composer.tabText')}
                   </TabsTrigger>
-                  <TabsTrigger value="template" className="px-2 text-xs">
+                  <TabsTrigger
+                    value="template"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#18181b] data-[state=active]:text-[#18181b] data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[#71717a] text-[12px] font-medium px-3 py-2 -mb-px"
+                  >
                     {t('inbox.composer.tabTemplate')}
                   </TabsTrigger>
                 </TabsList>

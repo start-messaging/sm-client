@@ -103,7 +103,27 @@
   },
   "dashboard": {
     "title": "Home",
-    "welcome": "Welcome, {{name}}"
+    "welcome": "Welcome, {{name}}",
+    "subtitle": "Here's what's happening with your workspace.",
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "range": {
+      "today": "Today",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days"
+    },
+    "openConversations": "Open conversations",
+    "openConversationsHint": "Unassigned conversations need attention",
+    "frr": "FRR",
+    "setupComplete": "Setup complete — you're ready to grow."
+  },
+  "sidebar": {
+    "plan": "plan",
+    "upgrade": "Upgrade",
+    "contacts": "contacts"
   },
   "home": {
     "chooseService": "Choose a service to start your first workspace.",
@@ -141,7 +161,11 @@
     "billing": "Billing",
     "settings": "Settings",
     "workspaceGroup": "Workspace",
-    "comingSoon": "Coming soon — this module is on the way."
+    "comingSoon": "Coming soon — this module is on the way.",
+    "serviceGroup": {
+      "whatsapp": "WHATSAPP"
+    },
+    "commonGroup": "COMMON"
   },
   "createWorkspace": {
     "back": "All services",
@@ -1013,7 +1037,13 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Manage workspace settings and quick replies.",
+    "nav": {
+      "general": "General",
+      "inbox": "Inbox",
+      "autoreplies": "Auto-replies"
+    },
     "quickReplies": {
+      "title": "Quick replies",
       "educationTitle": "Quick Replies",
       "educationBody": "Save canned responses with a shortcut (e.g. /thanks) so agents can insert them instantly in the composer. Quick replies speed up common answers without sacrificing a personal touch. Shortcuts are shared across the workspace — admins manage them here.",
       "addCta": "Add quick reply",

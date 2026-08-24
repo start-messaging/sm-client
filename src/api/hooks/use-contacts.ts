@@ -17,6 +17,17 @@ export function useContacts(slug: string, search?: string) {
   });
 }
 
+/** Lightweight total-only count — used by the sidebar plan card. */
+export function useContactsCount(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.contacts.count(slug),
+    queryFn: () => contactsApi.list(slug, {}),
+    enabled: slug.length > 0,
+    staleTime: STALE.STATIC,
+    select: (data) => data.total,
+  });
+}
+
 function useContactMutation<TArgs>(
   slug: string,
   fn: (args: TArgs) => Promise<unknown>,

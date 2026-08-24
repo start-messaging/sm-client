@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, CheckCircle2, Link2, RefreshCw, ShieldCheck } from 'lucide-react';
-import type { WabaConnectionStatus } from '@/api/whatsapp.api';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  Link2,
+  MinusCircle,
+  RefreshCw,
+  ShieldCheck,
+} from 'lucide-react';
+import type { WabaConnectionStatus } from '@/api/whatsapp.api';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import {
   useWabaStatus,
@@ -37,6 +35,7 @@ import {
 import { env } from '@/config/env';
 import { toast } from '@/lib/toast';
 import type { ConnectWhatsAppBody } from '@/api/whatsapp.api';
+import { cn } from '@/lib/utils';
 
 // ── FB SDK type augments ────────────────────────────────────────────────────
 
@@ -89,12 +88,6 @@ function useFbSdk(): boolean {
   return ready;
 }
 
-/**
- * Listen for the ES v4 `WA_EMBEDDED_SIGNUP` window message.
- * Meta's popup posts this before the FB.login callback fires, containing
- * `data.waba_id` and `data.phone_number_id`. We capture it into a ref
- * so the connect handler can include it as optional hint fields.
- */
 function useEsSessionCapture() {
   const ref = useRef<EsSessionInfo | null>(null);
 
@@ -131,7 +124,6 @@ function launchEmbeddedSignup(): Promise<string | null> {
         extras: {
           setup: {},
           featureType: '',
-          // Match Embedded Signup Builder "Session Info Version" (v3 payload).
           sessionInfoVersion: '3',
         },
       },
@@ -205,18 +197,205 @@ function PinDialog({
   );
 }
 
+// ── Connected card ──────────────────────────────────────────────────────────
+
+function ConnectedCard({
+  status,
+  onManage,
+  onSync,
+  syncing,
+}: {
+  status: WabaConnectionStatus;
+  onManage: () => void;
+  onSync: () => void;
+  syncing: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#e4e4e7] bg-white p-5">
+      {/* Green circle icon */}
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#dcfce7]">
+        <CheckCircle2 className="size-5 text-[#16a34a]" />
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-[#18181b] leading-snug">
+          {status.displayName ?? t('connect.title')}
+        </p>
+        {status.phoneNumber && (
+          <p className="text-[13px] text-[#71717a] mt-0.5">{status.phoneNumber}</p>
+        )}
+        {status.wabaId && (
+          <p className="text-[12px] text-[#a1a1aa] mt-1">
+            WABA: {status.wabaId}
+          </p>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-[12px] text-[#71717a] hover:text-[#18181b]"
+          disabled={syncing}
+          onClick={onSync}
+        >
+          <RefreshCw className={cn('mr-1 size-3.5', syncing && 'animate-spin')} />
+          {t('connect.sync.cta')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-[12px]"
+          onClick={onManage}
+        >
+          {t('connect.ctaConnected')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Not-connected card ───────────────────────────────────────────────────────
+
+function NotConnectedCard({
+  onConnect,
+  onSync,
+  launching,
+  syncing,
+  fbReady,
+}: {
+  onConnect: () => void;
+  onSync: () => void;
+  launching: boolean;
+  syncing: boolean;
+  fbReady: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#e4e4e7] bg-white p-5">
+      {/* Gray circle */}
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f4f4f5]">
+        <Link2 className="size-5 text-[#a1a1aa]" />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-[#18181b]">
+          {t('connect.title')}
+        </p>
+        <p className="text-[13px] text-[#71717a] mt-0.5">{t('connect.subtitle')}</p>
+
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          {env.meta.appId ? (
+            <Button
+              size="sm"
+              onClick={onConnect}
+              disabled={launching || !fbReady}
+              className="bg-[#18181b] text-white hover:bg-[#27272a] text-[12px]"
+            >
+              {launching && <Spinner className="mr-1.5" />}
+              <Link2 className="mr-1.5 size-3.5" />
+              {t('connect.cta')}
+            </Button>
+          ) : (
+            <p className="text-[12px] text-[#a1a1aa]">{t('connect.sdkNotReady')}</p>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-[12px] text-[#71717a]"
+            disabled={syncing}
+            onClick={onSync}
+          >
+            <RefreshCw className={cn('mr-1 size-3.5', syncing && 'animate-spin')} />
+            {t('connect.sync.cta')}
+          </Button>
+        </div>
+        <p className="text-[11px] text-[#a1a1aa] mt-2">{t('connect.sync.hint')}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Payment missing card ─────────────────────────────────────────────────────
+
+function PaymentMissingCard() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#fcd34d] bg-white p-5">
+      {/* Amber circle */}
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fef3c7]">
+        <AlertTriangle className="size-5 text-[#d97706]" />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-[#18181b]">
+          {t('connect.metaPayChecklist.title')}
+        </p>
+        <p className="text-[13px] text-[#71717a] mt-0.5">
+          {t('connect.metaPayChecklist.body')}
+        </p>
+        <div className="mt-3">
+          <Button variant="ghost" size="sm" className="text-[12px] px-0 gap-1 text-[#18181b]" asChild>
+            <a
+              href="https://business.facebook.com/billing_hub/accounts"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('connect.metaPayChecklist.cta')}
+              <ExternalLink className="size-3" />
+            </a>
+          </Button>
+        </div>
+        <p className="text-[11px] text-[#a1a1aa] mt-1">
+          {t('connect.metaPayChecklist.note')}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── PIN pending card ─────────────────────────────────────────────────────────
+
+function PinPendingCard({ onOpen }: { onOpen: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#fcd34d] bg-white p-5">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fef3c7]">
+        <AlertTriangle className="size-5 text-[#d97706]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-[#18181b]">
+          {t('connect.pin.pendingTitle')}
+        </p>
+        <p className="text-[13px] text-[#71717a] mt-0.5">
+          {t('connect.pin.pendingBody')}
+        </p>
+        <Button size="sm" variant="outline" className="mt-3 text-[12px]" onClick={onOpen}>
+          {t('connect.pin.openCta')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── WABA health card ────────────────────────────────────────────────────────
 
-function qualityColor(rating: string | null): string {
+function qualityPill(rating: string | null) {
   switch (rating?.toUpperCase()) {
     case 'GREEN':
-      return 'text-green-600 dark:text-green-400';
+      return { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' };
     case 'YELLOW':
-      return 'text-amber-500 dark:text-amber-400';
+      return { bg: 'bg-[#fef3c7]', text: 'text-[#d97706]' };
     case 'RED':
-      return 'text-red-600 dark:text-red-400';
+      return { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' };
     default:
-      return 'text-muted-foreground';
+      return { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' };
   }
 }
 
@@ -231,71 +410,74 @@ function WabaHealthCard({ status }: { status: WabaConnectionStatus }) {
 
   if (!hasAnySignal) return null;
 
+  const qPill = qualityPill(status.qualityRating);
+  const isVerified =
+    status.businessVerificationStatus?.toLowerCase() === 'verified';
+
   return (
-    <>
-      <Separator />
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck className="size-4" />
-            {t('connect.health.title')}
-          </CardTitle>
-          <CardDescription>{t('connect.health.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {status.messagingLimitPerDay !== null && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-muted-foreground text-xs">
-                {t('connect.health.dailyLimit')}
-              </span>
-              <span className="text-sm font-medium">
-                {status.messagingLimitPerDay === -1
-                  ? t('connect.health.unlimited')
-                  : status.messagingLimitPerDay.toLocaleString()}
-              </span>
-            </div>
-          )}
-          {status.qualityRating && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-muted-foreground text-xs">
-                {t('connect.health.qualityRating')}
-              </span>
-              <span
-                className={`text-sm font-medium ${qualityColor(status.qualityRating)}`}
-              >
-                {status.qualityRating}
-              </span>
-            </div>
-          )}
-          {status.businessVerificationStatus && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-muted-foreground text-xs">
-                {t('connect.health.bizVerification')}
-              </span>
-              <span className="flex items-center gap-1 text-sm font-medium">
-                {status.businessVerificationStatus.toLowerCase() ===
-                'verified' ? (
-                  <CheckCircle2 className="size-3.5 text-green-500" />
-                ) : (
-                  <AlertTriangle className="size-3.5 text-amber-500" />
-                )}
+    <div className="rounded-[10px] border border-[#e4e4e7] bg-white p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <ShieldCheck className="size-4 text-[#a1a1aa]" />
+        <p className="text-[13px] font-semibold text-[#18181b]">
+          {t('connect.health.title')}
+        </p>
+        <p className="text-[12px] text-[#a1a1aa]">
+          {t('connect.health.subtitle')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+        {status.messagingLimitPerDay !== null && (
+          <div>
+            <p className="text-[11px] font-medium text-[#a1a1aa] mb-1">
+              {t('connect.health.dailyLimit')}
+            </p>
+            <p className="text-[13px] font-semibold text-[#18181b]">
+              {status.messagingLimitPerDay === -1
+                ? t('connect.health.unlimited')
+                : status.messagingLimitPerDay.toLocaleString()}
+            </p>
+          </div>
+        )}
+        {status.qualityRating && (
+          <div>
+            <p className="text-[11px] font-medium text-[#a1a1aa] mb-1">
+              {t('connect.health.qualityRating')}
+            </p>
+            <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', qPill.bg, qPill.text)}>
+              {status.qualityRating}
+            </span>
+          </div>
+        )}
+        {status.businessVerificationStatus && (
+          <div>
+            <p className="text-[11px] font-medium text-[#a1a1aa] mb-1">
+              {t('connect.health.bizVerification')}
+            </p>
+            <div className="flex items-center gap-1">
+              {isVerified ? (
+                <CheckCircle2 className="size-3.5 text-[#16a34a]" />
+              ) : (
+                <MinusCircle className="size-3.5 text-[#a1a1aa]" />
+              )}
+              <span className="text-[13px] font-medium text-[#18181b]">
                 {status.businessVerificationStatus}
               </span>
             </div>
-          )}
-          {status.accountReviewStatus && (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-muted-foreground text-xs">
-                {t('connect.health.accountReview')}
-              </span>
-              <span className="text-sm font-medium">
-                {status.accountReviewStatus}
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
+          </div>
+        )}
+        {status.accountReviewStatus && (
+          <div>
+            <p className="text-[11px] font-medium text-[#a1a1aa] mb-1">
+              {t('connect.health.accountReview')}
+            </p>
+            <p className="text-[13px] font-semibold text-[#18181b]">
+              {status.accountReviewStatus}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -319,9 +501,7 @@ export function ConnectPage() {
 
   async function postConnect(body: ConnectWhatsAppBody) {
     const result = await connectWaba.mutateAsync(body, {
-      onError: (err) => {
-        toast.error(err);
-      },
+      onError: (err) => toast.error(err),
     });
     toast.success(t('connect.connected.title'));
     if (result.phoneRegistrationPending) {
@@ -335,19 +515,14 @@ export function ConnectPage() {
       return;
     }
     setLaunching(true);
-
     try {
       const code = await launchEmbeddedSignup();
-      if (!code) return; // user closed popup
-
+      if (!code) return;
       const session = sessionRef.current;
       const body: ConnectWhatsAppBody = {
         code,
-        ...(session
-          ? { wabaId: session.wabaId, phoneNumberId: session.phoneNumberId }
-          : {}),
+        ...(session ? { wabaId: session.wabaId, phoneNumberId: session.phoneNumberId } : {}),
       };
-
       await postConnect(body);
     } finally {
       setLaunching(false);
@@ -377,116 +552,45 @@ export function ConnectPage() {
     });
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t('connect.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">{t('connect.subtitle')}</p>
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-[13px] text-[#71717a]">
+        <Spinner className="size-4" />
+        {t('common.loading')}
       </div>
+    );
+  }
 
-      <EducationSlot
-        title={t('connect.intro.title')}
-        body={
-          <>
-            <span>{t('connect.intro.body')}</span>
-            <br />
-            <br />
-            <span className="font-medium">
-              {t('connect.intro.metaBillingNote')}
-            </span>
-          </>
-        }
-        docsUrl="https://developers.facebook.com/docs/whatsapp/embedded-signup"
-      />
+  return (
+    <div className="flex flex-col gap-4 max-w-[720px]">
+      {isConnected ? (
+        <ConnectedCard
+          status={wabaStatus}
+          onManage={() => void handleConnect()}
+          onSync={handleSync}
+          syncing={syncWaba.isPending}
+        />
+      ) : (
+        <NotConnectedCard
+          onConnect={() => void handleConnect()}
+          onSync={handleSync}
+          launching={launching || connectWaba.isPending}
+          syncing={syncWaba.isPending}
+          fbReady={fbReady}
+        />
+      )}
 
-      {/* Connection status card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle className="text-base">
-                {isConnected
-                  ? (wabaStatus.displayName ?? t('connect.title'))
-                  : t('connect.title')}
-              </CardTitle>
-              {isConnected && wabaStatus.phoneNumber && (
-                <CardDescription>{wabaStatus.phoneNumber}</CardDescription>
-              )}
-            </div>
-            {!isLoading && (
-              <Badge variant={isConnected ? 'default' : 'secondary'}>
-                {isConnected
-                  ? t('connect.status.connected')
-                  : t('connect.status.notConnected')}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
+      {isConnected && needsPhonePin && (
+        <PinPendingCard onOpen={() => setPinOpen(true)} />
+      )}
 
-        <CardContent className="flex flex-col gap-4">
-          {isConnected && (
-            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-              <CheckCircle2 className="size-4" />
-              {t('connect.connected.body')}
-            </div>
-          )}
+      {isConnected && wabaStatus.metaPaymentReady === false && (
+        <PaymentMissingCard />
+      )}
 
-          {isConnected && needsPhonePin && (
-            <div className="flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
-              <p className="text-sm font-medium">
-                {t('connect.pin.pendingTitle')}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t('connect.pin.pendingBody')}
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-fit"
-                onClick={() => setPinOpen(true)}
-              >
-                {t('connect.pin.openCta')}
-              </Button>
-            </div>
-          )}
-
-          <div className="flex flex-wrap items-center gap-2">
-            {env.meta.appId ? (
-              <Button
-                onClick={() => void handleConnect()}
-                disabled={launching || connectWaba.isPending || !fbReady}
-                className="w-fit"
-              >
-                {(launching || connectWaba.isPending) && <Spinner />}
-                <Link2 className="mr-2 size-4" />
-                {isConnected ? t('connect.ctaConnected') : t('connect.cta')}
-              </Button>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {t('connect.sdkNotReady')}
-              </p>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="w-fit"
-              disabled={syncWaba.isPending || isLoading}
-              onClick={handleSync}
-            >
-              <RefreshCw
-                className={`mr-1.5 size-3.5 ${syncWaba.isPending ? 'animate-spin' : ''}`}
-              />
-              {t('connect.sync.cta')}
-            </Button>
-          </div>
-          <p className="text-muted-foreground text-xs">
-            {t('connect.sync.hint')}
-          </p>
-        </CardContent>
-      </Card>
+      {isConnected && (
+        <WabaHealthCard status={wabaStatus} />
+      )}
 
       <PinDialog
         open={pinOpen}
@@ -494,42 +598,6 @@ export function ConnectPage() {
         onSubmit={(pin) => void handlePinSubmit(pin)}
         isPending={registerPhone.isPending}
       />
-
-      {/* Payment method missing — only shown when we know it's absent */}
-      {isConnected && wabaStatus.metaPaymentReady === false && (
-        <>
-          <Separator />
-          <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
-            <CardHeader>
-              <CardTitle className="text-base">
-                {t('connect.metaPayChecklist.title')}
-              </CardTitle>
-              <CardDescription className="text-foreground/80">
-                {t('connect.metaPayChecklist.body')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3 pt-0">
-              <Button variant="outline" size="sm" asChild className="w-fit">
-                <a
-                  href="https://business.facebook.com/billing_hub/accounts"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('connect.metaPayChecklist.cta')}
-                </a>
-              </Button>
-              <p className="text-muted-foreground text-xs">
-                {t('connect.metaPayChecklist.note')}
-              </p>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Account health signals — visible once connected */}
-      {isConnected && (
-        <WabaHealthCard status={wabaStatus} />
-      )}
     </div>
   );
 }

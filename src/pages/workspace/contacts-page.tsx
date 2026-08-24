@@ -12,10 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -31,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useQueryParam } from '@/hooks/use-query-param';
 import { useContacts, useDeleteContact } from '@/api/hooks/use-contacts';
@@ -43,25 +42,23 @@ import { toast } from '@/lib/toast';
 import { AddContactDialog } from './components/add-contact-dialog';
 import { ImportContactsDialog } from './components/import-contacts-dialog';
 
-// ── Source badge ──────────────────────────────────────────────────────────────
+// ── Source pill ───────────────────────────────────────────────────────────────
 
-const SOURCE_VARIANT: Record<
-  ContactSource,
-  'default' | 'secondary' | 'outline'
-> = {
-  whatsapp: 'default',
-  manual: 'secondary',
-  csv: 'outline',
-  link: 'outline',
+const SOURCE_STYLE: Record<ContactSource, { bg: string; text: string }> = {
+  whatsapp: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
+  manual:   { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
+  csv:      { bg: 'bg-[#e0f2fe]', text: 'text-[#0284c7]' },
+  link:     { bg: 'bg-[#ede9fe]', text: 'text-[#7c3aed]' },
 };
 
-function SourceBadge({ source }: { source?: ContactSource }) {
+function SourcePill({ source }: { source?: ContactSource }) {
   const { t } = useTranslation();
-  if (!source) return <span className="text-muted-foreground text-xs">—</span>;
+  if (!source) return <span className="text-[12px] text-[#a1a1aa]">—</span>;
+  const { bg, text } = SOURCE_STYLE[source];
   return (
-    <Badge variant={SOURCE_VARIANT[source]} className="text-xs capitalize">
+    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full capitalize', bg, text)}>
       {t(`contacts.source.${source}`)}
-    </Badge>
+    </span>
   );
 }
 
@@ -230,21 +227,18 @@ export function ContactsPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Page header */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('contacts.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('contacts.subtitle')}
-          </p>
+    <div className="flex flex-col gap-5">
+      {/* Action bar */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-baseline gap-2">
+          {contacts.length > 0 && (
+            <span className="text-[13px] text-[#a1a1aa]">{contacts.length}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link to={`/w/${ws.slug}/leads`}>
-              <KanbanSquare className="mr-1.5 size-4" />
+              <KanbanSquare className="mr-1.5 size-3.5" />
               {t('contacts.manageLeads')}
             </Link>
           </Button>
@@ -254,7 +248,7 @@ export function ContactsPage() {
               size="sm"
               onClick={() => exportCsv(filtered, stages)}
             >
-              <Download className="mr-1.5 size-4" />
+              <Download className="mr-1.5 size-3.5" />
               {t('contacts.export')}
             </Button>
           )}
@@ -263,20 +257,14 @@ export function ContactsPage() {
         </div>
       </div>
 
-      {/* Education slot */}
-      <EducationSlot
-        title={t('contacts.intro.title')}
-        body={t('contacts.intro.body')}
-      />
-
       {/* Search */}
       <div className="relative max-w-xs">
-        <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#a1a1aa]" />
         <Input
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder={t('contacts.filter.search')}
-          className="pl-8"
+          className="pl-8 bg-[#f4f4f5] border-transparent focus-visible:bg-white focus-visible:border-[#e4e4e7]"
         />
       </div>
 
@@ -528,76 +516,84 @@ function ContactRow({
   const isOverdue = followUpDate !== null && followUpDate < new Date();
 
   return (
-    <TableRow
-      className={
-        isOverdue ? 'bg-destructive/5 hover:bg-destructive/10' : undefined
-      }
-    >
-      <TableCell className="font-medium">
-        {c.name ?? <span className="text-muted-foreground">—</span>}
+    <TableRow className={isOverdue ? 'bg-[#fee2e2]/30' : undefined}>
+      <TableCell className="text-[13px] font-medium text-[#18181b]">
+        {c.name ?? <span className="text-[#a1a1aa]">—</span>}
       </TableCell>
-      <TableCell className="font-mono text-sm">{c.phoneE164}</TableCell>
+      <TableCell className="font-mono text-[12px] text-[#71717a]">
+        {c.phoneE164}
+      </TableCell>
       <TableCell>
-        <SourceBadge source={c.source} />
+        <SourcePill source={c.source} />
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {c.tags.length === 0 ? (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-[12px] text-[#a1a1aa]">—</span>
           ) : (
             c.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <span
+                key={tag}
+                className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-medium px-2 py-0.5 rounded-full"
+              >
                 {tag}
-              </Badge>
+              </span>
             ))
           )}
         </div>
       </TableCell>
       <TableCell>
         {c.pipelineStageId ? (
-          <Badge variant="outline" className="text-xs">
+          <span className="border border-[#e4e4e7] text-[#71717a] text-[11px] px-[6px] py-px rounded-full">
             {stageMap[c.pipelineStageId] ?? c.pipelineStageId}
-          </Badge>
+          </span>
         ) : (
-          <span className="text-muted-foreground text-xs">—</span>
+          <span className="text-[12px] text-[#a1a1aa]">—</span>
         )}
       </TableCell>
-      <TableCell className="text-sm">
-        {c.assignedToUserId ? (
-          (memberMap[c.assignedToUserId] ?? (
-            <span className="text-muted-foreground">—</span>
-          ))
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        )}
+      <TableCell className="text-[13px] text-[#71717a]">
+        {c.assignedToUserId
+          ? (memberMap[c.assignedToUserId] ?? <span className="text-[#a1a1aa]">—</span>)
+          : <span className="text-[#a1a1aa]">—</span>}
       </TableCell>
       <TableCell>
         {followUpDate ? (
-          <Badge
-            variant={isOverdue ? 'destructive' : 'outline'}
-            className="text-xs"
+          <span
+            className={cn(
+              'text-[11px] font-medium px-[6px] py-px rounded-full',
+              isOverdue
+                ? 'bg-[#fee2e2] text-[#dc2626]'
+                : 'border border-[#e4e4e7] text-[#71717a]',
+            )}
           >
             {isOverdue && `${t('leads.card.overdue')} · `}
             {followUpDate.toLocaleDateString()}
-          </Badge>
+          </span>
         ) : (
-          <span className="text-muted-foreground text-xs">—</span>
+          <span className="text-[12px] text-[#a1a1aa]">—</span>
         )}
       </TableCell>
       <TableCell>
-        <Badge variant={c.optedIn ? 'default' : 'outline'}>
+        <span
+          className={cn(
+            'text-[11px] font-medium px-[6px] py-px rounded-full',
+            c.optedIn
+              ? 'bg-[#dcfce7] text-[#16a34a]'
+              : 'bg-[#f4f4f5] text-[#71717a]',
+          )}
+        >
           {c.optedIn ? t('inbox.rail.optedIn') : t('inbox.rail.notOptedIn')}
-        </Badge>
+        </span>
       </TableCell>
       <TableCell>
         <Button
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-destructive size-8"
+          className="text-[#a1a1aa] hover:text-[#dc2626] size-8"
           aria-label={t('contacts.delete.cta')}
           onClick={onDelete}
         >
-          <Trash2 className="size-4" />
+          <Trash2 className="size-3.5" />
         </Button>
       </TableCell>
     </TableRow>

@@ -9,19 +9,14 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   User,
-  Phone,
-  Tag,
-  StickyNote,
-  Clock,
   ChevronRight,
   PlusCircle,
   Loader2,
   X,
+  ChevronDown,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -35,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/stores/auth.store';
 import { ROLE_RANK } from '@/types/api';
 import type { WorkspaceRole } from '@/types/api';
+import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 import { useUpdateContact } from '@/api/hooks/use-contacts';
 import {
   useContactNotes,
@@ -57,21 +53,19 @@ function atLeast(role: WorkspaceRole | null, min: WorkspaceRole): boolean {
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
 function Section({
-  icon: Icon,
   label,
   children,
 }: {
-  icon: React.ElementType;
   label: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-3 py-2">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <Icon className="size-3.5 text-muted-foreground" />
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+    <div className="px-3 py-2.5">
+      <div className="flex items-center justify-between mb-2 cursor-default">
+        <p className="text-[11px] font-[500] text-[#a1a1aa] uppercase tracking-wide">
           {label}
         </p>
+        <ChevronDown className="size-3 text-[#a1a1aa]" />
       </div>
       {children}
     </div>
@@ -117,25 +111,24 @@ function TagsEditor({
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((tag) => (
-        <Badge
+        <span
           key={tag}
-          variant="secondary"
           className={cn(
-            'text-xs gap-1',
+            'bg-[#f4f4f5] text-[#18181b] text-[11px] font-[500] px-2 py-0.5 rounded-full',
             canWrite && 'cursor-pointer hover:line-through',
           )}
           onClick={canWrite ? () => removeTag(tag) : undefined}
         >
           {tag}
-        </Badge>
+        </span>
       ))}
       {tags.length === 0 && (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-[11px] text-[#a1a1aa]">
           {t('inbox.rail.noTags')}
         </span>
       )}
       {canWrite && (
-        <div className="flex gap-1 w-full mt-1">
+        <div className="flex gap-1 w-full mt-1.5">
           <Input
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
@@ -146,7 +139,7 @@ function TagsEditor({
               }
             }}
             placeholder={t('inbox.rail.addTag')}
-            className="h-6 text-xs flex-1"
+            className="h-6 text-xs flex-1 border-dashed"
           />
           <Button
             size="icon"
@@ -464,13 +457,36 @@ export function InboxContactRail({
     );
   }
 
+  const contactName = contact?.name ?? conversation.contactName ?? '—';
+  const { bg: avatarBg, text: avatarText } = getAvatarColors(
+    conversation.contactName ?? conversation.contactPhone,
+  );
+  const avatarInitials = getInitials(
+    conversation.contactName,
+    conversation.contactPhone,
+  );
+
   return (
-    <div className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-contain border-l">
-      {/* Header */}
-      <div className="px-3 py-2 border-b bg-muted/20 shrink-0">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t('inbox.rail.title')}
-        </p>
+    <div className="flex h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-contain border-l border-[#e4e4e7] bg-white">
+      {/* Header with avatar */}
+      <div className="px-3 py-3 border-b border-[#e4e4e7] shrink-0 flex items-center gap-2.5">
+        <div
+          className={cn(
+            'flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold',
+            avatarBg,
+            avatarText,
+          )}
+        >
+          {avatarInitials}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-[#18181b] truncate">
+            {contactName}
+          </p>
+          <p className="text-[11px] text-[#a1a1aa]">
+            {conversation.contactPhone}
+          </p>
+        </div>
       </div>
 
       {contactLoading ? (
@@ -480,51 +496,40 @@ export function InboxContactRail({
           <Skeleton className="h-3 w-28" />
         </div>
       ) : (
-        <div className="flex flex-col divide-y text-sm">
-          {/* Identity */}
-          <Section icon={User} label={t('inbox.rail.contact')}>
-            <p className="font-medium text-sm truncate">
-              {contact?.name ?? conversation.contactName ?? '—'}
-            </p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <Phone className="size-3 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">
-                {conversation.contactPhone}
-              </p>
-            </div>
-            {/* Manage leads link */}
-            <Link
-              to={`/w/${slug}/leads`}
-              className="flex items-center gap-0.5 mt-1.5 text-xs text-primary hover:underline"
-            >
-              {t('inbox.thread.manageleads')}
-              <ChevronRight className="size-3" />
-            </Link>
-          </Section>
-
-          <Separator />
-
+        <div className="flex flex-col divide-y divide-[#e4e4e7] text-sm">
           {/* Opt-in */}
-          <Section icon={Phone} label={t('inbox.rail.optIn')}>
-            <div className="flex items-center gap-2">
+          <Section label={t('inbox.rail.optIn')}>
+            <div className="flex items-center justify-between">
+              <span
+                className={cn(
+                  'text-[11px] font-[500] px-2 py-0.5 rounded-full',
+                  contact?.optedIn
+                    ? 'bg-[#dcfce7] text-[#16a34a]'
+                    : 'bg-[#f4f4f5] text-[#71717a]',
+                )}
+              >
+                {contact?.optedIn
+                  ? t('inbox.rail.optedIn')
+                  : t('inbox.rail.notOptedIn')}
+              </span>
               <Switch
                 checked={contact?.optedIn ?? false}
                 onCheckedChange={canWrite ? handleOptIn : undefined}
                 disabled={!canWrite || update.isPending}
                 aria-label={t('inbox.rail.optIn')}
               />
-              <span className="text-xs text-muted-foreground">
-                {contact?.optedIn
-                  ? t('inbox.rail.optedIn')
-                  : t('inbox.rail.notOptedIn')}
-              </span>
             </div>
+            <Link
+              to={`/w/${slug}/leads`}
+              className="flex items-center gap-0.5 mt-2 text-[11px] text-[#18181b] hover:underline font-medium"
+            >
+              {t('inbox.thread.manageleads')}
+              <ChevronRight className="size-3" />
+            </Link>
           </Section>
 
-          <Separator />
-
           {/* Tags */}
-          <Section icon={Tag} label={t('inbox.rail.tags')}>
+          <Section label={t('inbox.rail.tags')}>
             <TagsEditor
               slug={slug}
               contactId={contactId}
@@ -533,45 +538,40 @@ export function InboxContactRail({
             />
           </Section>
 
-          <Separator />
-
           {/* Pipeline stage */}
           {stages.length > 0 && (
-            <>
-              <Section icon={ChevronRight} label={t('inbox.rail.stage')}>
-                {canWrite ? (
-                  <Select
-                    value={contact?.pipelineStageId ?? '__none__'}
-                    onValueChange={handleStage}
-                    disabled={update.isPending}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue placeholder={t('inbox.rail.noStage')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        {t('inbox.rail.noStage')}
+            <Section label={t('inbox.rail.stage')}>
+              {canWrite ? (
+                <Select
+                  value={contact?.pipelineStageId ?? '__none__'}
+                  onValueChange={handleStage}
+                  disabled={update.isPending}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder={t('inbox.rail.noStage')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      {t('inbox.rail.noStage')}
+                    </SelectItem>
+                    {stages.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
                       </SelectItem>
-                      {stages.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    {stages.find((s) => s.id === contact?.pipelineStageId)
-                      ?.name ?? t('inbox.rail.noStage')}
-                  </p>
-                )}
-              </Section>
-              <Separator />
-            </>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-[11px] text-[#71717a]">
+                  {stages.find((s) => s.id === contact?.pipelineStageId)
+                    ?.name ?? t('inbox.rail.noStage')}
+                </p>
+              )}
+            </Section>
           )}
 
           {/* Follow-up */}
-          <Section icon={Clock} label={t('inbox.rail.followUp')}>
+          <Section label={t('inbox.rail.followUp')}>
             {canWrite ? (
               <Input
                 type="datetime-local"
@@ -580,7 +580,7 @@ export function InboxContactRail({
                 className="h-7 text-xs"
               />
             ) : (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-[#71717a]">
                 {followUpValue
                   ? new Date(contact!.followUpAt!).toLocaleString([], {
                       day: '2-digit',
@@ -594,10 +594,8 @@ export function InboxContactRail({
             )}
           </Section>
 
-          <Separator />
-
           {/* Notes */}
-          <Section icon={StickyNote} label={t('inbox.rail.notes')}>
+          <Section label={t('inbox.rail.notes')}>
             <NotesSection
               slug={slug}
               contactId={contactId}
@@ -605,9 +603,8 @@ export function InboxContactRail({
             />
           </Section>
 
-          {/* Attributes (editable key/value) */}
-          <Separator />
-          <Section icon={Tag} label={t('inbox.rail.attributes', 'Attributes')}>
+          {/* Attributes */}
+          <Section label={t('inbox.rail.attributes', 'Attributes')}>
             <AttributesEditor
               slug={slug}
               contactId={contactId}

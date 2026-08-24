@@ -11,16 +11,17 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { BlockerBanner } from '@/components/education/blocker-banner';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useCampaignAnalytics, useCampaigns } from '@/api/hooks/use-campaigns';
-import { STATUS_VARIANT } from './components/campaign-status';
+import { STATUS_PILL } from './components/campaign-status';
 import { errorMessage } from '@/lib/errors';
 import { isApiError } from '@/types/error';
+import type { CampaignStatus } from '@/api/campaigns.api';
+import { cn } from '@/lib/utils';
 
 const SERIES_COLOR = {
   delivered: '#059669',
@@ -31,6 +32,16 @@ const SERIES_COLOR = {
 function pctCaption(part: number, total: number): string | undefined {
   if (total <= 0) return undefined;
   return `${Math.round((part / total) * 1000) / 10}%`;
+}
+
+function StatusPill({ status }: { status: CampaignStatus }) {
+  const { t } = useTranslation();
+  const { bg, text } = STATUS_PILL[status];
+  return (
+    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', bg, text)}>
+      {t(`campaigns.status.${status}`)}
+    </span>
+  );
 }
 
 function StatCard({
@@ -45,21 +56,17 @@ function StatCard({
   captionClassName?: string;
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3">
-        <span className="text-muted-foreground text-xs font-medium">
-          {label}
-        </span>
-        <div className="text-3xl font-bold tracking-tight">
-          {value.toLocaleString('en-US')}
+    <div className="bg-white border border-[#e4e4e7] rounded-[10px] p-[18px] flex flex-col gap-2">
+      <span className="text-[12px] font-medium text-[#a1a1aa]">{label}</span>
+      <div className="text-[30px] font-bold tracking-[-0.02em] text-[#18181b] leading-none">
+        {value.toLocaleString('en-US')}
+      </div>
+      {caption && (
+        <div className={captionClassName ?? 'text-[12px] text-[#71717a]'}>
+          {caption}
         </div>
-        {caption ? (
-          <div className={captionClassName ?? 'text-muted-foreground text-xs'}>
-            {caption}
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
 
@@ -126,15 +133,13 @@ export function CampaignInsightsPage() {
 
       {campaign && (
         <>
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold tracking-tight">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-[15px] font-semibold text-[#18181b]">
               {campaign.name}
             </h1>
-            <Badge variant={STATUS_VARIANT[campaign.status]}>
-              {t(`campaigns.status.${campaign.status}`)}
-            </Badge>
+            <StatusPill status={campaign.status} />
             {campaign.launchedAt && (
-              <span className="text-muted-foreground text-xs">
+              <span className="text-[12px] text-[#a1a1aa]">
                 {t('campaigns.insights.launched', {
                   date: new Date(campaign.launchedAt).toLocaleDateString(
                     undefined,
@@ -182,19 +187,19 @@ export function CampaignInsightsPage() {
                   label={t('campaigns.insights.stats.delivered')}
                   value={stats.delivered}
                   caption={pctCaption(stats.delivered, stats.total)}
-                  captionClassName="text-xs text-emerald-600"
+                  captionClassName="text-[12px] text-[#16a34a]"
                 />
                 <StatCard
                   label={t('campaigns.insights.stats.read')}
                   value={stats.read}
                   caption={pctCaption(stats.read, stats.total)}
-                  captionClassName="text-xs text-blue-600"
+                  captionClassName="text-[12px] text-[#2563eb]"
                 />
                 <StatCard
                   label={t('campaigns.insights.stats.failed')}
                   value={stats.failed}
                   caption={pctCaption(stats.failed, stats.total)}
-                  captionClassName="text-destructive text-xs"
+                  captionClassName="text-[12px] text-[#dc2626]"
                 />
               </div>
 

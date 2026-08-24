@@ -8,9 +8,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CalendarClock, KanbanSquare, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -20,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { EducationSlot } from '@/components/education/education-slot';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useContacts, useUpdateContact } from '@/api/hooks/use-contacts';
 import { usePipelineStages } from '@/api/hooks/use-pipeline-stages';
@@ -29,17 +26,7 @@ import { type WaContact } from '@/api/contacts.api';
 import type { PipelineStage } from '@/api/messages.api';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function initials(name: string | null, phone: string): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  }
-  return phone.slice(-2);
-}
+import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 
 // ── Contact card ─────────────────────────────────────────────────────────────
 
@@ -63,13 +50,17 @@ function ContactCard({
   const { t } = useTranslation();
 
   const followUpDate = c.followUpAt ? new Date(c.followUpAt) : null;
-  const now = new Date();
-  const isOverdue = followUpDate !== null && followUpDate <= now;
-
+  const isOverdue = followUpDate !== null && followUpDate <= new Date();
   const currentStageId = c.pipelineStageId ?? '__none__';
 
+  const initials = getInitials(c.name, c.phoneE164);
+  const { bg, text } = getAvatarColors(c.name ?? c.phoneE164);
+
+  const visibleTags = c.tags.slice(0, 2);
+  const extraTagCount = c.tags.length - visibleTags.length;
+
   return (
-    <Card
+    <div
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = 'move';
@@ -77,101 +68,104 @@ function ContactCard({
         onDragStart(c.id);
       }}
       className={cn(
-        'group relative cursor-grab text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing',
-        isOverdue && 'ring-2 ring-destructive/50 border-destructive/40',
+        'bg-white border border-[#e4e4e7] rounded-[10px] p-3 cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow flex flex-col gap-2',
+        isOverdue && 'border-[#fca5a5]',
       )}
     >
-      <CardHeader className="flex flex-row items-start gap-2.5 space-y-0 p-3 pb-2">
-        {/* Avatar */}
-        <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-          {initials(c.name, c.phoneE164)}
+      {/* Header row */}
+      <div className="flex items-start gap-2.5">
+        <div
+          className={cn(
+            'flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold',
+            bg,
+            text,
+          )}
+        >
+          {initials}
         </div>
-        {/* Name + phone */}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium leading-tight">
-            {c.name ?? (
-              <span className="text-muted-foreground">{c.phoneE164}</span>
-            )}
+          <p className="truncate text-[13px] font-semibold text-[#18181b] leading-tight">
+            {c.name ?? <span className="text-[#71717a]">{c.phoneE164}</span>}
           </p>
           {c.name && (
-            <p className="text-muted-foreground font-mono text-xs">
+            <p className="font-mono text-[11px] text-[#a1a1aa] mt-0.5">
               {c.phoneE164}
             </p>
           )}
         </div>
-        {/* Pending indicator */}
         {isPending && <Spinner className="size-3.5 shrink-0" />}
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex flex-col gap-1.5 p-3 pt-0">
-        {/* Overdue banner */}
-        {isOverdue && (
-          <div className="flex items-center gap-1 rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
-            <CalendarClock className="size-3 shrink-0" />
-            <span className="font-medium">
-              {t('leads.card.overdue')} · {followUpDate!.toLocaleDateString()}
-            </span>
-          </div>
-        )}
-
-        {/* Tags (first 2) */}
-        {c.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {c.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {c.tags.length > 2 && (
-              <Badge variant="outline" className="text-xs">
-                +{c.tags.length - 2}
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Assignee */}
-        <div className="text-muted-foreground flex items-center gap-1 text-xs">
-          <Users className="size-3" />
-          <span>
-            {c.assignedToUserId
-              ? (memberMap[c.assignedToUserId] ?? t('leads.card.noAssignee'))
-              : t('leads.card.noAssignee')}
+      {/* Overdue banner */}
+      {isOverdue && (
+        <div className="flex items-center gap-1 rounded-[6px] bg-[#fee2e2] px-2 py-1">
+          <CalendarClock className="size-3 shrink-0 text-[#dc2626]" />
+          <span className="text-[11px] font-medium text-[#dc2626]">
+            {t('leads.card.overdue')} · {followUpDate!.toLocaleDateString()}
           </span>
         </div>
+      )}
 
-        {/* Follow-up (non-overdue) */}
-        {followUpDate && !isOverdue && (
-          <div className="text-muted-foreground flex items-center gap-1 text-xs">
-            <CalendarClock className="size-3" />
-            <span>
-              {t('leads.card.followUp', {
-                date: followUpDate.toLocaleDateString(),
-              })}
+      {/* Tags */}
+      {c.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {visibleTags.map((tag) => (
+            <span
+              key={tag}
+              className="bg-[#f4f4f5] text-[#18181b] text-[10px] font-medium px-[6px] py-px rounded-full"
+            >
+              {tag}
             </span>
-          </div>
-        )}
+          ))}
+          {extraTagCount > 0 && (
+            <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
+              +{extraTagCount}
+            </span>
+          )}
+        </div>
+      )}
 
-        {/* Move to stage (Select fallback) */}
-        <Select
-          value={currentStageId}
-          onValueChange={(v) => onMove(c.id, v)}
-          disabled={isPending}
-        >
-          <SelectTrigger className="mt-1 h-7 text-xs">
-            <SelectValue placeholder={t('leads.card.moveTo')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">{t('leads.noStage')}</SelectItem>
-            {stages.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardContent>
-    </Card>
+      {/* Assignee */}
+      <div className="flex items-center gap-1 text-[12px] text-[#71717a]">
+        <Users className="size-3 shrink-0" />
+        <span className="truncate">
+          {c.assignedToUserId
+            ? (memberMap[c.assignedToUserId] ?? t('leads.card.noAssignee'))
+            : t('leads.card.noAssignee')}
+        </span>
+      </div>
+
+      {/* Follow-up (non-overdue) */}
+      {followUpDate && !isOverdue && (
+        <div className="flex items-center gap-1 text-[12px] text-[#71717a]">
+          <CalendarClock className="size-3 shrink-0" />
+          <span>
+            {t('leads.card.followUp', {
+              date: followUpDate.toLocaleDateString(),
+            })}
+          </span>
+        </div>
+      )}
+
+      {/* Move to stage */}
+      <Select
+        value={currentStageId}
+        onValueChange={(v) => onMove(c.id, v)}
+        disabled={isPending}
+      >
+        <SelectTrigger className="h-7 text-[11px] mt-0.5">
+          <SelectValue placeholder={t('leads.card.moveTo')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">{t('leads.noStage')}</SelectItem>
+          {stages.map((s) => (
+            <SelectItem key={s.id} value={s.id}>
+              {s.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -208,7 +202,6 @@ function KanbanColumn({
   }
 
   function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    // Only clear if leaving the column entirely (not a child)
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragOver(false);
     }
@@ -226,19 +219,19 @@ function KanbanColumn({
   return (
     <div
       className={cn(
-        'flex w-72 shrink-0 flex-col gap-2 rounded-lg p-2 transition-colors',
-        isDragOver && 'bg-muted/60 ring-2 ring-primary/30',
+        'flex w-[272px] shrink-0 flex-col gap-2 rounded-[10px] p-2.5 transition-colors',
+        isDragOver ? 'bg-[#e4e4e7]' : 'bg-[#f4f4f5]',
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <Badge variant="secondary" className="text-xs tabular-nums">
+      <div className="flex items-center justify-between px-1 py-0.5">
+        <h3 className="text-[12px] font-semibold text-[#18181b] truncate">{title}</h3>
+        <span className="bg-white border border-[#e4e4e7] text-[#71717a] text-[10px] font-semibold px-[6px] py-px rounded-full tabular-nums shrink-0 ml-1.5">
           {contacts.length}
-        </Badge>
+        </span>
       </div>
 
       {/* Cards */}
@@ -246,13 +239,11 @@ function KanbanColumn({
         {contacts.length === 0 ? (
           <div
             className={cn(
-              'border-muted rounded-lg border border-dashed p-4 text-center transition-colors',
-              isDragOver && 'border-primary/50 bg-primary/5',
+              'rounded-[8px] border border-dashed border-[#d4d4d8] p-4 text-center transition-colors',
+              isDragOver && 'border-[#18181b]/30 bg-white/60',
             )}
           >
-            <p className="text-muted-foreground text-xs">
-              {t('leads.empty.body')}
-            </p>
+            <p className="text-[11px] text-[#a1a1aa]">{t('leads.empty.body')}</p>
           </div>
         ) : (
           contacts.map((c) => (
@@ -278,10 +269,10 @@ function KanbanSkeleton() {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex w-72 shrink-0 flex-col gap-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-28 w-full rounded-lg" />
-          <Skeleton className="h-28 w-full rounded-lg" />
+        <div key={i} className="flex w-[272px] shrink-0 flex-col gap-2 bg-[#f4f4f5] rounded-[10px] p-2.5">
+          <Skeleton className="h-4 w-24 rounded-full" />
+          <Skeleton className="h-28 w-full rounded-[10px]" />
+          <Skeleton className="h-28 w-full rounded-[10px]" />
         </div>
       ))}
     </div>
@@ -294,25 +285,17 @@ export function LeadsPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
 
-  const { data: contactsData, isLoading: contactsLoading } = useContacts(
-    ws.slug,
-  );
-  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(
-    ws.slug,
-  );
+  const { data: contactsData, isLoading: contactsLoading } = useContacts(ws.slug);
+  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(ws.slug);
   const { data: membersData } = useMembers(ws.slug, ws.id);
   const updateContact = useUpdateContact(ws.slug);
 
-  // DnD state — track which contact is currently being dragged/pending
   const [pendingContactId, setPendingContactId] = useState<string | null>(null);
   const draggedContactId = useRef<string | null>(null);
 
   const contacts = contactsData?.contacts ?? [];
   const stages = useMemo(
-    () =>
-      [...(stagesData?.pipelineStages ?? [])].sort(
-        (a, b) => a.sortOrder - b.sortOrder,
-      ),
+    () => [...(stagesData?.pipelineStages ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
     [stagesData],
   );
   const members = membersData?.members ?? [];
@@ -322,12 +305,9 @@ export function LeadsPage() {
     [members],
   );
 
-  // Group contacts by pipelineStageId; null → '__none__'
   const columnMap = useMemo(() => {
     const map: Record<string, WaContact[]> = { __none__: [] };
-    stages.forEach((s) => {
-      map[s.id] = [];
-    });
+    stages.forEach((s) => { map[s.id] = []; });
     contacts.forEach((c) => {
       const key = c.pipelineStageId ?? '__none__';
       if (map[key]) {
@@ -374,56 +354,42 @@ export function LeadsPage() {
   const isLoading = contactsLoading || stagesLoading;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Page header */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {t('leads.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">{t('leads.subtitle')}</p>
-        </div>
+    <div className="flex flex-col gap-5">
+      {/* Action bar */}
+      <div className="flex items-center justify-end">
         <Button variant="outline" size="sm" asChild>
           <Link to={`/w/${ws.slug}/contacts`}>
-            <KanbanSquare className="mr-1.5 size-4" />
+            <KanbanSquare className="mr-1.5 size-3.5" />
             {t('contacts.title')}
           </Link>
         </Button>
       </div>
 
-      {/* Education slot */}
-      <EducationSlot
-        title={t('leads.intro.title')}
-        body={t('leads.intro.body')}
-      />
-
-      {/* Loading */}
       {isLoading && <KanbanSkeleton />}
 
-      {/* Empty board — no stages yet */}
+      {/* Empty board — no stages */}
       {!isLoading && stages.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <KanbanSquare className="text-muted-foreground size-10" />
-            <div>
-              <p className="font-medium">{t('leads.emptyBoard.title')}</p>
-              <p className="text-muted-foreground text-sm">
-                {t('leads.emptyBoard.body')}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/w/${ws.slug}/contacts`}>
-                {t('leads.emptyBoard.cta')}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-[#e4e4e7] py-16 text-center">
+          <KanbanSquare className="size-10 text-[#a1a1aa]" />
+          <div>
+            <p className="text-[13px] font-medium text-[#18181b]">
+              {t('leads.emptyBoard.title')}
+            </p>
+            <p className="text-[12px] text-[#71717a] mt-0.5">
+              {t('leads.emptyBoard.body')}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/w/${ws.slug}/contacts`}>
+              {t('leads.emptyBoard.cta')}
+            </Link>
+          </Button>
+        </div>
       )}
 
       {/* Kanban board */}
       {!isLoading && stages.length > 0 && (
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {/* Pipeline stage columns */}
+        <div className="flex gap-3 overflow-x-auto pb-4">
           {stages.map((stage) => (
             <KanbanColumn
               key={stage.id}
@@ -438,7 +404,6 @@ export function LeadsPage() {
             />
           ))}
 
-          {/* "No stage" column — always last */}
           {(columnMap['__none__'] ?? []).length > 0 && (
             <KanbanColumn
               stageId="__none__"
