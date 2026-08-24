@@ -189,6 +189,18 @@
       "held": "{{amount}} होल्ड पर",
       "addFunds": "धनराशि जोड़ें",
       "addFundsSoon": "टॉप-अप बिलिंग के साथ आएंगे।"
+    },
+    "analytics": {
+      "conversationsToday": "आज की बातचीत",
+      "resolvedToday": "आज हल की गई",
+      "avgResponse": "औसत प्रतिक्रिया समय",
+      "resolutionRate": "{{rate}}% समाधान दर",
+      "topAgents": {
+        "title": "शीर्ष एजेंट",
+        "agent": "एजेंट",
+        "handled": "संभाली गई",
+        "empty": "अभी तक कोई असाइन की गई बातचीत नहीं है।"
+      }
     }
   },
   "education": {
@@ -259,6 +271,15 @@
       "hint": "कनेक्शन अपडेट आमतौर पर वेबहुक से आते हैं। अगर आपने Meta में नंबर/WABA बदला और स्टेटस गलत लगे तो रीफ़्रेश करें।",
       "stillConnected": "Meta पर अभी भी कनेक्टेड है",
       "updated": "Meta से स्टेटस अपडेट हो गया"
+    },
+    "health": {
+      "title": "अकाउंट हेल्थ",
+      "subtitle": "आपके WABA और फ़ोन नंबर के लिए Meta के लाइव सिग्नल।",
+      "dailyLimit": "दैनिक बातचीत सीमा",
+      "unlimited": "असीमित",
+      "qualityRating": "गुणवत्ता रेटिंग",
+      "bizVerification": "बिज़नेस सत्यापन",
+      "accountReview": "अकाउंट समीक्षा"
     }
   },
   "inbox": {
@@ -453,7 +474,31 @@
     "action": {
       "launch": "लॉन्च",
       "pause": "रोकें",
-      "resume": "फिर शुरू करें"
+      "resume": "फिर शुरू करें",
+      "duplicate": "डुप्लिकेट करें",
+      "viewInsights": "इनसाइट्स देखें"
+    },
+    "duplicated": "कैंपेन डुप्लिकेट हो गया",
+    "insights": {
+      "back": "सभी कैंपेन",
+      "launched": "लॉन्च: {{date}}",
+      "notFound": "कैंपेन नहीं मिला।",
+      "stats": {
+        "total": "कुल",
+        "sent": "भेजा",
+        "delivered": "डिलीवर",
+        "read": "पढ़ा",
+        "failed": "विफल"
+      },
+      "chart": {
+        "title": "समय के साथ डिलीवरी",
+        "empty": "अभी तक कोई डिलीवरी डेटा नहीं।",
+        "legend": {
+          "delivered": "डिलीवर",
+          "read": "पढ़ा",
+          "failed": "विफल"
+        }
+      }
     },
     "create": {
       "title": "कैंपेन बनाएँ",
@@ -502,7 +547,20 @@
       "audienceCount": "ऑडियंस",
       "metaNote": "Meta वार्तालाप शुल्क आपके WhatsApp Business Account पर बिल करता है। यह CRM वॉलेट चार्ज नहीं है।",
       "saveDraft": "ड्राफ्ट बनाएँ",
-      "createLaunch": "बनाएँ और लॉन्च करें"
+      "createLaunch": "बनाएँ और लॉन्च करें",
+      "tabContacts": "संपर्कों से",
+      "tabCsv": "CSV अपलोड करें",
+      "csv": {
+        "hint": "CSV में \"phone\" कॉलम होना चाहिए (E.164, जैसे +919876543210)। वैकल्पिक \"name\" कॉलम और टेम्पलेट वेरिएबल के लिए \"attr:<key>\" कॉलम जोड़ें।",
+        "dropzone": "एक CSV फ़ाइल चुनें…",
+        "previewNote": "पहली 5 पंक्तियाँ दिखाई गई हैं। फ़ोन की वैधता और ऑप्ट-आउट स्थिति कैंपेन बनाते समय जाँची जाती है।",
+        "rowCount_one": "{{count}} पंक्ति पार्स हुई",
+        "rowCount_other": "{{count}} पंक्तियाँ पार्स हुईं",
+        "errorParsing": "यह फ़ाइल पढ़ी नहीं जा सकी। जाँचें कि यह एक वैध CSV है।",
+        "missingPhoneColumn": "CSV में \"phone\" कॉलम होना चाहिए।",
+        "emptyFile": "इस CSV में कोई डेटा पंक्ति नहीं है।",
+        "rowsRequired": "पहले कम से कम एक पंक्ति वाली CSV अपलोड करें।"
+      }
     }
   },
   "errors": {
@@ -645,6 +703,72 @@
       "typeaheadPlaceholder": "त्वरित उत्तर खोजने के लिए / टाइप करें…",
       "typeaheadEmpty": "कोई मेल खाने वाला त्वरित उत्तर नहीं",
       "typeaheadHeading": "त्वरित उत्तर"
+    },
+    "autoReplies": {
+      "title": "ऑटो-रिप्लाई",
+      "subtitle": "जब ग्राहक का संदेश किसी कीवर्ड से मेल खाए तो स्वचालित उत्तर भेजें। उत्तर केवल तभी भेजे जाते हैं जब देरी की अवधि में किसी एजेंट ने जवाब न दिया हो।",
+      "upgradeBanner": "ऑटो-रिप्लाई उच्च प्लान पर उपलब्ध है।",
+      "upgrade": "अपग्रेड करें",
+      "addCta": "नियम जोड़ें",
+      "addTitle": "ऑटो-रिप्लाई नियम जोड़ें",
+      "editTitle": "ऑटो-रिप्लाई नियम संपादित करें",
+      "emptyTitle": "अभी कोई ऑटो-रिप्लाई नियम नहीं",
+      "emptyBody": "किसी कीवर्ड से मेल खाने पर स्वचालित उत्तर देने के लिए एक नियम जोड़ें।",
+      "fields": {
+        "name": "नाम",
+        "keywords": "कीवर्ड",
+        "matchType": "मैच प्रकार",
+        "replyType": "उत्तर प्रकार",
+        "replyText": "उत्तर संदेश",
+        "replyTemplateName": "टेम्पलेट",
+        "replyTemplateLanguage": "टेम्पलेट भाषा",
+        "priority": "प्राथमिकता",
+        "active": "सक्रिय"
+      },
+      "placeholders": {
+        "name": "जैसे Greeting reply",
+        "keywords": "जैसे hello, hi, hey",
+        "replyText": "नमस्ते! Acme Corp में आपका स्वागत है...",
+        "priority": "0"
+      },
+      "keywordsHint": "एक से अधिक कीवर्ड को अल्पविराम से अलग करें।",
+      "matchTypes": {
+        "exact": "पूर्ण मेल",
+        "contains": "इसमें शामिल है",
+        "starts_with": "इससे शुरू होता है"
+      },
+      "replyTypes": {
+        "text": "टेक्स्ट",
+        "template": "टेम्पलेट"
+      },
+      "templateLabel": "टेम्पलेट: {{name}}",
+      "noTemplates": "अभी कोई स्वीकृत टेम्पलेट नहीं",
+      "errors": {
+        "nameRequired": "नाम आवश्यक है",
+        "nameTooLong": "नाम अधिकतम 120 अक्षरों का होना चाहिए",
+        "keywordsRequired": "कम से कम एक कीवर्ड जोड़ें",
+        "replyTextRequired": "उत्तर संदेश आवश्यक है",
+        "replyTemplateRequired": "एक टेम्पलेट चुनें",
+        "replyTemplateLanguageRequired": "एक टेम्पलेट भाषा चुनें",
+        "priorityInvalid": "प्राथमिकता एक गैर-नकारात्मक संख्या होनी चाहिए"
+      },
+      "cols": {
+        "keywords": "कीवर्ड",
+        "matchType": "मैच प्रकार",
+        "reply": "उत्तर",
+        "active": "सक्रिय",
+        "priority": "प्राथमिकता"
+      },
+      "actions": "क्रियाएँ",
+      "edit": "संपादित करें",
+      "delete": "हटाएँ",
+      "deleteTitle": "ऑटो-रिप्लाई नियम हटाएँ?",
+      "deleteBody": "यह नियम अब स्वचालित उत्तर ट्रिगर नहीं करेगा। यह पूर्ववत नहीं किया जा सकता।",
+      "created": "ऑटो-रिप्लाई नियम जोड़ा गया",
+      "updated": "ऑटो-रिप्लाई नियम अपडेट किया गया",
+      "deleted": "ऑटो-रिप्लाई नियम हटाया गया",
+      "loadError": "ऑटो-रिप्लाई नियम लोड नहीं हो सके। कृपया पृष्ठ रिफ्रेश करें।",
+      "readOnlyNotice": "केवल एडमिन और ओनर ही ऑटो-रिप्लाई नियम बना या संपादित कर सकते हैं।"
     },
     "routing": {
       "title": "चैट रूटिंग",

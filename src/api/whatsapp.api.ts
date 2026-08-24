@@ -13,12 +13,22 @@ export interface WabaConnectionStatus {
   phoneNumber: string | null;
   /**
    * Whether Meta has confirmed a valid payment method on the WABA.
-   * `null` means unknown (best-effort probe; always handle send-time errors).
+   * `null` means unknown (no payment webhook received yet).
    */
   metaPaymentReady: boolean | null;
   wabaId: string | null;
   /** True when WABA is linked but phone is not yet Cloud API registered. */
   phoneRegistrationPending: boolean;
+  /** Meta WABA-level app-review status, e.g. 'APPROVED' | 'PENDING' | 'REJECTED'. */
+  accountReviewStatus: string | null;
+  /** Meta Business Manager verification state. */
+  businessVerificationStatus: string | null;
+  /** Daily business-initiated conversation cap for this phone number. */
+  messagingLimitPerDay: number | null;
+  /** Per-number quality rating from Meta: GREEN | YELLOW | RED | UNKNOWN. */
+  qualityRating: string | null;
+  /** Meta display-name review state: APPROVED | PENDING_REVIEW | DECLINED. */
+  displayNameStatus: string | null;
 }
 
 export interface ConnectWhatsAppBody {

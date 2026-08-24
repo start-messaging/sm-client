@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Link2, RefreshCw } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Link2, RefreshCw, ShieldCheck } from 'lucide-react';
+import type { WabaConnectionStatus } from '@/api/whatsapp.api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -204,6 +205,100 @@ function PinDialog({
   );
 }
 
+// ── WABA health card ────────────────────────────────────────────────────────
+
+function qualityColor(rating: string | null): string {
+  switch (rating?.toUpperCase()) {
+    case 'GREEN':
+      return 'text-green-600 dark:text-green-400';
+    case 'YELLOW':
+      return 'text-amber-500 dark:text-amber-400';
+    case 'RED':
+      return 'text-red-600 dark:text-red-400';
+    default:
+      return 'text-muted-foreground';
+  }
+}
+
+function WabaHealthCard({ status }: { status: WabaConnectionStatus }) {
+  const { t } = useTranslation();
+
+  const hasAnySignal =
+    status.accountReviewStatus ||
+    status.businessVerificationStatus ||
+    status.messagingLimitPerDay !== null ||
+    status.qualityRating;
+
+  if (!hasAnySignal) return null;
+
+  return (
+    <>
+      <Separator />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="size-4" />
+            {t('connect.health.title')}
+          </CardTitle>
+          <CardDescription>{t('connect.health.subtitle')}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {status.messagingLimitPerDay !== null && (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-muted-foreground text-xs">
+                {t('connect.health.dailyLimit')}
+              </span>
+              <span className="text-sm font-medium">
+                {status.messagingLimitPerDay === -1
+                  ? t('connect.health.unlimited')
+                  : status.messagingLimitPerDay.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {status.qualityRating && (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-muted-foreground text-xs">
+                {t('connect.health.qualityRating')}
+              </span>
+              <span
+                className={`text-sm font-medium ${qualityColor(status.qualityRating)}`}
+              >
+                {status.qualityRating}
+              </span>
+            </div>
+          )}
+          {status.businessVerificationStatus && (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-muted-foreground text-xs">
+                {t('connect.health.bizVerification')}
+              </span>
+              <span className="flex items-center gap-1 text-sm font-medium">
+                {status.businessVerificationStatus.toLowerCase() ===
+                'verified' ? (
+                  <CheckCircle2 className="size-3.5 text-green-500" />
+                ) : (
+                  <AlertTriangle className="size-3.5 text-amber-500" />
+                )}
+                {status.businessVerificationStatus}
+              </span>
+            </div>
+          )}
+          {status.accountReviewStatus && (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-muted-foreground text-xs">
+                {t('connect.health.accountReview')}
+              </span>
+              <span className="text-sm font-medium">
+                {status.accountReviewStatus}
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export function ConnectPage() {
@@ -400,8 +495,8 @@ export function ConnectPage() {
         isPending={registerPhone.isPending}
       />
 
-      {/* Meta payment education — only shown once connected */}
-      {isConnected && (
+      {/* Payment method missing — only shown when we know it's absent */}
+      {isConnected && wabaStatus.metaPaymentReady === false && (
         <>
           <Separator />
           <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
@@ -429,6 +524,11 @@ export function ConnectPage() {
             </CardContent>
           </Card>
         </>
+      )}
+
+      {/* Account health signals — visible once connected */}
+      {isConnected && (
+        <WabaHealthCard status={wabaStatus} />
       )}
     </div>
   );

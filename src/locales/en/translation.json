@@ -190,6 +190,18 @@
       "held": "{{amount}} on hold",
       "addFunds": "Add funds",
       "addFundsSoon": "Top-ups arrive with billing."
+    },
+    "analytics": {
+      "conversationsToday": "Conversations today",
+      "resolvedToday": "Resolved today",
+      "avgResponse": "Avg. response time",
+      "resolutionRate": "{{rate}}% resolution rate",
+      "topAgents": {
+        "title": "Top agents",
+        "agent": "Agent",
+        "handled": "Handled",
+        "empty": "No assigned conversations yet."
+      }
     }
   },
   "education": {
@@ -320,6 +332,15 @@
       "hint": "Connection updates normally arrive via webhooks. Use refresh if you changed the number or WABA in Meta and status looks wrong.",
       "stillConnected": "Still connected on Meta",
       "updated": "Status updated from Meta"
+    },
+    "health": {
+      "title": "Account health",
+      "subtitle": "Live signals from Meta for your connected WABA and phone number.",
+      "dailyLimit": "Daily conversation limit",
+      "unlimited": "Unlimited",
+      "qualityRating": "Quality rating",
+      "bizVerification": "Business verification",
+      "accountReview": "Account review"
     }
   },
   "inbox": {
@@ -341,6 +362,7 @@
     "windowWarningShort": "Window open",
     "windowClosedShort": "Window closed",
     "windowClosingShort": "Closing soon",
+    "now": "now",
     "tabs": {
       "all": "All",
       "active": "Active",
@@ -531,10 +553,22 @@
       "category": "Category",
       "headerOptional": "Header (optional)",
       "headerPlaceholder": "Short title shown above the body",
+      "headerFormat": {
+        "TEXT": "Text",
+        "IMAGE": "Image",
+        "VIDEO": "Video",
+        "DOCUMENT": "Document"
+      },
+      "headerLinkHint": "Must be a publicly accessible URL.",
+      "headerLinkRequired": "A media URL is required for this header type.",
       "body": "Body text",
       "bodyPlaceholder": "Hello {{1}}, your order {{2}} has been confirmed.",
-      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. We attach Meta sample values automatically. Max 1,024 characters.",
+      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. Enter sample values below so Meta can review your template. Max 1,024 characters.",
       "bodyRequired": "Body text is required.",
+      "sampleValuesTitle": "Sample values (for Meta review)",
+      "sampleFor": "Sample for {{n}}",
+      "sampleHint": "Meta requires sample text to review your template.",
+      "sampleRequired": "A sample value is required for every {{n}} variable in the body",
       "footerOptional": "Footer (optional)",
       "footerPlaceholder": "e.g. Reply STOP to opt out",
       "componentsNote": "Header and footer are included in the payload Meta reviews.",
@@ -625,7 +659,23 @@
       "success_one": "Imported {{count}} contact — {{skipped}} skipped.",
       "success_other": "Imported {{count}} contacts — {{skipped}} skipped.",
       "skippedHint": "Skipped rows have duplicate numbers or are not valid E.164 numbers.",
-      "errorParsing": "Could not read the file — make sure it is a valid UTF-8 CSV."
+      "errorParsing": "Could not read the file — make sure it is a valid UTF-8 CSV.",
+      "mapping": {
+        "subtitle": "Match your CSV columns to contact fields.",
+        "hint": "Choose what each column maps to. Phone is required; unmatched columns are skipped.",
+        "column": "Your CSV column",
+        "target": "Maps to",
+        "required": "Required",
+        "phoneRequiredError": "Map at least one column to Phone number to continue.",
+        "optionPhone": "Phone number",
+        "optionName": "Name",
+        "optionEmail": "Email",
+        "optionTag": "Tag",
+        "optionAttribute": "Custom attribute",
+        "optionSkip": "Skip this column",
+        "next": "Next",
+        "back": "Back"
+      }
     },
     "delete": {
       "title": "Remove contact?",
@@ -645,6 +695,8 @@
       "actions": "Actions"
     },
     "filter": {
+      "search": "Search name or phone…",
+      "noResults": "No contacts match \"{{term}}\".",
       "allTags": "All tags",
       "allStages": "All stages",
       "allAssignees": "All assignees",
@@ -728,7 +780,31 @@
     "action": {
       "launch": "Launch",
       "pause": "Pause",
-      "resume": "Resume"
+      "resume": "Resume",
+      "duplicate": "Duplicate",
+      "viewInsights": "View insights"
+    },
+    "duplicated": "Campaign duplicated",
+    "insights": {
+      "back": "All campaigns",
+      "launched": "Launched {{date}}",
+      "notFound": "Campaign not found.",
+      "stats": {
+        "total": "Total",
+        "sent": "Sent",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed"
+      },
+      "chart": {
+        "title": "Delivery over time",
+        "empty": "No delivery data yet.",
+        "legend": {
+          "delivered": "Delivered",
+          "read": "Read",
+          "failed": "Failed"
+        }
+      }
     },
     "create": {
       "title": "Create campaign",
@@ -779,7 +855,20 @@
       "audienceCount": "Audience",
       "metaNote": "Meta bills conversations on your WhatsApp Business Account. This is not a CRM wallet charge.",
       "saveDraft": "Create draft",
-      "createLaunch": "Create and launch"
+      "createLaunch": "Create and launch",
+      "tabContacts": "From contacts",
+      "tabCsv": "Upload CSV",
+      "csv": {
+        "hint": "CSV needs a \"phone\" column (E.164, e.g. +919876543210). Add an optional \"name\" column and \"attr:<key>\" columns for template variables.",
+        "dropzone": "Choose a CSV file…",
+        "previewNote": "Showing the first 5 rows. Phone validity and opt-out status are checked when the campaign is created.",
+        "rowCount_one": "{{count}} row parsed",
+        "rowCount_other": "{{count}} rows parsed",
+        "errorParsing": "Could not read this file. Check it's a valid CSV.",
+        "missingPhoneColumn": "The CSV needs a \"phone\" column.",
+        "emptyFile": "This CSV has no data rows.",
+        "rowsRequired": "Upload a CSV with at least one row first."
+      }
     }
   },
   "billing": {
@@ -967,6 +1056,72 @@
       "typeaheadPlaceholder": "Type / to search quick replies…",
       "typeaheadEmpty": "No matching quick replies",
       "typeaheadHeading": "Quick replies"
+    },
+    "autoReplies": {
+      "title": "Auto-replies",
+      "subtitle": "Automatically reply when a customer message matches a keyword. Replies are sent only when no agent has responded within the delay.",
+      "upgradeBanner": "Auto-replies are available on a higher plan.",
+      "upgrade": "Upgrade",
+      "addCta": "Add rule",
+      "addTitle": "Add auto-reply rule",
+      "editTitle": "Edit auto-reply rule",
+      "emptyTitle": "No auto-reply rules yet",
+      "emptyBody": "Add a rule to automatically respond when a message matches a keyword.",
+      "fields": {
+        "name": "Name",
+        "keywords": "Keyword(s)",
+        "matchType": "Match type",
+        "replyType": "Reply type",
+        "replyText": "Reply message",
+        "replyTemplateName": "Template",
+        "replyTemplateLanguage": "Template language",
+        "priority": "Priority",
+        "active": "Active"
+      },
+      "placeholders": {
+        "name": "e.g. Greeting reply",
+        "keywords": "e.g. hello, hi, hey",
+        "replyText": "Hi there! Welcome to Acme Corp...",
+        "priority": "0"
+      },
+      "keywordsHint": "Separate multiple keywords with commas.",
+      "matchTypes": {
+        "exact": "Exact match",
+        "contains": "Contains",
+        "starts_with": "Starts with"
+      },
+      "replyTypes": {
+        "text": "Text",
+        "template": "Template"
+      },
+      "templateLabel": "Template: {{name}}",
+      "noTemplates": "No approved templates yet",
+      "errors": {
+        "nameRequired": "Name is required",
+        "nameTooLong": "Name must be 120 characters or fewer",
+        "keywordsRequired": "Add at least one keyword",
+        "replyTextRequired": "Reply message is required",
+        "replyTemplateRequired": "Select a template",
+        "replyTemplateLanguageRequired": "Select a template language",
+        "priorityInvalid": "Priority must be a non-negative number"
+      },
+      "cols": {
+        "keywords": "Keyword(s)",
+        "matchType": "Match type",
+        "reply": "Reply",
+        "active": "Active",
+        "priority": "Priority"
+      },
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete auto-reply rule?",
+      "deleteBody": "This rule will no longer trigger automatic replies. This cannot be undone.",
+      "created": "Auto-reply rule added",
+      "updated": "Auto-reply rule updated",
+      "deleted": "Auto-reply rule deleted",
+      "loadError": "Could not load auto-reply rules. Please refresh and try again.",
+      "readOnlyNotice": "Only admins and owners can create or edit auto-reply rules."
     },
     "routing": {
       "title": "Chat Routing",

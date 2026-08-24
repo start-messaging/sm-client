@@ -193,6 +193,18 @@
       "held": "{{amount}} محجوز",
       "addFunds": "إضافة رصيد",
       "addFundsSoon": "عمليات الشحن قادمة مع الفوترة."
+    },
+    "analytics": {
+      "conversationsToday": "محادثات اليوم",
+      "resolvedToday": "تم حلها اليوم",
+      "avgResponse": "متوسط وقت الرد",
+      "resolutionRate": "معدل الحل {{rate}}%",
+      "topAgents": {
+        "title": "أفضل الوكلاء",
+        "agent": "الوكيل",
+        "handled": "تمت معالجتها",
+        "empty": "لا توجد محادثات مُعيَّنة حتى الآن."
+      }
     }
   },
   "education": {
@@ -263,6 +275,15 @@
       "hint": "تصل تحديثات الاتصال عادة عبر الويب هوكس. استخدم التحديث إذا غيّرت الرقم أو WABA في Meta وبدا الحالة غير صحيحة.",
       "stillConnected": "لا يزال متصلاً على Meta",
       "updated": "تم تحديث الحالة من Meta"
+    },
+    "health": {
+      "title": "صحة الحساب",
+      "subtitle": "إشارات حية من Meta لـ WABA ورقم هاتفك.",
+      "dailyLimit": "حد المحادثات اليومية",
+      "unlimited": "غير محدود",
+      "qualityRating": "تقييم الجودة",
+      "bizVerification": "التحقق من الأعمال",
+      "accountReview": "مراجعة الحساب"
     }
   },
   "inbox": {
@@ -457,7 +478,31 @@
     "action": {
       "launch": "إطلاق",
       "pause": "إيقاف مؤقت",
-      "resume": "استئناف"
+      "resume": "استئناف",
+      "duplicate": "تكرار",
+      "viewInsights": "عرض التحليلات"
+    },
+    "duplicated": "تم تكرار الحملة",
+    "insights": {
+      "back": "كل الحملات",
+      "launched": "أُطلقت في {{date}}",
+      "notFound": "لم يتم العثور على الحملة.",
+      "stats": {
+        "total": "الإجمالي",
+        "sent": "مُرسَل",
+        "delivered": "مُسلَّم",
+        "read": "مقروء",
+        "failed": "فشل"
+      },
+      "chart": {
+        "title": "التسليم عبر الزمن",
+        "empty": "لا توجد بيانات تسليم بعد.",
+        "legend": {
+          "delivered": "مُسلَّم",
+          "read": "مقروء",
+          "failed": "فشل"
+        }
+      }
     },
     "create": {
       "title": "إنشاء حملة",
@@ -506,7 +551,20 @@
       "audienceCount": "الجمهور",
       "metaNote": "ميتا تحسب رسوم المحادثات على حساب واتساب للأعمال. هذا ليس خصماً من محفظة إدارة علاقات العملاء.",
       "saveDraft": "إنشاء مسودة",
-      "createLaunch": "إنشاء وإطلاق"
+      "createLaunch": "إنشاء وإطلاق",
+      "tabContacts": "من جهات الاتصال",
+      "tabCsv": "تحميل CSV",
+      "csv": {
+        "hint": "يجب أن يحتوي ملف CSV على عمود \"phone\" (بصيغة E.164، مثل +919876543210). يمكن إضافة عمود \"name\" اختياري وأعمدة \"attr:<key>\" لمتغيرات القالب.",
+        "dropzone": "اختر ملف CSV…",
+        "previewNote": "عرض أول 5 صفوف. يتم فحص صلاحية الهاتف وحالة إلغاء الاشتراك عند إنشاء الحملة.",
+        "rowCount_one": "تم تحليل {{count}} صف",
+        "rowCount_other": "تم تحليل {{count}} صفوف",
+        "errorParsing": "تعذّرت قراءة هذا الملف. تحقق من أنه ملف CSV صالح.",
+        "missingPhoneColumn": "يجب أن يحتوي ملف CSV على عمود \"phone\".",
+        "emptyFile": "لا يحتوي هذا ملف CSV على أي صفوف بيانات.",
+        "rowsRequired": "قم بتحميل ملف CSV يحتوي على صف واحد على الأقل أولاً."
+      }
     }
   },
   "errors": {
@@ -649,6 +707,72 @@
       "typeaheadPlaceholder": "اكتب / للبحث في الردود السريعة…",
       "typeaheadEmpty": "لا توجد ردود مطابقة",
       "typeaheadHeading": "الردود السريعة"
+    },
+    "autoReplies": {
+      "title": "الردود التلقائية",
+      "subtitle": "الرد تلقائياً عند تطابق رسالة العميل مع كلمة مفتاحية. تُرسل الردود فقط إذا لم يرد أي وكيل خلال فترة التأخير.",
+      "upgradeBanner": "الردود التلقائية متاحة في خطة أعلى.",
+      "upgrade": "ترقية",
+      "addCta": "إضافة قاعدة",
+      "addTitle": "إضافة قاعدة رد تلقائي",
+      "editTitle": "تعديل قاعدة الرد التلقائي",
+      "emptyTitle": "لا توجد قواعد ردود تلقائية بعد",
+      "emptyBody": "أضف قاعدة للرد تلقائياً عند تطابق رسالة مع كلمة مفتاحية.",
+      "fields": {
+        "name": "الاسم",
+        "keywords": "الكلمات المفتاحية",
+        "matchType": "نوع التطابق",
+        "replyType": "نوع الرد",
+        "replyText": "نص الرد",
+        "replyTemplateName": "القالب",
+        "replyTemplateLanguage": "لغة القالب",
+        "priority": "الأولوية",
+        "active": "نشط"
+      },
+      "placeholders": {
+        "name": "مثال: رد الترحيب",
+        "keywords": "مثال: hello, hi, hey",
+        "replyText": "مرحباً! أهلاً بك في Acme Corp...",
+        "priority": "0"
+      },
+      "keywordsHint": "افصل بين الكلمات المفتاحية المتعددة بفواصل.",
+      "matchTypes": {
+        "exact": "تطابق تام",
+        "contains": "يحتوي على",
+        "starts_with": "يبدأ بـ"
+      },
+      "replyTypes": {
+        "text": "نص",
+        "template": "قالب"
+      },
+      "templateLabel": "القالب: {{name}}",
+      "noTemplates": "لا توجد قوالب معتمدة بعد",
+      "errors": {
+        "nameRequired": "الاسم مطلوب",
+        "nameTooLong": "يجب أن لا يتجاوز الاسم 120 حرفاً",
+        "keywordsRequired": "أضف كلمة مفتاحية واحدة على الأقل",
+        "replyTextRequired": "نص الرد مطلوب",
+        "replyTemplateRequired": "اختر قالباً",
+        "replyTemplateLanguageRequired": "اختر لغة القالب",
+        "priorityInvalid": "يجب أن تكون الأولوية رقماً غير سالب"
+      },
+      "cols": {
+        "keywords": "الكلمات المفتاحية",
+        "matchType": "نوع التطابق",
+        "reply": "الرد",
+        "active": "نشط",
+        "priority": "الأولوية"
+      },
+      "actions": "الإجراءات",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "deleteTitle": "حذف قاعدة الرد التلقائي؟",
+      "deleteBody": "لن تُشغّل هذه القاعدة ردوداً تلقائية بعد الآن. لا يمكن التراجع عن هذا الإجراء.",
+      "created": "تمت إضافة قاعدة الرد التلقائي",
+      "updated": "تم تحديث قاعدة الرد التلقائي",
+      "deleted": "تم حذف قاعدة الرد التلقائي",
+      "loadError": "تعذّر تحميل قواعد الردود التلقائية. يرجى تحديث الصفحة والمحاولة مجدداً.",
+      "readOnlyNotice": "يمكن للمشرفين والملاك فقط إنشاء قواعد الردود التلقائية أو تعديلها."
     },
     "routing": {
       "title": "توجيه المحادثات",

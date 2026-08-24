@@ -72,6 +72,13 @@ export const endpoints = {
     disconnect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/disconnect`),
   },
 
+  // ── WhatsApp analytics ────────────────────────────────────────────────────
+  analytics: {
+    // Dashboard overview widget: today's counts, avg response, top agents.
+    overview: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/analytics/overview`),
+  },
+
   // ── Template Examples (admin-curated gallery, published only) ────────────
   templateExamples: {
     /** Global published recipes (JWT). Not workspace-scoped on the server. */
@@ -135,11 +142,20 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/media`),
     // SSE live inbox updates (pair with ?access_token= for EventSource).
     events: (slug: string) => v1(`/workspaces/${slug}/whatsapp/events`),
+    // Count of conversations with unread messages (for the nav badge).
+    unreadCount: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/conversations/unread-count`),
   },
 
   // ── Contacts ──────────────────────────────────────────────────────────────
   contacts: {
-    list: (slug: string) => v1(`/workspaces/${slug}/contacts`),
+    list: (slug: string, params?: { search?: string }) => {
+      const base = v1(`/workspaces/${slug}/contacts`);
+      const qs = new URLSearchParams();
+      if (params?.search) qs.set('search', params.search);
+      const str = qs.toString();
+      return str ? `${base}?${str}` : base;
+    },
     create: (slug: string) => v1(`/workspaces/${slug}/contacts`),
     byId: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/contacts/${id}`),
@@ -174,6 +190,12 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/pause`),
     resume: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/resume`),
+    duplicate: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/duplicate`),
+    analytics: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/analytics`),
+    audienceCsv: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/audience-csv`),
   },
 
   // ── Billing (CRM subscription) ────────────────────────────────────────────
@@ -185,6 +207,16 @@ export const endpoints = {
     checkout: (slug: string) => v1(`/workspaces/${slug}/billing/checkout`),
     // Available plans to upgrade to.
     plans: (slug: string) => v1(`/workspaces/${slug}/billing/plans`),
+  },
+
+  // ── Auto-reply rules ──────────────────────────────────────────────────────
+  autoReplies: {
+    list: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/auto-reply-rules`),
+    create: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/auto-reply-rules`),
+    byId: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/whatsapp/auto-reply-rules/${id}`),
   },
 
   // ── FCM web push ──────────────────────────────────────────────────────────
