@@ -8,7 +8,7 @@ import type { TemplateCategory } from '@/api/templates.api';
 import {
   exampleBodyPreview,
   type TemplateExample,
-} from '@/lib/template-examples';
+} from '@/api/template-examples.api';
 import { useResolvedTemplateExamples } from '@/api/hooks/use-template-examples';
 
 const CATEGORY_TABS: { value: TemplateCategory | 'ALL'; labelKey: string }[] = [

@@ -38,7 +38,7 @@ import {
 import { useResolvedTemplateExamples } from '@/api/hooks/use-template-examples';
 import { toast } from '@/lib/toast';
 import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
-import { exampleBodyPreview, featuredExamples } from '@/lib/template-examples';
+import { exampleBodyPreview, featuredExamples } from '@/api/template-examples.api';
 import { cn } from '@/lib/utils';
 
 const STATUS_PILL: Record<TemplateStatus, { bg: string; text: string }> = {
