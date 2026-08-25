@@ -1,8 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { useMutation } from '@tanstack/react-query';
 import {
   Send,
   AlertCircle,
@@ -14,9 +21,11 @@ import {
   Music,
   X,
   Eye,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -39,12 +48,19 @@ import {
   useSendMedia,
   usePatchConversation,
 } from '@/api/hooks/use-messages';
+import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
+import { hasFeature } from '@/lib/plan';
 import { useTemplates } from '@/api/hooks/use-templates';
 import { useMembers } from '@/api/hooks/use-members';
 import { useAuthStore } from '@/stores/auth.store';
 import { toast } from '@/lib/toast';
 import { ROLE_RANK } from '@/types/api';
-import type { WaConversation, WaMessage } from '@/api/messages.api';
+import {
+  messagesApi,
+  type WaConversation,
+  type WaMessage,
+  type SendInteractiveMessageBody,
+} from '@/api/messages.api';
 import type { WorkspaceRole } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { QuickReplyTypeahead } from '@/components/inbox/quick-reply-typeahead';
@@ -200,11 +216,13 @@ function TextComposer({
   slug,
   conversationId,
   canAttach,
+  isContactOptedOut,
 }: {
   slug: string;
   conversationId: string;
   /** false when the caller is VIEWER or outside 24h window */
   canAttach: boolean;
+  isContactOptedOut?: boolean;
 }) {
   const { t } = useTranslation();
   const send = useSendMessage(slug, conversationId);
@@ -352,6 +370,12 @@ function TextComposer({
         }}
       />
 
+      {isContactOptedOut && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+          {t('inbox.composer.opted_out_agent_info')}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         {canAttach ? (
           <Tooltip>
@@ -530,14 +554,292 @@ function TemplateComposer({
   );
 }
 
+// ── Interactive composer ──────────────────────────────────────────────────────
+
+function InteractiveComposer({
+  slug,
+  conversationId,
+  isContactOptedOut,
+}: {
+  slug: string;
+  conversationId: string;
+  isContactOptedOut?: boolean;
+}) {
+  const { t } = useTranslation();
+  const ws = useCurrentWorkspace();
+  const hasInteractive = hasFeature(ws, 'interactive_messages');
+
+  const [interactiveType, setInteractiveType] = useState<'button' | 'list'>(
+    'button',
+  );
+  const [body, setBody] = useState('');
+  const [footer, setFooter] = useState('');
+  const [buttons, setButtons] = useState([{ id: 'btn_1', title: '' }]);
+  const [buttonLabel, setButtonLabel] = useState('');
+  const [rows, setRows] = useState([
+    { id: 'row_1', title: '', description: '' },
+  ]);
+
+  const send = useMutation({
+    mutationFn: (data: SendInteractiveMessageBody) =>
+      messagesApi.sendInteractive(slug, conversationId, data),
+    onSuccess: () => {
+      setBody('');
+      setFooter('');
+      setButtons([{ id: 'btn_1', title: '' }]);
+      setButtonLabel('');
+      setRows([{ id: 'row_1', title: '', description: '' }]);
+      toast.success(t('inbox.interactive.send'));
+    },
+    onError: (err) => toast.error(err),
+  });
+
+  if (!hasInteractive) {
+    return (
+      <div className="border-t px-4 py-6 text-center text-sm text-muted-foreground">
+        {t('inbox.interactive.plan_gate')}
+      </div>
+    );
+  }
+
+  function handleSend() {
+    if (!body.trim()) return;
+    if (interactiveType === 'button') {
+      const validButtons = buttons.filter((b) => b.title.trim());
+      if (validButtons.length === 0) return;
+      send.mutate({
+        type: 'button',
+        body: body.trim(),
+        ...(footer.trim() ? { footer: footer.trim() } : {}),
+        buttons: validButtons,
+      });
+    } else {
+      if (!buttonLabel.trim()) return;
+      const validRows = rows.filter((r) => r.title.trim());
+      if (validRows.length === 0) return;
+      send.mutate({
+        type: 'list',
+        body: body.trim(),
+        ...(footer.trim() ? { footer: footer.trim() } : {}),
+        buttonLabel: buttonLabel.trim(),
+        sections: [
+          {
+            rows: validRows.map((r) => ({
+              id: r.id,
+              title: r.title.trim(),
+              ...(r.description.trim()
+                ? { description: r.description.trim() }
+                : {}),
+            })),
+          },
+        ],
+      });
+    }
+  }
+
+  const isBusy = send.isPending;
+
+  return (
+    <div className="border-t p-3 flex flex-col gap-3">
+      {isContactOptedOut && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+          {t('inbox.interactive.opted_out_warning')}
+        </div>
+      )}
+
+      <div className="flex gap-4 text-sm">
+        <label className="flex cursor-pointer items-center gap-1.5">
+          <input
+            type="radio"
+            name="interactive-type"
+            checked={interactiveType === 'button'}
+            onChange={() => setInteractiveType('button')}
+            className="size-3.5"
+          />
+          {t('inbox.interactive.type_button')}
+        </label>
+        <label className="flex cursor-pointer items-center gap-1.5">
+          <input
+            type="radio"
+            name="interactive-type"
+            checked={interactiveType === 'list'}
+            onChange={() => setInteractiveType('list')}
+            className="size-3.5"
+          />
+          {t('inbox.interactive.type_list')}
+        </label>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          maxLength={1024}
+          placeholder={t('inbox.interactive.body_label')}
+          className="min-h-[60px] max-h-32 resize-none text-sm"
+          disabled={isBusy}
+        />
+        <span className="text-muted-foreground text-right text-xs">
+          {body.length}/1024
+        </span>
+      </div>
+
+      <Input
+        value={footer}
+        onChange={(e) => setFooter(e.target.value)}
+        maxLength={60}
+        placeholder={t('inbox.interactive.footer_label')}
+        className="h-8 text-sm"
+        disabled={isBusy}
+      />
+
+      {interactiveType === 'button' ? (
+        <div className="flex flex-col gap-2">
+          {buttons.map((btn, i) => (
+            <div key={btn.id} className="flex items-center gap-2">
+              <span className="text-muted-foreground w-14 shrink-0 text-xs">
+                {t('inbox.interactive.button_title', { n: i + 1 })}
+              </span>
+              <Input
+                value={btn.title}
+                onChange={(e) => {
+                  const next = [...buttons];
+                  next[i] = { ...btn, title: e.target.value };
+                  setButtons(next);
+                }}
+                maxLength={20}
+                className="h-8 flex-1 text-sm"
+                disabled={isBusy}
+              />
+              {buttons.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => setButtons(buttons.filter((_, j) => j !== i))}
+                  disabled={isBusy}
+                >
+                  <X className="size-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+          {buttons.length < 3 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 self-start text-xs"
+              onClick={() =>
+                setButtons([
+                  ...buttons,
+                  { id: `btn_${buttons.length + 1}`, title: '' },
+                ])
+              }
+              disabled={isBusy}
+            >
+              {t('inbox.interactive.add_button')}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Input
+            value={buttonLabel}
+            onChange={(e) => setButtonLabel(e.target.value)}
+            maxLength={20}
+            placeholder={t('inbox.interactive.button_label_hint')}
+            className="h-8 text-sm"
+            disabled={isBusy}
+          />
+          {rows.map((row, i) => (
+            <div key={row.id} className="flex items-start gap-2">
+              <div className="flex flex-1 flex-col gap-1">
+                <Input
+                  value={row.title}
+                  onChange={(e) => {
+                    const next = [...rows];
+                    next[i] = { ...row, title: e.target.value };
+                    setRows(next);
+                  }}
+                  maxLength={24}
+                  placeholder={t('inbox.interactive.row_title')}
+                  className="h-8 text-sm"
+                  disabled={isBusy}
+                />
+                <Input
+                  value={row.description}
+                  onChange={(e) => {
+                    const next = [...rows];
+                    next[i] = { ...row, description: e.target.value };
+                    setRows(next);
+                  }}
+                  maxLength={72}
+                  placeholder={t('inbox.interactive.row_description')}
+                  className="h-8 text-sm"
+                  disabled={isBusy}
+                />
+              </div>
+              {rows.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="mt-0.5 size-7 shrink-0"
+                  onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                  disabled={isBusy}
+                >
+                  <X className="size-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+          {rows.length < 10 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 self-start text-xs"
+              onClick={() =>
+                setRows([
+                  ...rows,
+                  { id: `row_${rows.length + 1}`, title: '', description: '' },
+                ])
+              }
+              disabled={isBusy}
+            >
+              {t('inbox.interactive.add_row')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          onClick={handleSend}
+          disabled={isBusy || !body.trim()}
+        >
+          {isBusy && <Spinner className="mr-1.5" />}
+          {t('inbox.interactive.send')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── Message bubble ────────────────────────────────────────────────────────────
 
 function MessageBubble({
   msg,
   templateBodyMap,
+  templateCarouselMap,
 }: {
   msg: WaMessage;
   templateBodyMap: Record<string, string>;
+  templateCarouselMap: Record<string, boolean>;
 }) {
   const { t } = useTranslation();
   const outbound = msg.direction === 'outbound';
@@ -547,6 +849,59 @@ function MessageBubble({
   const resolvedBody =
     msg.body ??
     (msg.templateName ? (templateBodyMap[msg.templateName] ?? null) : null);
+
+  const isInteractiveReply = msg.messageType === 'interactive_reply';
+  const isInteractiveButton = msg.messageType === 'interactive_button';
+  const isInteractiveList = msg.messageType === 'interactive_list';
+
+  const interactivePayload = msg.interactiveData?.payload as
+    | {
+        body?: { text?: string };
+        footer?: { text?: string };
+        action?: {
+          buttons?: Array<{ reply?: { title?: string } }>;
+          button?: string;
+        };
+      }
+    | undefined;
+
+  const buttonTitles = isInteractiveButton
+    ? (interactivePayload?.action?.buttons
+        ?.map((b) => b.reply?.title)
+        .filter((t): t is string => !!t) ?? [])
+    : [];
+
+  const listButtonLabel = isInteractiveList
+    ? (interactivePayload?.action?.button ?? '')
+    : '';
+
+  const interactiveFooter =
+    isInteractiveButton || isInteractiveList
+      ? (interactivePayload?.footer?.text ?? '')
+      : '';
+
+  if (isInteractiveReply) {
+    const replyTitle = msg.interactiveData?.replyTitle ?? '—';
+    return (
+      <div className="self-start max-w-[75%] rounded-[0_10px_10px_10px] border border-[#e4e4e7] bg-white px-3 py-2 text-sm shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <p className="mb-1 text-[11px] text-muted-foreground">
+          {t('inbox.bubble.interactive_reply_label')}
+        </p>
+        <div className="flex items-center gap-2 rounded-md border border-[#e4e4e7] bg-[#f4f4f5] px-3 py-1.5">
+          <CheckCircle2 className="size-3.5 shrink-0 text-[#16a34a]" />
+          <span className="font-medium">{replyTitle}</span>
+        </div>
+        <div className="mt-1 flex justify-end">
+          <span className="text-[11px] text-[#a1a1aa]">
+            {new Date(msg.timestamp).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -566,6 +921,9 @@ function MessageBubble({
             )}
           >
             {t('inbox.templateBubble.label', { name: msg.templateName })}
+            {templateCarouselMap[msg.templateName] && (
+              <span className="ml-1.5 opacity-70">(Carousel)</span>
+            )}
           </p>
         )}
 
@@ -583,6 +941,52 @@ function MessageBubble({
         {!resolvedBody && !isMedia && (
           <p className="whitespace-pre-wrap wrap-break-word">
             {msg.templateName ? t('inbox.templateBubble.bodyFallback') : '—'}
+          </p>
+        )}
+
+        {/* Interactive button pills */}
+        {isInteractiveButton && buttonTitles.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {buttonTitles.map((title) => (
+              <span
+                key={title}
+                className={cn(
+                  'rounded-full border px-3 py-0.5 text-xs font-medium',
+                  outbound
+                    ? 'border-white/30 text-white/80'
+                    : 'border-[#e4e4e7] text-[#52525b]',
+                )}
+              >
+                {title}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Interactive list button */}
+        {isInteractiveList && listButtonLabel && (
+          <div
+            className={cn(
+              'mt-2 flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium',
+              outbound
+                ? 'border-white/30 text-white/80'
+                : 'border-[#e4e4e7] text-[#52525b]',
+            )}
+          >
+            <List className="size-3.5 shrink-0" />
+            {listButtonLabel}
+          </div>
+        )}
+
+        {/* Footer for interactive messages */}
+        {(isInteractiveButton || isInteractiveList) && interactiveFooter && (
+          <p
+            className={cn(
+              'mt-1 text-[11px]',
+              outbound ? 'text-[#a1a1aa]' : 'text-muted-foreground',
+            )}
+          >
+            {interactiveFooter}
           </p>
         )}
 
@@ -952,11 +1356,14 @@ export function ConversationThread({
 
   // Snapshot unread count once on open — used to place the "new messages" divider.
   // Stored in a ref keyed by conversationId so switching conversations resets it.
-  const unreadSnapshotRef = useRef<{ convId: string; count: number } | null>(null);
-  if (
-    unreadSnapshotRef.current?.convId !== conversation.id
-  ) {
-    unreadSnapshotRef.current = { convId: conversation.id, count: conversation.unreadCount };
+  const unreadSnapshotRef = useRef<{ convId: string; count: number } | null>(
+    null,
+  );
+  if (unreadSnapshotRef.current?.convId !== conversation.id) {
+    unreadSnapshotRef.current = {
+      convId: conversation.id,
+      count: conversation.unreadCount,
+    };
   }
   const initialUnreadCount = unreadSnapshotRef.current.count;
 
@@ -993,6 +1400,18 @@ export function ConversationThread({
     }
     return map;
   }, [templatesData]);
+
+  const templateCarouselMap = useMemo<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    for (const tpl of templatesData?.templates ?? []) {
+      if (tpl.isCarousel) map[tpl.name] = true;
+    }
+    return map;
+  }, [templatesData]);
+
+  type ConvWithContact = WaConversation & { contact?: { isOptedIn?: boolean } };
+  const contactOptedOut =
+    (conversation as ConvWithContact).contact?.isOptedIn === false;
 
   // ── Interleave messages + assignment events by timestamp ────────────────
   type ThreadItem =
@@ -1107,13 +1526,19 @@ export function ConversationThread({
                 <div className="flex items-center gap-2 py-1 select-none">
                   <div className="flex-1 h-px bg-[#e4e4e7]" />
                   <span className="text-[11px] text-[#a1a1aa] shrink-0">
-                    {t('inbox.thread.newMessages', { count: initialUnreadCount })}
+                    {t('inbox.thread.newMessages', {
+                      count: initialUnreadCount,
+                    })}
                   </span>
                   <div className="flex-1 h-px bg-[#e4e4e7]" />
                 </div>
               )}
               {item.kind === 'message' ? (
-                <MessageBubble msg={item.msg} templateBodyMap={templateBodyMap} />
+                <MessageBubble
+                  msg={item.msg}
+                  templateBodyMap={templateBodyMap}
+                  templateCarouselMap={templateCarouselMap}
+                />
               ) : (
                 <SystemEventLine event={item.event} />
               )}
@@ -1142,6 +1567,12 @@ export function ConversationThread({
                   >
                     {t('inbox.composer.tabTemplate')}
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="interactive"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#18181b] data-[state=active]:text-[#18181b] data-[state=active]:bg-transparent data-[state=active]:shadow-none text-[#71717a] text-[12px] font-medium px-3 py-2 -mb-px"
+                  >
+                    {t('inbox.composer.tab_interactive')}
+                  </TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="text" className="mt-0">
@@ -1149,12 +1580,20 @@ export function ConversationThread({
                   slug={slug}
                   conversationId={conversation.id}
                   canAttach={true}
+                  isContactOptedOut={contactOptedOut}
                 />
               </TabsContent>
               <TabsContent value="template" className="mt-0">
                 <TemplateComposer
                   slug={slug}
                   conversationId={conversation.id}
+                />
+              </TabsContent>
+              <TabsContent value="interactive" className="mt-0">
+                <InteractiveComposer
+                  slug={slug}
+                  conversationId={conversation.id}
+                  isContactOptedOut={contactOptedOut}
                 />
               </TabsContent>
             </Tabs>

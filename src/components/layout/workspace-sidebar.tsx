@@ -35,7 +35,10 @@ export function WorkspaceSidebar({
   const items = navForService(workspace.serviceKey);
 
   return (
-    <Sidebar className="border-r border-[#e4e4e7] bg-white" style={{ '--sidebar-width': '240px' } as React.CSSProperties}>
+    <Sidebar
+      className="border-r border-[#e4e4e7] bg-white"
+      style={{ '--sidebar-width': '240px' } as React.CSSProperties}
+    >
       <SidebarHeader className="p-0">
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
@@ -44,7 +47,10 @@ export function WorkspaceSidebar({
         {/* Service nav group */}
         <div className="flex flex-col gap-0.5">
           <p className="px-2 pb-1 pt-2 text-[10px] font-medium uppercase tracking-[0.08em] text-[#a1a1aa]">
-            {t(`nav.serviceGroup.${workspace.serviceKey}`, workspace.serviceKey.toUpperCase())}
+            {t(
+              `nav.serviceGroup.${workspace.serviceKey}`,
+              workspace.serviceKey.toUpperCase(),
+            )}
           </p>
           {items.map((item) => (
             <NavItem key={item.segment} workspace={workspace} item={item} />
@@ -87,7 +93,9 @@ function NavItem({
   const isCampaigns = item.segment === 'campaigns';
 
   const { data: unread } = useUnreadCount(workspace.slug, { enabled: isInbox });
-  const hasUpdate = useNotificationStore((s) => s.hasUpdate[item.segment] ?? false);
+  const hasUpdate = useNotificationStore(
+    (s) => s.hasUpdate[item.segment] ?? false,
+  );
 
   const iconEl = (
     <span className="relative inline-flex shrink-0">
@@ -236,7 +244,8 @@ function PlanCard({ workspace }: { workspace: CurrentWorkspace }) {
       {maxContacts != null && (
         <>
           <p className="text-[11px] text-[#71717a]">
-            {contactCount ?? '—'} / {maxContacts.toLocaleString()} {t('sidebar.contacts')}
+            {contactCount ?? '—'} / {maxContacts.toLocaleString()}{' '}
+            {t('sidebar.contacts')}
           </p>
           {pct !== null && (
             <div className="mt-1.5 h-[3px] w-full overflow-hidden rounded-full bg-[#e4e4e7]">

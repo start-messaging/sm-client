@@ -29,6 +29,8 @@ export interface Campaign {
     read: number;
     failed: number;
   };
+  /** Feature 6 — contacts skipped because they are opted out. */
+  skippedOptedOut: number;
   createdAt: string;
   updatedAt: string;
 }

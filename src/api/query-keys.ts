@@ -119,4 +119,15 @@ export const queryKeys = {
     subscription: (slug: string) => ['billing', 'subscription', slug] as const,
     plans: (slug: string) => ['billing', 'plans', slug] as const,
   },
+
+  // ── Flows (no-code chatbot automations) ───────────────────────────────────
+  flows: {
+    all: (slug: string) => ['flows', slug] as const,
+    byId: (slug: string, id: string) => ['flows', slug, id] as const,
+  },
+
+  // ── API Keys (outbound trigger API) ───────────────────────────────────────
+  apiKeys: {
+    all: (slug: string) => ['apiKeys', slug] as const,
+  },
 } as const;

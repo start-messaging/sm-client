@@ -470,9 +470,16 @@ export function CreateCampaignPage() {
                       ) : (
                         approvedTemplates.map((tpl) => (
                           <SelectItem key={tpl.id} value={tpl.id}>
-                            {tpl.name}
-                            <span className="text-muted-foreground ml-2 text-xs">
-                              {tpl.language}
+                            <span className="flex items-center gap-1.5">
+                              {tpl.name}
+                              {tpl.isCarousel && (
+                                <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 px-1.5 py-0 text-[10px] font-medium">
+                                  Carousel
+                                </Badge>
+                              )}
+                              <span className="text-muted-foreground text-xs">
+                                {tpl.language}
+                              </span>
                             </span>
                           </SelectItem>
                         ))
@@ -483,6 +490,11 @@ export function CreateCampaignPage() {
               />
               {errors.templateId && (
                 <FieldError>{t(errors.templateId.message ?? '')}</FieldError>
+              )}
+              {selectedTemplate?.isCarousel && (
+                <p className="text-muted-foreground text-xs">
+                  {t('campaigns.carousel_template_note')}
+                </p>
               )}
               {approvedTemplates.length === 0 && (
                 <Button
@@ -622,6 +634,19 @@ export function CreateCampaignPage() {
                   count: audienceIds.length,
                 })}
               </p>
+
+              {selectedContacts.filter((c) => !c.optedIn).length > 0 && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+                  {t(
+                    selectedContacts.filter((c) => !c.optedIn).length === 1
+                      ? 'campaigns.opted_out_warning'
+                      : 'campaigns.opted_out_warning_plural',
+                    {
+                      count: selectedContacts.filter((c) => !c.optedIn).length,
+                    },
+                  )}
+                </div>
+              )}
 
               <div className="rounded-md border">
                 {visibleContacts.length === 0 ? (

@@ -228,7 +228,9 @@ function KanbanColumn({
     >
       {/* Column header */}
       <div className="flex items-center justify-between px-1 py-0.5">
-        <h3 className="text-[12px] font-semibold text-[#18181b] truncate">{title}</h3>
+        <h3 className="text-[12px] font-semibold text-[#18181b] truncate">
+          {title}
+        </h3>
         <span className="bg-white border border-[#e4e4e7] text-[#71717a] text-[10px] font-semibold px-[6px] py-px rounded-full tabular-nums shrink-0 ml-1.5">
           {contacts.length}
         </span>
@@ -243,7 +245,9 @@ function KanbanColumn({
               isDragOver && 'border-[#18181b]/30 bg-white/60',
             )}
           >
-            <p className="text-[11px] text-[#a1a1aa]">{t('leads.empty.body')}</p>
+            <p className="text-[11px] text-[#a1a1aa]">
+              {t('leads.empty.body')}
+            </p>
           </div>
         ) : (
           contacts.map((c) => (
@@ -269,7 +273,10 @@ function KanbanSkeleton() {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex w-[272px] shrink-0 flex-col gap-2 bg-[#f4f4f5] rounded-[10px] p-2.5">
+        <div
+          key={i}
+          className="flex w-[272px] shrink-0 flex-col gap-2 bg-[#f4f4f5] rounded-[10px] p-2.5"
+        >
           <Skeleton className="h-4 w-24 rounded-full" />
           <Skeleton className="h-28 w-full rounded-[10px]" />
           <Skeleton className="h-28 w-full rounded-[10px]" />
@@ -285,8 +292,12 @@ export function LeadsPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
 
-  const { data: contactsData, isLoading: contactsLoading } = useContacts(ws.slug);
-  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(ws.slug);
+  const { data: contactsData, isLoading: contactsLoading } = useContacts(
+    ws.slug,
+  );
+  const { data: stagesData, isLoading: stagesLoading } = usePipelineStages(
+    ws.slug,
+  );
   const { data: membersData } = useMembers(ws.slug, ws.id);
   const updateContact = useUpdateContact(ws.slug);
 
@@ -295,7 +306,10 @@ export function LeadsPage() {
 
   const contacts = contactsData?.contacts ?? [];
   const stages = useMemo(
-    () => [...(stagesData?.pipelineStages ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+    () =>
+      [...(stagesData?.pipelineStages ?? [])].sort(
+        (a, b) => a.sortOrder - b.sortOrder,
+      ),
     [stagesData],
   );
   const members = membersData?.members ?? [];
@@ -307,7 +321,9 @@ export function LeadsPage() {
 
   const columnMap = useMemo(() => {
     const map: Record<string, WaContact[]> = { __none__: [] };
-    stages.forEach((s) => { map[s.id] = []; });
+    stages.forEach((s) => {
+      map[s.id] = [];
+    });
     contacts.forEach((c) => {
       const key = c.pipelineStageId ?? '__none__';
       if (map[key]) {

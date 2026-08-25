@@ -60,7 +60,9 @@ export function UserMenu() {
             className="flex items-center justify-between"
           >
             <span>{lang.label}</span>
-            {activeLang === lang.code && <Check className="size-3.5 text-[#18181b]" />}
+            {activeLang === lang.code && (
+              <Check className="size-3.5 text-[#18181b]" />
+            )}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />

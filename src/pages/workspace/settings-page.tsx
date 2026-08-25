@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Lock, MoreHorizontal, Plus, Slash, RotateCcw } from 'lucide-react';
+import { Copy, Lock, MoreHorizontal, Plus, Slash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -26,6 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -57,6 +58,11 @@ import {
   useDeleteAutoReplyRule,
   useUpdateAutoReplyRule,
 } from '@/api/hooks/use-auto-reply-rules';
+import {
+  useApiKeys,
+  useCreateApiKey,
+  useRevokeApiKey,
+} from '@/api/hooks/use-api-keys';
 import {
   useCreateQuickReply,
   useDeleteQuickReply,
@@ -814,7 +820,11 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
           </p>
         </div>
         {canWrite && (
-          <Button size="sm" onClick={() => setAddOpen(true)} disabled={!enabled}>
+          <Button
+            size="sm"
+            onClick={() => setAddOpen(true)}
+            disabled={!enabled}
+          >
             <Plus className="mr-1.5 size-3.5" />
             {t('settings.autoReplies.addCta')}
           </Button>
@@ -837,10 +847,14 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
 
       {isLoading ? (
         <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
         </div>
       ) : isError ? (
-        <p className="text-[13px] text-[#71717a]">{t('settings.autoReplies.loadError')}</p>
+        <p className="text-[13px] text-[#71717a]">
+          {t('settings.autoReplies.loadError')}
+        </p>
       ) : !rules || rules.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-[#e4e4e7] py-12 text-center">
           <p className="text-[13px] font-medium text-[#18181b]">
@@ -873,80 +887,80 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
                 {canWrite && <TableHead className="w-12" />}
               </TableRow>
             </TableHeader>
-              <TableBody>
-                {rules.map((rule) => (
-                  <TableRow key={rule.id}>
+            <TableBody>
+              {rules.map((rule) => (
+                <TableRow key={rule.id}>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {rule.keywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-mono font-medium px-[6px] py-px rounded-full"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
+                      {t(`settings.autoReplies.matchTypes.${rule.matchType}`)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-xs truncate">
+                    {rule.replyType === 'text'
+                      ? rule.replyText
+                      : t('settings.autoReplies.templateLabel', {
+                          name: rule.replyTemplateName,
+                        })}
+                  </TableCell>
+                  <TableCell>{rule.priority}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={rule.isActive}
+                      onCheckedChange={(v) =>
+                        updateRule.mutate(
+                          { id: rule.id, body: { isActive: v } },
+                          { onError: (err) => toast.error(err) },
+                        )
+                      }
+                      disabled={!canWrite || !enabled || updateRule.isPending}
+                      aria-label={t('settings.autoReplies.fields.active')}
+                    />
+                  </TableCell>
+                  {canWrite && (
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {rule.keywords.map((kw) => (
-                          <span
-                            key={kw}
-                            className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-mono font-medium px-[6px] py-px rounded-full"
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t('settings.autoReplies.actions')}
+                            disabled={!enabled}
                           >
-                            {kw}
-                          </span>
-                        ))}
-                      </div>
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditing(rule)}>
+                            {t('settings.autoReplies.edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleting(rule)}
+                          >
+                            {t('settings.autoReplies.delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
-                    <TableCell>
-                      <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
-                        {t(`settings.autoReplies.matchTypes.${rule.matchType}`)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-xs truncate">
-                      {rule.replyType === 'text'
-                        ? rule.replyText
-                        : t('settings.autoReplies.templateLabel', {
-                            name: rule.replyTemplateName,
-                          })}
-                    </TableCell>
-                    <TableCell>{rule.priority}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={rule.isActive}
-                        onCheckedChange={(v) =>
-                          updateRule.mutate(
-                            { id: rule.id, body: { isActive: v } },
-                            { onError: (err) => toast.error(err) },
-                          )
-                        }
-                        disabled={!canWrite || !enabled || updateRule.isPending}
-                        aria-label={t('settings.autoReplies.fields.active')}
-                      />
-                    </TableCell>
-                    {canWrite && (
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={t('settings.autoReplies.actions')}
-                              disabled={!enabled}
-                            >
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditing(rule)}>
-                              {t('settings.autoReplies.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => setDeleting(rule)}
-                            >
-                              {t('settings.autoReplies.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {!canWrite && rules && rules.length > 0 && (
         <p className="text-[11px] text-[#a1a1aa]">
@@ -1009,7 +1023,13 @@ function AutoRepliesSection({ slug, canWrite }: AutoRepliesSectionProps) {
 
 /* ------------------------------------------------------------------ quick replies panel */
 
-function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean }) {
+function QuickRepliesPanel({
+  slug,
+  canWrite,
+}: {
+  slug: string;
+  canWrite: boolean;
+}) {
   const { t } = useTranslation();
   const { data: replies, isLoading, isError } = useQuickReplies(slug);
   const deleteReply = useDeleteQuickReply(slug);
@@ -1039,10 +1059,14 @@ function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean
 
       {isLoading ? (
         <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
         </div>
       ) : isError ? (
-        <p className="text-[13px] text-[#71717a]">{t('settings.quickReplies.loadError')}</p>
+        <p className="text-[13px] text-[#71717a]">
+          {t('settings.quickReplies.loadError')}
+        </p>
       ) : !replies || replies.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-[10px] border border-dashed border-[#e4e4e7] py-16 text-center">
           <div className="flex size-10 items-center justify-center rounded-full bg-[#f4f4f5]">
@@ -1111,7 +1135,10 @@ function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean
                           <DropdownMenuItem onClick={() => setEditing(qr)}>
                             {t('settings.quickReplies.edit')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(qr)}>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleting(qr)}
+                          >
                             {t('settings.quickReplies.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -1141,12 +1168,19 @@ function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean
           slug={slug}
         />
       )}
-      <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(o) => !o && setDeleting(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('settings.quickReplies.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('settings.quickReplies.deleteTitle')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('settings.quickReplies.deleteBody', { shortcut: deleting?.shortcut })}
+              {t('settings.quickReplies.deleteBody', {
+                shortcut: deleting?.shortcut,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1155,7 +1189,8 @@ function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean
               onClick={() => {
                 if (!deleting) return;
                 deleteReply.mutate(deleting.id, {
-                  onSuccess: () => toast.success(t('settings.quickReplies.deleted')),
+                  onSuccess: () =>
+                    toast.success(t('settings.quickReplies.deleted')),
                   onError: (err) => toast.error(err),
                 });
                 setDeleting(null);
@@ -1170,14 +1205,327 @@ function QuickRepliesPanel({ slug, canWrite }: { slug: string; canWrite: boolean
   );
 }
 
+/* ------------------------------------------------------------------ api keys */
+
+type ApiKeyDialogState = 'closed' | 'form' | 'reveal';
+
+function ApiKeysSection({ slug }: { slug: string }) {
+  const { t } = useTranslation();
+  const ws = useCurrentWorkspace();
+  const enabled = hasFeature(ws, 'api_triggers');
+
+  const { data, isLoading, isError } = useApiKeys(slug);
+  const createKey = useCreateApiKey(slug);
+  const revokeKey = useRevokeApiKey(slug);
+
+  const [dialogState, setDialogState] = useState<ApiKeyDialogState>('closed');
+  const [keyName, setKeyName] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [rawKey, setRawKey] = useState('');
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const keys = data?.apiKeys ?? [];
+
+  function openGenerate() {
+    setKeyName('');
+    setNameError('');
+    setDialogState('form');
+  }
+
+  function closeDialog() {
+    setDialogState('closed');
+    setRawKey('');
+    setKeyName('');
+    setNameError('');
+  }
+
+  function handleGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = keyName.trim();
+    if (!trimmed) {
+      setNameError('required');
+      return;
+    }
+    if (trimmed.length > 80) {
+      setNameError('tooLong');
+      return;
+    }
+    createKey.mutate(
+      { name: trimmed },
+      {
+        onSuccess: (result) => {
+          setRawKey(result.rawKey);
+          setDialogState('reveal');
+        },
+        onError: (err) => toast.error(err),
+      },
+    );
+  }
+
+  function formatLastUsed(dateStr: string | null) {
+    if (!dateStr) return t('api_keys.never_used');
+    return new Date(dateStr).toLocaleDateString();
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-[13px] font-semibold text-[#18181b]">
+            {t('api_keys.page_title')}
+          </h2>
+        </div>
+        {enabled && (
+          <Button size="sm" onClick={openGenerate}>
+            <Plus className="mr-1.5 size-3.5" />
+            {t('api_keys.generate')}
+          </Button>
+        )}
+      </div>
+
+      {!enabled && (
+        <div className="flex items-center gap-2 rounded-[8px] border border-[#fcd34d] bg-[#fef9c3] px-3 py-2">
+          <Lock className="size-3.5 shrink-0 text-[#d97706]" />
+          <p className="flex-1 text-[12px] text-[#92400e]">
+            {t('api_keys.plan_gate')}
+          </p>
+          <InfoTip content={t('workspace.plan.upgradeSoon')}>
+            <Button size="sm" variant="outline" disabled>
+              {t('workspace.plan.upgrade')}
+            </Button>
+          </InfoTip>
+        </div>
+      )}
+
+      {enabled &&
+        (isLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <p className="text-[13px] text-[#71717a]">
+            {t('settings.quickReplies.loadError')}
+          </p>
+        ) : keys.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-[#e4e4e7] py-12 text-center">
+            <p className="text-[13px] font-medium text-[#18181b]">
+              {t('api_keys.empty_title')}
+            </p>
+            <p className="text-[12px] text-[#71717a]">
+              {t('api_keys.empty_desc')}
+            </p>
+            <Button size="sm" onClick={openGenerate}>
+              <Plus className="mr-1.5 size-3.5" />
+              {t('api_keys.generate')}
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-[10px] border border-[#e4e4e7] overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#fafafa]">
+                  <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                    {t('settings.autoReplies.fields.name')}
+                  </TableHead>
+                  <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                    {t('api_keys.prefix_label')}
+                  </TableHead>
+                  <TableHead className="text-[11px] font-medium text-[#a1a1aa]">
+                    {t('api_keys.last_used')}
+                  </TableHead>
+                  <TableHead className="w-28 text-[11px] font-medium text-[#a1a1aa]">
+                    {t('settings.quickReplies.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {keys.map((key) => {
+                  const isRevoked = key.revokedAt !== null;
+                  return (
+                    <TableRow
+                      key={key.id}
+                      className={isRevoked ? 'opacity-50' : undefined}
+                    >
+                      <TableCell
+                        className={cn(
+                          'text-[13px] font-medium text-[#18181b]',
+                          isRevoked && 'line-through',
+                        )}
+                      >
+                        {key.name}
+                      </TableCell>
+                      <TableCell>
+                        <span className="bg-[#f4f4f5] text-[#18181b] text-[11px] font-mono font-medium px-[6px] py-px rounded-full">
+                          {key.keyPrefix}
+                          {'••••••••'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-[12px] text-[#71717a]">
+                        {formatLastUsed(key.lastUsedAt)}
+                      </TableCell>
+                      <TableCell>
+                        {isRevoked ? (
+                          <span className="text-[12px] text-[#a1a1aa]">
+                            Revoked
+                          </span>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setRevokingId(key.id)}
+                            disabled={revokeKey.isPending}
+                          >
+                            {t('api_keys.revoke')}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ))}
+
+      <Dialog
+        open={dialogState !== 'closed'}
+        onOpenChange={(o) => !o && closeDialog()}
+      >
+        <DialogContent className="max-w-md">
+          {dialogState === 'form' ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t('api_keys.generate')}</DialogTitle>
+              </DialogHeader>
+              <form
+                id="ak-form"
+                onSubmit={handleGenerate}
+                className="flex flex-col gap-4"
+              >
+                <Field>
+                  <FieldLabel htmlFor="ak-name">
+                    {t('api_keys.name_label')}
+                  </FieldLabel>
+                  <Input
+                    id="ak-name"
+                    value={keyName}
+                    onChange={(e) => {
+                      setKeyName(e.target.value);
+                      if (nameError) setNameError('');
+                    }}
+                    maxLength={80}
+                    placeholder="e.g. My integration"
+                    disabled={createKey.isPending}
+                  />
+                  {nameError && (
+                    <FieldError>
+                      {nameError === 'tooLong'
+                        ? 'Name must be 80 characters or fewer'
+                        : 'Name is required'}
+                    </FieldError>
+                  )}
+                </Field>
+              </form>
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  onClick={closeDialog}
+                  disabled={createKey.isPending}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  form="ak-form"
+                  disabled={createKey.isPending}
+                >
+                  {createKey.isPending && <Spinner className="mr-2 size-4" />}
+                  Generate
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t('api_keys.generate')}</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-4">
+                <Alert className="border-amber-200 bg-amber-50">
+                  <AlertDescription className="text-[12px] text-amber-800">
+                    {t('api_keys.save_warning')}
+                  </AlertDescription>
+                </Alert>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 break-all rounded-[6px] border border-[#e4e4e7] bg-[#f4f4f5] px-3 py-2 text-[12px] font-mono text-[#18181b]">
+                    {rawKey}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(rawKey);
+                      toast.success('Copied to clipboard');
+                    }}
+                  >
+                    <Copy className="size-4" />
+                  </Button>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={closeDialog}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={revokingId !== null}
+        onOpenChange={(o) => !o && setRevokingId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to revoke this key?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The key will stop working
+              immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!revokingId) return;
+                revokeKey.mutate(revokingId, {
+                  onSuccess: () => toast.success('API key revoked'),
+                  onError: (err) => toast.error(err),
+                });
+                setRevokingId(null);
+              }}
+            >
+              {t('api_keys.revoke')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ page */
 
-type SettingsSection = 'general' | 'inbox' | 'autoreplies';
+type SettingsSection = 'general' | 'inbox' | 'autoreplies' | 'apikeys';
 
 const NAV_ITEMS: { id: SettingsSection; labelKey: string }[] = [
-  { id: 'general',     labelKey: 'settings.nav.general' },
-  { id: 'inbox',       labelKey: 'settings.nav.inbox' },
+  { id: 'general', labelKey: 'settings.nav.general' },
+  { id: 'inbox', labelKey: 'settings.nav.inbox' },
   { id: 'autoreplies', labelKey: 'settings.nav.autoreplies' },
+  { id: 'apikeys', labelKey: 'api_keys.page_title' },
 ];
 
 export function SettingsPage() {
@@ -1223,12 +1571,16 @@ export function SettingsPage() {
         )}
         {section === 'inbox' && !isAgent && (
           <p className="text-[13px] text-[#71717a]">
-            {t('settings.routing.agentOnly', 'Inbox settings are available to agents and above.')}
+            {t(
+              'settings.routing.agentOnly',
+              'Inbox settings are available to agents and above.',
+            )}
           </p>
         )}
         {section === 'autoreplies' && (
           <AutoRepliesSection slug={ws.slug} canWrite={canWrite} />
         )}
+        {section === 'apikeys' && <ApiKeysSection slug={ws.slug} />}
       </div>
     </div>
   );

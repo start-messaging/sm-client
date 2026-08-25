@@ -9,7 +9,6 @@ import {
   Trash2,
   Star,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -42,14 +41,11 @@ import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
 import { exampleBodyPreview, featuredExamples } from '@/lib/template-examples';
 import { cn } from '@/lib/utils';
 
-const STATUS_PILL: Record<
-  TemplateStatus,
-  { bg: string; text: string }
-> = {
+const STATUS_PILL: Record<TemplateStatus, { bg: string; text: string }> = {
   APPROVED: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
-  PENDING:  { bg: 'bg-[#fef3c7]', text: 'text-[#d97706]' },
+  PENDING: { bg: 'bg-[#fef3c7]', text: 'text-[#d97706]' },
   REJECTED: { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' },
-  PAUSED:   { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
+  PAUSED: { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
   DISABLED: { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
 };
 
@@ -67,7 +63,9 @@ const META_BUSINESS_SUPPORT_HOME =
   'https://business.facebook.com/latest/business_support_home';
 
 function wasRecategorized(tpl: WaTemplate): boolean {
-  return Boolean(tpl.submittedCategory && tpl.submittedCategory !== tpl.category);
+  return Boolean(
+    tpl.submittedCategory && tpl.submittedCategory !== tpl.category,
+  );
 }
 
 function hasPendingCategoryChange(tpl: WaTemplate): boolean {
@@ -103,7 +101,13 @@ function StatusPill({ status }: { status: TemplateStatus }) {
   const { t } = useTranslation();
   const { bg, text } = STATUS_PILL[status];
   return (
-    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', bg, text)}>
+    <span
+      className={cn(
+        'text-[10px] font-semibold px-[6px] py-px rounded-full',
+        bg,
+        text,
+      )}
+    >
       {t(`templates.status.${status}`)}
     </span>
   );
@@ -144,11 +148,16 @@ function TemplateCard({
           </span>
           <span className="text-[10px] text-[#a1a1aa]">{tpl.language}</span>
           {tpl.qualityScore && (
-            <span className={cn(
-              'flex items-center gap-0.5 text-[10px] font-medium ml-auto',
-              tpl.qualityScore === 'HIGH' ? 'text-[#16a34a]' :
-              tpl.qualityScore === 'MEDIUM' ? 'text-[#d97706]' : 'text-[#dc2626]',
-            )}>
+            <span
+              className={cn(
+                'flex items-center gap-0.5 text-[10px] font-medium ml-auto',
+                tpl.qualityScore === 'HIGH'
+                  ? 'text-[#16a34a]'
+                  : tpl.qualityScore === 'MEDIUM'
+                    ? 'text-[#d97706]'
+                    : 'text-[#dc2626]',
+              )}
+            >
               <Star className="size-2.5" />
               {tpl.qualityScore}
             </span>
@@ -254,7 +263,9 @@ export function TemplatesPage() {
   const recategorized = templates.filter(wasRecategorized);
   const pendingCategory = templates.filter(hasPendingCategoryChange);
   const hasPending = templates.some((tpl) => tpl.status === 'PENDING');
-  const approvedCount = templates.filter((tpl) => tpl.status === 'APPROVED').length;
+  const approvedCount = templates.filter(
+    (tpl) => tpl.status === 'APPROVED',
+  ).length;
 
   const visible = useMemo(() => {
     const filtered =
@@ -301,8 +312,15 @@ export function TemplatesPage() {
     <div className="flex flex-col gap-6">
       {/* Action bar */}
       <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={handleSync} disabled={manualSyncing}>
-          <RefreshCw className={cn('mr-1.5 size-3.5', manualSyncing && 'animate-spin')} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSync}
+          disabled={manualSyncing}
+        >
+          <RefreshCw
+            className={cn('mr-1.5 size-3.5', manualSyncing && 'animate-spin')}
+          />
           {t('templates.syncCta')}
         </Button>
         <Button size="sm" asChild>
@@ -317,9 +335,13 @@ export function TemplatesPage() {
       {recategorized.length > 0 && (
         <div className="flex flex-col gap-2 rounded-lg border border-[#fcd34d] bg-[#fef9c3] p-4 text-[#92400e]">
           <p className="text-sm font-medium">
-            {t('templates.recategorized.bannerTitle', { count: recategorized.length })}
+            {t('templates.recategorized.bannerTitle', {
+              count: recategorized.length,
+            })}
           </p>
-          <p className="text-sm opacity-90">{t('templates.recategorized.bannerBody')}</p>
+          <p className="text-sm opacity-90">
+            {t('templates.recategorized.bannerBody')}
+          </p>
           <a
             href={META_BUSINESS_SUPPORT_HOME}
             target="_blank"
@@ -333,9 +355,13 @@ export function TemplatesPage() {
       {pendingCategory.length > 0 && (
         <div className="flex flex-col gap-2 rounded-lg border border-[#fcd34d] bg-[#fef9c3] p-4 text-[#92400e]">
           <p className="text-sm font-medium">
-            {t('templates.recategorized.pendingTitle', { count: pendingCategory.length })}
+            {t('templates.recategorized.pendingTitle', {
+              count: pendingCategory.length,
+            })}
           </p>
-          <p className="text-sm opacity-90">{t('templates.recategorized.pendingBody')}</p>
+          <p className="text-sm opacity-90">
+            {t('templates.recategorized.pendingBody')}
+          </p>
         </div>
       )}
 
@@ -403,11 +429,21 @@ export function TemplatesPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={FILTER_ALL}>{t('templates.yours.filterAll')}</SelectItem>
-                <SelectItem value="APPROVED">{t('templates.status.APPROVED')}</SelectItem>
-                <SelectItem value="PENDING">{t('templates.status.PENDING')}</SelectItem>
-                <SelectItem value="REJECTED">{t('templates.status.REJECTED')}</SelectItem>
-                <SelectItem value="PAUSED">{t('templates.status.PAUSED')}</SelectItem>
+                <SelectItem value={FILTER_ALL}>
+                  {t('templates.yours.filterAll')}
+                </SelectItem>
+                <SelectItem value="APPROVED">
+                  {t('templates.status.APPROVED')}
+                </SelectItem>
+                <SelectItem value="PENDING">
+                  {t('templates.status.PENDING')}
+                </SelectItem>
+                <SelectItem value="REJECTED">
+                  {t('templates.status.REJECTED')}
+                </SelectItem>
+                <SelectItem value="PAUSED">
+                  {t('templates.status.PAUSED')}
+                </SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -429,8 +465,12 @@ export function TemplatesPage() {
             <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
               <LayoutTemplate className="text-[#a1a1aa] size-10" />
               <div>
-                <p className="font-medium text-[#18181b]">{t('templates.empty.title')}</p>
-                <p className="text-[13px] text-[#71717a] mt-0.5">{t('templates.empty.body')}</p>
+                <p className="font-medium text-[#18181b]">
+                  {t('templates.empty.title')}
+                </p>
+                <p className="text-[13px] text-[#71717a] mt-0.5">
+                  {t('templates.empty.body')}
+                </p>
               </div>
               <div className="flex gap-2 mt-1">
                 <Button variant="outline" size="sm" asChild>

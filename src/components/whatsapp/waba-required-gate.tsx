@@ -95,7 +95,9 @@ export function WabaRequiredGate({
             <div className="mb-3 flex size-11 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/60">
               <Link2 className="size-5 text-amber-700 dark:text-amber-300" />
             </div>
-            <CardTitle className="text-lg">{t(`education.${code}.title`)}</CardTitle>
+            <CardTitle className="text-lg">
+              {t(`education.${code}.title`)}
+            </CardTitle>
             <CardDescription className="text-foreground/80 text-sm leading-relaxed">
               {t(`education.${code}.body`)}
             </CardDescription>

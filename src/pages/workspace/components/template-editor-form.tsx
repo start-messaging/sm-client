@@ -3,7 +3,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -26,8 +25,27 @@ import type {
 } from '@/api/templates.api';
 import type { TemplateExample } from '@/lib/template-examples';
 import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
+import { TemplateEditorButtons } from './template-editor-buttons';
 
 const TEMPLATE_NAME_RE = /^[a-z0-9_]{1,512}$/;
+
+type TemplateSubtype = 'standard' | 'lto' | 'authentication' | 'carousel';
+
+const SUBTYPES: { value: TemplateSubtype; labelKey: string }[] = [
+  { value: 'standard', labelKey: 'templates.subtype_standard' },
+  { value: 'lto', labelKey: 'templates.subtype_lto' },
+  { value: 'authentication', labelKey: 'templates.subtype_authentication' },
+  { value: 'carousel', labelKey: 'templates.subtype_carousel' },
+];
+
+const CAROUSEL_BUTTON_TYPES: {
+  value: TemplateButton['type'];
+  label: string;
+}[] = [
+  { value: 'QUICK_REPLY', label: 'Quick reply' },
+  { value: 'URL', label: 'Visit website (URL)' },
+  { value: 'PHONE_NUMBER', label: 'Call phone number' },
+];
 
 const LANGUAGES = [
   { value: 'en_US', label: 'English (US)' },
@@ -54,64 +72,15 @@ const CATEGORIES: { value: TemplateCategory; label: string }[] = [
   { value: 'AUTHENTICATION', label: 'Authentication' },
 ];
 
-const BUTTON_TYPES: { value: TemplateButton['type']; label: string }[] = [
-  { value: 'QUICK_REPLY', label: 'Quick reply' },
-  { value: 'URL', label: 'Visit website (URL)' },
-  { value: 'PHONE_NUMBER', label: 'Call phone number' },
-];
-
-const MAX_BUTTONS = 3;
-
-type ButtonRow = {
-  type: TemplateButton['type'];
-  text: string;
-  url: string;
-  urlExample: string;
-  phoneNumber: string;
-};
-
-function emptyButton(): ButtonRow {
-  return {
-    type: 'QUICK_REPLY',
-    text: '',
-    url: '',
-    urlExample: '',
-    phoneNumber: '',
-  };
-}
-
-function urlHasVariable(url: string): boolean {
-  return /\{\{1\}\}/.test(url);
-}
-
-function urlExampleSuffix(url: string, sample: string): string {
-  const prefix = url.split('{{1}}')[0] ?? '';
-  if (prefix && sample.startsWith(prefix)) return sample.slice(prefix.length);
-  return sample;
-}
-
-function bodyVariableIndexes(text: string): number[] {
-  const matches = [...text.matchAll(/\{\{([0-9]+)\}\}/g)];
-  const indexes = matches.map((m) => Number(m[1]));
-  return Array.from(new Set(indexes)).sort((a, b) => a - b);
-}
-
-function substituteBodyVariables(
-  text: string,
-  samples: Record<number, string>,
-): string {
-  return text.replace(/\{\{([0-9]+)\}\}/g, (match, n) => {
-    const sample = samples[Number(n)]?.trim();
-    return sample || match;
-  });
-}
-
 const HEADER_FORMATS: NonNullable<TemplateComponent['format']>[] = [
   'TEXT',
   'IMAGE',
   'VIDEO',
   'DOCUMENT',
 ];
+
+const AUTH_BODY =
+  'Your verification code is {{1}}. Do not share it with anyone.';
 
 const schema = z
   .object({
@@ -140,8 +109,30 @@ export interface CreateTemplateSeed {
   headerText?: string;
   headerLink?: string;
   footerText?: string;
-  buttons?: ButtonRow[];
+  buttons?: TemplateButton[];
   banner?: 'copyApproved' | 'resubmitRejected';
+}
+
+function bodyVariableIndexes(text: string): number[] {
+  const matches = [...text.matchAll(/\{\{([0-9]+)\}\}/g)];
+  const indexes = matches.map((m) => Number(m[1]));
+  return Array.from(new Set(indexes)).sort((a, b) => a - b);
+}
+
+function substituteBodyVariables(
+  text: string,
+  samples: Record<number, string>,
+): string {
+  return text.replace(/\{\{([0-9]+)\}\}/g, (match, n) => {
+    const sample = samples[Number(n)]?.trim();
+    return sample || match;
+  });
+}
+
+function buttonsFromComponents(
+  components: TemplateComponent[],
+): TemplateButton[] {
+  return components.find((c) => c.type === 'BUTTONS')?.buttons ?? [];
 }
 
 function seedFromComponents(
@@ -192,17 +183,6 @@ export function seedFromTemplate(
   };
 }
 
-function buttonsFromComponents(components: TemplateComponent[]): ButtonRow[] {
-  const raw = components.find((c) => c.type === 'BUTTONS')?.buttons ?? [];
-  return raw.map((b) => ({
-    type: b.type,
-    text: b.text,
-    url: b.url ?? '',
-    urlExample: b.example?.[0] ?? '',
-    phoneNumber: b.phone_number ?? '',
-  }));
-}
-
 interface TemplateEditorFormProps {
   slug: string;
   seed?: CreateTemplateSeed | null;
@@ -217,7 +197,9 @@ export function TemplateEditorForm({
   onSuccess,
 }: TemplateEditorFormProps) {
   const { t } = useTranslation();
-  const [buttons, setButtons] = useState<ButtonRow[]>(seed?.buttons ?? []);
+
+  const [subtype, setSubtype] = useState<TemplateSubtype>('standard');
+  const [buttons, setButtons] = useState<TemplateButton[]>(seed?.buttons ?? []);
   const [buttonErrors, setButtonErrors] = useState<string[]>([]);
   const [bodySamples, setBodySamples] = useState<Record<number, string>>(() => {
     const init: Record<number, string> = {};
@@ -227,6 +209,22 @@ export function TemplateEditorForm({
     return init;
   });
   const [bodySampleError, setBodySampleError] = useState('');
+
+  // LTO state
+  const [ltoHasExpiry, setLtoHasExpiry] = useState(false);
+
+  // Authentication state
+  const [authCopyCode, setAuthCopyCode] = useState(true);
+  const [authExpiryMinutes, setAuthExpiryMinutes] = useState('');
+
+  // Carousel state
+  const [carouselHeaderFormat, setCarouselHeaderFormat] = useState<
+    'IMAGE' | 'VIDEO'
+  >('IMAGE');
+  const [carouselCardCount, setCarouselCardCount] = useState(2);
+  const [carouselButtonType, setCarouselButtonType] =
+    useState<TemplateButton['type']>('QUICK_REPLY');
+
   const createTemplate = useCreateTemplate(slug);
 
   const {
@@ -258,42 +256,23 @@ export function TemplateEditorForm({
   const footerText = useWatch({ control, name: 'footerText' });
 
   const bodyVariables = useMemo(
-    () => bodyVariableIndexes(bodyText ?? ''),
-    [bodyText],
+    () =>
+      bodyVariableIndexes(
+        subtype === 'authentication' ? AUTH_BODY : (bodyText ?? ''),
+      ),
+    [bodyText, subtype],
   );
 
-  const previewBodyText = useMemo(
-    () => substituteBodyVariables(bodyText ?? '', bodySamples),
-    [bodyText, bodySamples],
-  );
+  const previewBodyText = useMemo(() => {
+    if (subtype === 'authentication') return AUTH_BODY;
+    return substituteBodyVariables(bodyText ?? '', bodySamples);
+  }, [bodyText, bodySamples, subtype]);
 
   const previewHeaderText = headerFormat === 'TEXT' ? headerText : undefined;
 
   function updateBodySample(index: number, value: string) {
     setBodySamples((prev) => ({ ...prev, [index]: value }));
     setBodySampleError('');
-  }
-
-  function addButton() {
-    if (buttons.length >= MAX_BUTTONS) return;
-    setButtons((prev) => [...prev, emptyButton()]);
-    setButtonErrors([]);
-  }
-
-  function removeButton(index: number) {
-    setButtons((prev) => prev.filter((_, i) => i !== index));
-    setButtonErrors([]);
-  }
-
-  function updateButton<K extends keyof ButtonRow>(
-    index: number,
-    key: K,
-    value: ButtonRow[K],
-  ) {
-    setButtons((prev) =>
-      prev.map((b, i) => (i === index ? { ...b, [key]: value } : b)),
-    );
-    setButtonErrors([]);
   }
 
   function validateButtons(): string[] {
@@ -314,13 +293,8 @@ export function TemplateEditorForm({
             'templates.create.buttons.errorUrlMax',
             'Meta allows at most 2 website buttons',
           );
-        if (!b.url.trim())
+        if (!b.url?.trim())
           return t('templates.create.buttons.errorUrl', 'URL is required');
-        if (urlHasVariable(b.url) && !b.urlExample.trim())
-          return t(
-            'templates.create.buttons.errorUrlExample',
-            'A sample value for {{1}} is required (the suffix only, e.g. ORDER123)',
-          );
       }
       if (b.type === 'PHONE_NUMBER') {
         seenPhone += 1;
@@ -329,7 +303,7 @@ export function TemplateEditorForm({
             'templates.create.buttons.errorPhoneMax',
             'Meta allows only one call button',
           );
-        if (!b.phoneNumber.trim())
+        if (!b.phone_number?.trim())
           return t(
             'templates.create.buttons.errorPhone',
             'Phone number is required',
@@ -340,25 +314,37 @@ export function TemplateEditorForm({
   }
 
   const onSubmit = (v: FormValues) => {
-    const errs = validateButtons();
-    if (errs.some(Boolean)) {
-      setButtonErrors(errs);
-      return;
+    const showButtons = subtype !== 'authentication' && subtype !== 'carousel';
+
+    if (showButtons) {
+      const errs = validateButtons();
+      if (errs.some(Boolean)) {
+        setButtonErrors(errs);
+        return;
+      }
     }
 
-    const missingSample = bodyVariables.some((n) => !bodySamples[n]?.trim());
-    if (missingSample) {
-      setBodySampleError(
-        t(
-          'templates.create.sampleRequired',
-          'A sample value is required for every {{n}} variable in the body',
-        ),
-      );
-      return;
+    if (subtype !== 'authentication') {
+      const missingSample = bodyVariables.some((n) => !bodySamples[n]?.trim());
+      if (missingSample) {
+        setBodySampleError(
+          t(
+            'templates.create.sampleRequired',
+            'A sample value is required for every {{n}} variable in the body',
+          ),
+        );
+        return;
+      }
     }
 
     const components: TemplateComponent[] = [];
-    if (v.headerFormat === 'TEXT') {
+
+    if (subtype === 'carousel') {
+      components.push({
+        type: 'HEADER',
+        format: carouselHeaderFormat,
+      });
+    } else if (v.headerFormat === 'TEXT') {
       if (v.headerText?.trim()) {
         components.push({
           type: 'HEADER',
@@ -374,48 +360,67 @@ export function TemplateEditorForm({
       });
     }
 
-    const bodyComponent: TemplateComponent = { type: 'BODY', text: v.bodyText };
-    if (bodyVariables.length > 0) {
-      bodyComponent.example = {
-        body_text: [bodyVariables.map((n) => bodySamples[n]?.trim() ?? '')],
+    if (subtype === 'authentication') {
+      components.push({ type: 'BODY', text: AUTH_BODY });
+    } else {
+      const bodyComponent: TemplateComponent = {
+        type: 'BODY',
+        text: v.bodyText,
       };
+      if (bodyVariables.length > 0) {
+        bodyComponent.example = {
+          body_text: [bodyVariables.map((n) => bodySamples[n]?.trim() ?? '')],
+        };
+      }
+      components.push(bodyComponent);
     }
-    components.push(bodyComponent);
 
-    if (v.footerText?.trim()) {
+    if (
+      subtype !== 'authentication' &&
+      subtype !== 'carousel' &&
+      v.footerText?.trim()
+    ) {
       components.push({ type: 'FOOTER', text: v.footerText.trim() });
     }
 
-    if (buttons.length > 0) {
-      const builtButtons: TemplateButton[] = buttons.map((b) => {
-        if (b.type === 'QUICK_REPLY') {
-          return { type: 'QUICK_REPLY', text: b.text.trim() };
-        }
-        if (b.type === 'URL') {
-          const url = b.url.trim();
-          const btn: TemplateButton = {
-            type: 'URL',
-            text: b.text.trim(),
-            url,
-          };
-          if (urlHasVariable(url) && b.urlExample.trim()) {
-            btn.example = [urlExampleSuffix(url, b.urlExample.trim())];
-          }
-          return btn;
-        }
-        return {
-          type: 'PHONE_NUMBER',
-          text: b.text.trim(),
-          phone_number: b.phoneNumber.replace(/\D/g, ''),
-        };
+    if (subtype === 'authentication' && authCopyCode) {
+      components.push({
+        type: 'BUTTONS',
+        buttons: [
+          {
+            type: 'QUICK_REPLY',
+            text: t('templates.auth_copy_code', 'Copy code'),
+          },
+        ],
       });
-      const callToAction = builtButtons.filter((b) => b.type !== 'QUICK_REPLY');
-      const quickReplies = builtButtons.filter((b) => b.type === 'QUICK_REPLY');
+    } else if (showButtons && buttons.length > 0) {
+      const callToAction = buttons.filter((b) => b.type !== 'QUICK_REPLY');
+      const quickReplies = buttons.filter((b) => b.type === 'QUICK_REPLY');
       components.push({
         type: 'BUTTONS',
         buttons: [...callToAction, ...quickReplies],
       });
     }
+
+    const extraFields =
+      subtype === 'carousel'
+        ? {
+            subtype: 'carousel' as const,
+            carouselCardCount,
+            carouselHeaderFormat,
+            carouselButtonType,
+          }
+        : subtype === 'lto'
+          ? { subtype: 'lto' as const, ltoHasExpiry }
+          : subtype === 'authentication'
+            ? {
+                subtype: 'authentication' as const,
+                authCopyCode,
+                authExpiryMinutes: authExpiryMinutes
+                  ? Number(authExpiryMinutes)
+                  : undefined,
+              }
+            : { subtype: 'standard' as const };
 
     createTemplate.mutate(
       {
@@ -423,7 +428,8 @@ export function TemplateEditorForm({
         language: v.language,
         category: v.category,
         components,
-      },
+        ...extraFields,
+      } as Parameters<typeof createTemplate.mutate>[0],
       {
         onSuccess: () => {
           toast.success(t('templates.create.success'));
@@ -434,7 +440,13 @@ export function TemplateEditorForm({
     );
   };
 
-  const buttonLabels = buttons.map((b) => b.text.trim()).filter(Boolean);
+  const previewButtonLabels = useMemo(() => {
+    if (subtype === 'authentication') {
+      return authCopyCode ? [t('templates.auth_copy_code', 'Copy code')] : [];
+    }
+    if (subtype === 'carousel') return [];
+    return buttons.map((b) => b.text.trim()).filter(Boolean);
+  }, [subtype, buttons, authCopyCode, t]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
@@ -514,246 +526,290 @@ export function TemplateEditorForm({
           </div>
         </div>
 
+        {/* Subtype selector */}
         <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-header-format">
-            {t('templates.create.headerOptional')}
+          <FieldLabel htmlFor="tpl-subtype">
+            {t('templates.subtype_label')}
           </FieldLabel>
           <Select
-            value={headerFormat}
-            onValueChange={(v) =>
-              setValue('headerFormat', v as FormValues['headerFormat'])
-            }
+            value={subtype}
+            onValueChange={(v) => setSubtype(v as TemplateSubtype)}
           >
-            <SelectTrigger id="tpl-header-format">
+            <SelectTrigger id="tpl-subtype">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {HEADER_FORMATS.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {t(`templates.create.headerFormat.${f}`)}
+              {SUBTYPES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {t(s.labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          {headerFormat === 'TEXT' ? (
-            <Input
-              id="tpl-header"
-              placeholder={t('templates.create.headerPlaceholder')}
-              maxLength={60}
-              {...register('headerText')}
-            />
-          ) : (
-            <>
-              <Input
-                id="tpl-header-link"
-                placeholder="https://cdn.example.com/banner.jpg"
-                aria-invalid={!!errors.headerLink}
-                {...register('headerLink')}
-              />
-              <p className="text-muted-foreground text-xs">
-                {t('templates.create.headerLinkHint')}
-              </p>
-              {errors.headerLink && (
-                <FieldError
-                  errors={[{ message: t(errors.headerLink.message!) }]}
-                />
-              )}
-            </>
-          )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-body">
-            {t('templates.create.body')}
-          </FieldLabel>
-          <Textarea
-            id="tpl-body"
-            rows={5}
-            placeholder={t('templates.create.bodyPlaceholder')}
-            aria-invalid={!!errors.bodyText}
-            {...register('bodyText')}
-          />
-          <p className="text-muted-foreground text-xs">
-            {t('templates.create.bodyHint')}
-          </p>
-          {errors.bodyText && (
-            <FieldError errors={[{ message: t(errors.bodyText.message!) }]} />
-          )}
-
-          {bodyVariables.length > 0 && (
-            <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
-              <p className="text-xs font-semibold">
-                {t('templates.create.sampleValuesTitle')}
-              </p>
-              {bodyVariables.map((n) => (
-                <div key={n} className="flex flex-col gap-1">
-                  <FieldLabel htmlFor={`tpl-sample-${n}`} className="text-xs">
-                    {t('templates.create.sampleFor', 'Sample for {{n}}', {
-                      n: `{{${n}}}`,
-                    })}
-                  </FieldLabel>
-                  <Input
-                    id={`tpl-sample-${n}`}
-                    className="h-8 text-xs"
-                    value={bodySamples[n] ?? ''}
-                    onChange={(e) => updateBodySample(n, e.target.value)}
-                  />
-                </div>
-              ))}
-              <p className="text-muted-foreground text-xs">
-                {t('templates.create.sampleHint')}
-              </p>
-              {bodySampleError && (
-                <FieldError errors={[{ message: bodySampleError }]} />
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <FieldLabel htmlFor="tpl-footer">
-            {t('templates.create.footerOptional')}
-          </FieldLabel>
-          <Input
-            id="tpl-footer"
-            placeholder={t('templates.create.footerPlaceholder')}
-            maxLength={60}
-            {...register('footerText')}
-          />
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <FieldLabel>
-              {t('templates.create.buttons.label', 'Buttons')}{' '}
-              <span className="text-muted-foreground font-normal">
-                ({t('templates.create.buttons.optional', 'optional, max 3')})
-              </span>
+        {/* Header — hidden for carousel (header format is set via carousel controls) */}
+        {subtype !== 'carousel' && (
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="tpl-header-format">
+              {t('templates.create.headerOptional')}
             </FieldLabel>
-            {buttons.length < MAX_BUTTONS && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addButton}
-                className="h-7 text-xs"
-              >
-                <Plus className="mr-1 size-3" />
-                {t('templates.create.buttons.add', 'Add button')}
-              </Button>
+            <Select
+              value={headerFormat}
+              onValueChange={(v) =>
+                setValue('headerFormat', v as FormValues['headerFormat'])
+              }
+            >
+              <SelectTrigger id="tpl-header-format">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {HEADER_FORMATS.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {t(`templates.create.headerFormat.${f}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {headerFormat === 'TEXT' ? (
+              <Input
+                id="tpl-header"
+                placeholder={t('templates.create.headerPlaceholder')}
+                maxLength={60}
+                {...register('headerText')}
+              />
+            ) : (
+              <>
+                <Input
+                  id="tpl-header-link"
+                  placeholder="https://cdn.example.com/banner.jpg"
+                  aria-invalid={!!errors.headerLink}
+                  {...register('headerLink')}
+                />
+                <p className="text-muted-foreground text-xs">
+                  {t('templates.create.headerLinkHint')}
+                </p>
+                {errors.headerLink && (
+                  <FieldError
+                    errors={[{ message: t(errors.headerLink.message!) }]}
+                  />
+                )}
+              </>
             )}
           </div>
+        )}
 
-          {buttons.length === 0 && (
-            <p className="text-muted-foreground text-xs">
-              {t(
-                'templates.create.buttons.hint',
-                'Add up to 3 buttons — quick replies, website links, or a call number.',
-              )}
-            </p>
-          )}
-
-          {buttons.map((btn, idx) => (
-            <div
-              key={idx}
-              className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">
-                  {t('templates.create.buttons.buttonN', 'Button {{n}}', {
-                    n: idx + 1,
-                  })}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-6"
-                  onClick={() => removeButton(idx)}
-                  aria-label={t(
-                    'templates.create.buttons.remove',
-                    'Remove button',
-                  )}
-                >
-                  <Trash2 className="size-3.5 text-destructive" />
-                </Button>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <FieldLabel htmlFor={`btn-type-${idx}`} className="text-xs">
-                  {t('templates.create.buttons.type', 'Type')}
-                </FieldLabel>
-                <Select
-                  value={btn.type}
-                  onValueChange={(v) =>
-                    updateButton(idx, 'type', v as TemplateButton['type'])
-                  }
-                >
-                  <SelectTrigger id={`btn-type-${idx}`} className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BUTTON_TYPES.map((bt) => (
-                      <SelectItem key={bt.value} value={bt.value}>
-                        {bt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <FieldLabel htmlFor={`btn-text-${idx}`} className="text-xs">
-                  {t('templates.create.buttons.buttonText', 'Button label')}
-                </FieldLabel>
-                <Input
-                  id={`btn-text-${idx}`}
-                  className="h-8 text-xs"
-                  maxLength={25}
-                  value={btn.text}
-                  onChange={(e) => updateButton(idx, 'text', e.target.value)}
-                />
-              </div>
-
-              {btn.type === 'URL' && (
-                <>
-                  <Input
-                    className="h-8 text-xs"
-                    placeholder="https://example.com/track/{{1}}"
-                    value={btn.url}
-                    onChange={(e) => updateButton(idx, 'url', e.target.value)}
-                  />
-                  {urlHasVariable(btn.url) && (
-                    <Input
-                      className="h-8 text-xs"
-                      placeholder="ORDER123"
-                      value={btn.urlExample}
-                      onChange={(e) =>
-                        updateButton(idx, 'urlExample', e.target.value)
-                      }
-                    />
-                  )}
-                </>
-              )}
-
-              {btn.type === 'PHONE_NUMBER' && (
-                <Input
-                  className="h-8 text-xs"
-                  placeholder="+919876543210"
-                  value={btn.phoneNumber}
-                  onChange={(e) =>
-                    updateButton(idx, 'phoneNumber', e.target.value)
-                  }
-                />
-              )}
-
-              {buttonErrors[idx] && (
-                <FieldError errors={[{ message: buttonErrors[idx] }]} />
-              )}
+        {/* Body — read-only for authentication */}
+        {subtype === 'authentication' ? (
+          <div className="flex flex-col gap-2">
+            <FieldLabel>{t('templates.create.body')}</FieldLabel>
+            <div className="bg-muted/30 rounded-md border px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">
+              {AUTH_BODY}
             </div>
-          ))}
-        </div>
+            <p className="text-muted-foreground text-xs">
+              {t('templates.auth_body_preview', AUTH_BODY)}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="tpl-body">
+              {t('templates.create.body')}
+            </FieldLabel>
+            <Textarea
+              id="tpl-body"
+              rows={5}
+              placeholder={t('templates.create.bodyPlaceholder')}
+              aria-invalid={!!errors.bodyText}
+              {...register('bodyText')}
+            />
+            <p className="text-muted-foreground text-xs">
+              {t('templates.create.bodyHint')}
+            </p>
+            {errors.bodyText && (
+              <FieldError errors={[{ message: t(errors.bodyText.message!) }]} />
+            )}
+
+            {bodyVariables.length > 0 && (
+              <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
+                <p className="text-xs font-semibold">
+                  {t('templates.create.sampleValuesTitle')}
+                </p>
+                {bodyVariables.map((n) => (
+                  <div key={n} className="flex flex-col gap-1">
+                    <FieldLabel htmlFor={`tpl-sample-${n}`} className="text-xs">
+                      {t('templates.create.sampleFor', 'Sample for {{n}}', {
+                        n: `{{${n}}}`,
+                      })}
+                    </FieldLabel>
+                    <Input
+                      id={`tpl-sample-${n}`}
+                      className="h-8 text-xs"
+                      value={bodySamples[n] ?? ''}
+                      onChange={(e) => updateBodySample(n, e.target.value)}
+                    />
+                  </div>
+                ))}
+                <p className="text-muted-foreground text-xs">
+                  {t('templates.create.sampleHint')}
+                </p>
+                {bodySampleError && (
+                  <FieldError errors={[{ message: bodySampleError }]} />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer — hidden for auth and carousel */}
+        {subtype !== 'authentication' && subtype !== 'carousel' && (
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="tpl-footer">
+              {t('templates.create.footerOptional')}
+            </FieldLabel>
+            <Input
+              id="tpl-footer"
+              placeholder={t('templates.create.footerPlaceholder')}
+              maxLength={60}
+              {...register('footerText')}
+            />
+          </div>
+        )}
+
+        {/* LTO fields */}
+        {subtype === 'lto' && (
+          <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="rounded"
+                checked={ltoHasExpiry}
+                onChange={(e) => setLtoHasExpiry(e.target.checked)}
+              />
+              {t('templates.lto_expiry_toggle')}
+            </label>
+            <p className="text-muted-foreground text-xs">
+              {t('templates.lto_expiry_hint')}
+            </p>
+          </div>
+        )}
+
+        {/* Authentication fields */}
+        {subtype === 'authentication' && (
+          <div className="bg-muted/30 flex flex-col gap-3 rounded-md border p-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="rounded"
+                checked={authCopyCode}
+                onChange={(e) => setAuthCopyCode(e.target.checked)}
+              />
+              {t('templates.auth_copy_code')}
+            </label>
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="auth-expiry" className="text-xs">
+                {t('templates.auth_expiry_minutes')}
+              </FieldLabel>
+              <Input
+                id="auth-expiry"
+                type="number"
+                min={1}
+                max={90}
+                className="h-8 w-24 text-xs"
+                placeholder="e.g. 10"
+                value={authExpiryMinutes}
+                onChange={(e) => setAuthExpiryMinutes(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Carousel fields */}
+        {subtype === 'carousel' && (
+          <div className="bg-muted/30 flex flex-col gap-3 rounded-md border p-3">
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="carousel-header" className="text-xs">
+                {t('templates.carousel_header_format')}
+              </FieldLabel>
+              <Select
+                value={carouselHeaderFormat}
+                onValueChange={(v) =>
+                  setCarouselHeaderFormat(v as 'IMAGE' | 'VIDEO')
+                }
+              >
+                <SelectTrigger id="carousel-header" className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IMAGE">
+                    {t('templates.create.headerFormat.IMAGE')}
+                  </SelectItem>
+                  <SelectItem value="VIDEO">
+                    {t('templates.create.headerFormat.VIDEO')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="carousel-count" className="text-xs">
+                {t('templates.carousel_card_count')}
+              </FieldLabel>
+              <Input
+                id="carousel-count"
+                type="number"
+                min={2}
+                max={10}
+                className="h-8 w-24 text-xs"
+                value={carouselCardCount}
+                onChange={(e) =>
+                  setCarouselCardCount(
+                    Math.min(10, Math.max(2, Number(e.target.value))),
+                  )
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="carousel-btn-type" className="text-xs">
+                {t('templates.carousel_button_type')}
+              </FieldLabel>
+              <Select
+                value={carouselButtonType}
+                onValueChange={(v) =>
+                  setCarouselButtonType(v as TemplateButton['type'])
+                }
+              >
+                <SelectTrigger id="carousel-btn-type" className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAROUSEL_BUTTON_TYPES.map((bt) => (
+                    <SelectItem key={bt.value} value={bt.value}>
+                      {bt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <p className="text-muted-foreground text-xs">
+              {t('templates.carousel_note')}
+            </p>
+          </div>
+        )}
+
+        {/* Buttons section — standard and LTO only */}
+        {subtype !== 'authentication' && subtype !== 'carousel' && (
+          <TemplateEditorButtons
+            value={buttons}
+            onChange={(b) => {
+              setButtons(b);
+              setButtonErrors([]);
+            }}
+            errors={buttonErrors}
+          />
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button
@@ -775,9 +831,17 @@ export function TemplateEditorForm({
         <WaMessagePreview
           headerText={previewHeaderText}
           bodyText={previewBodyText}
-          footerText={footerText}
+          footerText={
+            subtype !== 'authentication' && subtype !== 'carousel'
+              ? footerText
+              : undefined
+          }
           templateName={name}
-          buttonLabels={buttonLabels}
+          buttonLabels={previewButtonLabels}
+          isCarousel={subtype === 'carousel'}
+          carouselCardCount={
+            subtype === 'carousel' ? carouselCardCount : undefined
+          }
         />
       </aside>
     </div>

@@ -156,6 +156,7 @@
     "dashboard": "لوحة التحكم",
     "inbox": "الوارد",
     "campaigns": "الحملات",
+    "automations": "الأتمتة",
     "templates": "القوالب",
     "contacts": "جهات الاتصال",
     "leads": "العملاء المحتملون",
@@ -362,7 +363,9 @@
       "send": "إرسال",
       "sendTemplate": "إرسال القالب",
       "pickTemplate": "اختر قالباً معتمداً…",
-      "noApprovedTemplates": "لا توجد قوالب معتمدة بعد. أنشئ قالباً واحصل على موافقة من قسم القوالب أولاً."
+      "noApprovedTemplates": "لا توجد قوالب معتمدة بعد. أنشئ قالباً واحصل على موافقة من قسم القوالب أولاً.",
+      "tab_interactive": "تفاعلي",
+      "opted_out_agent_info": "انسحبت جهة الاتصال من الرسائل التلقائية. إرسال الوكيل لا يزال مسموحاً."
     },
     "newConversation": {
       "trigger": "محادثة جديدة",
@@ -412,6 +415,24 @@
       "editAttributes": "تعديل الخصائص",
       "addAttribute": "إضافة خاصية",
       "dueFollowUp": "متابعة مستحقة"
+    },
+    "interactive": {
+      "type_button": "أزرار الرد",
+      "type_list": "رسالة قائمة",
+      "body_label": "نص الرسالة",
+      "footer_label": "تذييل (اختياري)",
+      "button_title": "زر {{n}}",
+      "add_button": "إضافة زر",
+      "button_label_hint": "يفتح القائمة",
+      "add_row": "إضافة صف",
+      "row_title": "عنوان الصف",
+      "row_description": "وصف (اختياري)",
+      "send": "إرسال تفاعلي",
+      "plan_gate": "الرسائل التفاعلية متاحة في الخطة الأساسية وما فوق",
+      "opted_out_warning": "انسحبت جهة الاتصال. سيرفض الخادم هذا الإرسال."
+    },
+    "bubble": {
+      "interactive_reply_label": "الخيار المحدد"
     }
   },
   "templates": {
@@ -490,7 +511,26 @@
       "REJECTED": "مرفوض",
       "PAUSED": "متوقف",
       "DISABLED": "معطّل"
-    }
+    },
+    "subtype_label": "نوع القالب",
+    "subtype_standard": "قياسي",
+    "subtype_lto": "عرض محدود المدة",
+    "subtype_authentication": "مصادقة / OTP",
+    "subtype_carousel": "عرض دوّار",
+    "buttons_section_title": "الأزرار",
+    "add_button": "إضافة زر",
+    "button_limit_hint": "الحد الأقصى 3 أزرار",
+    "button_mix_warning": "لا يمكن مزج أزرار الرد السريع مع أزرار URL أو الهاتف",
+    "lto_expiry_toggle": "إظهار مؤقت العد التنازلي",
+    "lto_expiry_hint": "تعرض ميتا العد التنازلي داخل واتساب.",
+    "auth_body_preview": "رمز التحقق الخاص بك هو {{1}}. لا تشاركه مع أحد.",
+    "auth_copy_code": "زر نسخ الرمز",
+    "auth_expiry_minutes": "انتهاء صلاحية الرمز (بالدقائق)",
+    "carousel_header_format": "نوع وسائط البطاقة",
+    "carousel_card_count": "عدد البطاقات",
+    "carousel_button_type": "نوع الزر لجميع البطاقات",
+    "carousel_note": "تُضاف الصور ونصوص كل بطاقة بعد موافقة ميتا على القالب.",
+    "carousel_preview_note": "قالب عرض دوّار — {{n}} بطاقات"
   },
   "campaigns": {
     "title": "الحملات",
@@ -616,7 +656,98 @@
         "emptyFile": "لا يحتوي هذا ملف CSV على أي صفوف بيانات.",
         "rowsRequired": "قم بتحميل ملف CSV يحتوي على صف واحد على الأقل أولاً."
       }
+    },
+    "opted_out_warning": "سيتم تخطي {{count}} جهة اتصال (منسحبة)",
+    "opted_out_warning_plural": "سيتم تخطي {{count}} جهات اتصال (منسحبة)",
+    "carousel_template_note": "تُرسل قوالب العرض الدوار بقيم نائبة في الحملات."
+  },
+  "flows": {
+    "page_title": "الأتمتة",
+    "new_flow": "تدفق جديد",
+    "status_draft": "مسودة",
+    "status_active": "نشط",
+    "status_inactive": "غير نشط",
+    "trigger_first_message": "الرسالة الأولى",
+    "trigger_any_inbound": "أي وارد",
+    "trigger_keyword": "كلمة مفتاحية",
+    "activate": "تفعيل",
+    "deactivate": "إيقاف",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "empty_title": "لا توجد تدفقات بعد",
+    "empty_desc": "أنشئ أول تدفق للدردشة الآلية لأتمتة المحادثات.",
+    "plan_gate": "تفعيل التدفق متاح في الخطة المتقدمة",
+    "node": {
+      "no_message": "(لا توجد رسالة)",
+      "no_question": "(لا يوجد سؤال)",
+      "no_condition": "(لا يوجد شرط)",
+      "no_options": "لا توجد خيارات بعد",
+      "no_field": "(لا يوجد حقل)",
+      "no_tag": "(لا يوجد وسم)",
+      "no_stage": "(لا توجد مرحلة)",
+      "no_agent": "(لا يوجد زميل)",
+      "end_preview": "ينتهي التدفق هنا",
+      "wait_preview": "ينتظر رد جهة الاتصال",
+      "wait_note": "يستمر عند الرد",
+      "trigger_no_keywords": "لا توجد كلمات مفتاحية بعد",
+      "option_count_one": "خيار واحد",
+      "option_count_other": "{{count}} خيارات"
+    },
+    "config": {
+      "message": "الرسالة",
+      "question": "السؤال",
+      "buttons": "أزرار الرد",
+      "list_button": "تسمية زر القائمة",
+      "list_button_placeholder": "مثل: اختر خياراً",
+      "rows": "صفوف القائمة",
+      "option_title": "تسمية الخيار",
+      "add_option": "إضافة خيار",
+      "remove_option": "إزالة خيار",
+      "variables": "إدراج قيمة",
+      "field": "الحقل",
+      "value": "القيمة",
+      "tag": "اسم الوسم",
+      "tag_placeholder": "مثل: مهتم",
+      "stage": "نقل جهة الاتصال إلى",
+      "stage_pick": "اختر مرحلة",
+      "stage_settings": "فتح الإعدادات",
+      "agent": "تسليم المحادثة إلى",
+      "agent_pick": "اختر زميلاً",
+      "trigger_type": "يبدأ عندما",
+      "keywords": "الكلمات المفتاحية",
+      "add_keyword": "إضافة كلمة",
+      "remove_keyword": "إزالة كلمة",
+      "operator": "الشرط",
+      "check": "القيمة للتحقق",
+      "delete_step": "حذف الخطوة"
+    },
+    "issue": {
+      "title": "قبل تفعيل هذا التدفق",
+      "count_one": "مشكلة واحدة",
+      "count_other": "{{count}} مشاكل",
+      "blocked": "عقدة {{label}} ليس لها اتصال صادر"
     }
+  },
+  "api_keys": {
+    "page_title": "مفاتيح API",
+    "generate": "إنشاء مفتاح",
+    "revoke": "إلغاء",
+    "name_label": "اسم المفتاح",
+    "prefix_label": "المفتاح",
+    "last_used": "آخر استخدام",
+    "never_used": "لم يُستخدم",
+    "save_warning": "احفظ هذا المفتاح الآن — لن يُعرض مرة أخرى.",
+    "empty_title": "لا توجد مفاتيح API",
+    "empty_desc": "أنشئ مفتاحاً لإرسال رسائل واتساب عبر Trigger API.",
+    "plan_gate": "مفاتيح API متاحة في الخطة الأساسية وما فوق"
+  },
+  "contacts": {
+    "tabs": {
+      "opted_out": "منسحب"
+    },
+    "opted_out_badge": "منسحب",
+    "opted_out_tip": "جهات الاتصال التي ردّت بـ STOP أو كلمة مماثلة. تُتخطى الرسائل التلقائية. يمكن للوكلاء الإرسال يدويًا من صندوق الوارد.",
+    "empty_opted_out": "لم تنسحب أي جهة اتصال بعد"
   },
   "errors": {
     "title": "حدث خطأ ما",
@@ -849,6 +980,22 @@
     "disconnectedBanner": {
       "body": "واتساب غير مربوط. اربط حساب WABA لاستخدام صندوق الوارد والقوالب والحملات.",
       "cta": "ربط واتساب"
+    },
+    "campaigns": {
+      "optedOutWarning": "{{count}} جهات اتصال انسحبت وسيتم تخطيها تلقائيًا."
+    },
+    "contacts": {
+      "optedOut": "منسحب"
+    },
+    "template": {
+      "subtype": {
+        "lto": "عرض محدود المدة",
+        "authentication": "مصادقة",
+        "carousel": "عرض دوّار"
+      }
+    },
+    "composer": {
+      "optedOutWarning": "انسحبت جهة الاتصال هذه. لن تتلقى الرسائل التلقائية، لكن يمكنك الإرسال يدويًا."
     }
   },
   "invite": {

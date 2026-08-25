@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, CheckCircle2, Timer, Users, TrendingUp } from 'lucide-react';
+import {
+  MessageSquare,
+  CheckCircle2,
+  Timer,
+  Users,
+  TrendingUp,
+} from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -86,7 +92,9 @@ function StatCard({
     <Card className="border-[#e4e4e7]">
       <CardContent className="p-[18px]">
         <div className="mb-3 flex items-start justify-between">
-          <span className="text-[12px] font-medium text-[#71717a]">{label}</span>
+          <span className="text-[12px] font-medium text-[#71717a]">
+            {label}
+          </span>
           <Icon size={15} className="text-[#a1a1aa]" />
         </div>
         <div
@@ -118,7 +126,9 @@ function FrrBadge({ rate }: { rate: number }) {
         ? 'bg-[#fef9c3] text-[#ca8a04]'
         : 'bg-[#fee2e2] text-[#dc2626]';
   return (
-    <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${className}`}>
+    <span
+      className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${className}`}
+    >
       {rate}%
     </span>
   );
@@ -147,7 +157,9 @@ export function WorkspaceDashboardPage() {
 
   const resolutionRate =
     analytics && analytics.conversationsToday > 0
-      ? Math.round((analytics.resolvedToday / analytics.conversationsToday) * 100)
+      ? Math.round(
+          (analytics.resolvedToday / analytics.conversationsToday) * 100,
+        )
       : null;
 
   const setupSteps: ChecklistStep[] = [
@@ -156,7 +168,9 @@ export function WorkspaceDashboardPage() {
       label: t('education.steps.connect.label'),
       description: t('education.steps.connect.description'),
       status: isConnected ? 'done' : 'pending',
-      cta: isConnected ? undefined : { label: t('connect.cta'), onClick: () => navigate('connect') },
+      cta: isConnected
+        ? undefined
+        : { label: t('connect.cta'), onClick: () => navigate('connect') },
     },
     {
       id: 'metaPay',
@@ -168,7 +182,10 @@ export function WorkspaceDashboardPage() {
           ? {
               label: t('education.META_PAYMENT_REQUIRED.cta'),
               onClick: () =>
-                window.open('https://business.facebook.com/billing_hub/accounts', '_blank'),
+                window.open(
+                  'https://business.facebook.com/billing_hub/accounts',
+                  '_blank',
+                ),
             }
           : undefined,
     },
@@ -176,17 +193,27 @@ export function WorkspaceDashboardPage() {
       id: 'firstTemplate',
       label: t('education.steps.firstTemplate.label'),
       description: t('education.steps.firstTemplate.description'),
-      status: !isConnected ? 'blocked' : hasApprovedTemplate ? 'done' : 'pending',
+      status: !isConnected
+        ? 'blocked'
+        : hasApprovedTemplate
+          ? 'done'
+          : 'pending',
       cta:
         isConnected && !hasApprovedTemplate
-          ? { label: t('templates.createCta'), onClick: () => navigate('templates') }
+          ? {
+              label: t('templates.createCta'),
+              onClick: () => navigate('templates'),
+            }
           : undefined,
     },
     {
       id: 'firstSend',
       label: t('education.steps.firstSend.label'),
       description: t('education.steps.firstSend.description'),
-      status: isConnected && metaPayReady && hasApprovedTemplate ? 'pending' : 'blocked',
+      status:
+        isConnected && metaPayReady && hasApprovedTemplate
+          ? 'pending'
+          : 'blocked',
       cta:
         isConnected && metaPayReady && hasApprovedTemplate
           ? { label: t('inbox.title'), onClick: () => navigate('inbox') }
@@ -204,7 +231,9 @@ export function WorkspaceDashboardPage() {
           <h1 className="text-[18px] font-semibold leading-tight text-[#18181b]">
             {t(`dashboard.greeting.${timeGreeting()}`, { name: firstName })}
           </h1>
-          <p className="text-[13px] text-[#71717a]">{t('dashboard.subtitle')}</p>
+          <p className="text-[13px] text-[#71717a]">
+            {t('dashboard.subtitle')}
+          </p>
         </div>
         <DateRangeControl value={range} onChange={setRange} />
       </div>
@@ -216,30 +245,50 @@ export function WorkspaceDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t('workspace.analytics.conversationsToday')}
-          value={isLoading || !analytics ? '—' : String(analytics.conversationsToday)}
+          value={
+            isLoading || !analytics ? '—' : String(analytics.conversationsToday)
+          }
           icon={MessageSquare}
         />
         <StatCard
           label={t('workspace.analytics.resolvedToday')}
-          value={isLoading || !analytics ? '—' : String(analytics.resolvedToday)}
-          caption={resolutionRate !== null ? t('workspace.analytics.resolutionRate', { rate: resolutionRate }) : undefined}
+          value={
+            isLoading || !analytics ? '—' : String(analytics.resolvedToday)
+          }
+          caption={
+            resolutionRate !== null
+              ? t('workspace.analytics.resolutionRate', {
+                  rate: resolutionRate,
+                })
+              : undefined
+          }
           icon={CheckCircle2}
         />
         <StatCard
           label={t('workspace.analytics.avgResponse')}
-          value={isLoading || !analytics ? '—' : formatMinutes(analytics.avgResponseMinutes)}
+          value={
+            isLoading || !analytics
+              ? '—'
+              : formatMinutes(analytics.avgResponseMinutes)
+          }
           icon={Timer}
         />
         <StatCard
           label={t('dashboard.openConversations')}
-          value={isLoading || !analytics ? '—' : String(analytics.conversationsToday - analytics.resolvedToday)}
+          value={
+            isLoading || !analytics
+              ? '—'
+              : String(analytics.conversationsToday - analytics.resolvedToday)
+          }
           caption={
-            analytics && analytics.conversationsToday - analytics.resolvedToday > 0
+            analytics &&
+            analytics.conversationsToday - analytics.resolvedToday > 0
               ? t('dashboard.openConversationsHint')
               : undefined
           }
           highlight={
-            !!analytics && analytics.conversationsToday - analytics.resolvedToday > 0
+            !!analytics &&
+            analytics.conversationsToday - analytics.resolvedToday > 0
           }
           icon={Users}
         />
@@ -273,7 +322,9 @@ export function WorkspaceDashboardPage() {
                   const colors = getAvatarColors(agent.userId);
                   const frr =
                     agent.handled > 0
-                      ? Math.round((agent.handled / analytics.conversationsToday) * 100)
+                      ? Math.round(
+                          (agent.handled / analytics.conversationsToday) * 100,
+                        )
                       : 0;
                   return (
                     <TableRow key={agent.userId}>

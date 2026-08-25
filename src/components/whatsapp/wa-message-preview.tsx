@@ -5,8 +5,9 @@ interface WaMessagePreviewProps {
   bodyText?: string;
   footerText?: string;
   templateName?: string;
-  /** Optional button labels rendered inside the bubble. */
   buttonLabels?: string[];
+  isCarousel?: boolean;
+  carouselCardCount?: number;
 }
 
 /**
@@ -37,6 +38,8 @@ export function WaMessagePreview({
   footerText,
   templateName,
   buttonLabels,
+  isCarousel,
+  carouselCardCount,
 }: WaMessagePreviewProps) {
   const { t } = useTranslation();
 
@@ -135,7 +138,19 @@ export function WaMessagePreview({
                   </p>
                 )}
 
-                {buttonLabels && buttonLabels.length > 0 && (
+                {isCarousel && (
+                  <p className="mt-2 text-[11px] italic text-zinc-500">
+                    {t(
+                      'templates.carousel_preview_note',
+                      'Carousel template — {{n}} cards',
+                      {
+                        n: carouselCardCount ?? '?',
+                      },
+                    )}
+                  </p>
+                )}
+
+                {!isCarousel && buttonLabels && buttonLabels.length > 0 && (
                   <div className="mt-2 flex flex-col gap-1">
                     {buttonLabels.map((label, i) => (
                       <div

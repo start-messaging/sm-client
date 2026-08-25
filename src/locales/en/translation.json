@@ -153,6 +153,7 @@
     "connect": "Connect",
     "inbox": "Inbox",
     "campaigns": "Campaigns",
+    "automations": "Automations",
     "templates": "Templates",
     "contacts": "Contacts",
     "leads": "Leads",
@@ -444,7 +445,9 @@
       "paramPlaceholder": "Value for {{n}}",
       "paramRequired": "Enter a value for {{n}} before sending.",
       "sentTemplate": "Template submitted to WhatsApp",
-      "deliveryFailed": "Message failed to deliver. Check the bubble for Meta’s reason."
+      "deliveryFailed": "Message failed to deliver. Check the bubble for Meta’s reason.",
+      "tab_interactive": "Interactive",
+      "opted_out_agent_info": "This contact has opted out of automated messages. Agent sends are still allowed."
     },
     "status": {
       "queued": "Sending…",
@@ -533,6 +536,24 @@
       "nationalNumberMin": "Enter at least 4 digits",
       "nationalNumberMax": "Number is too long",
       "nationalNumberDigits": "Digits only — no spaces or symbols"
+    },
+    "interactive": {
+      "type_button": "Reply buttons",
+      "type_list": "List message",
+      "body_label": "Message body",
+      "footer_label": "Footer (optional)",
+      "button_title": "Button {{n}}",
+      "add_button": "Add button",
+      "button_label_hint": "Opens the list",
+      "add_row": "Add row",
+      "row_title": "Row title",
+      "row_description": "Description (optional)",
+      "send": "Send interactive",
+      "plan_gate": "Interactive messages are available on Basic and above",
+      "opted_out_warning": "This contact has opted out. The server will reject this send."
+    },
+    "bubble": {
+      "interactive_reply_label": "Selected option"
     }
   },
   "templates": {
@@ -658,7 +679,26 @@
       "INCORRECT_CATEGORY": "Wrong category — try Utility vs Marketing.",
       "SCAM": "Flagged as potential scam content.",
       "INVALID_COMPONENT": "A component (header/body/footer/buttons) is invalid."
-    }
+    },
+    "subtype_label": "Template type",
+    "subtype_standard": "Standard",
+    "subtype_lto": "Limited Time Offer",
+    "subtype_authentication": "Authentication / OTP",
+    "subtype_carousel": "Carousel",
+    "buttons_section_title": "Buttons",
+    "add_button": "Add button",
+    "button_limit_hint": "Maximum 3 buttons",
+    "button_mix_warning": "Quick Reply buttons cannot be mixed with URL or Phone buttons",
+    "lto_expiry_toggle": "Show countdown timer",
+    "lto_expiry_hint": "Meta displays a countdown inside WhatsApp.",
+    "auth_body_preview": "Your verification code is {{1}}. Do not share it with anyone.",
+    "auth_copy_code": "Copy code button",
+    "auth_expiry_minutes": "Code expiry (minutes)",
+    "carousel_header_format": "Card media type",
+    "carousel_card_count": "Number of cards",
+    "carousel_button_type": "Button type for all cards",
+    "carousel_note": "Card images and body text are configured per-card after Meta approves the template.",
+    "carousel_preview_note": "Carousel template — {{n}} cards"
   },
   "contacts": {
     "title": "Contacts",
@@ -754,7 +794,13 @@
       "link": "Link"
     },
     "export": "Export CSV",
-    "manageLeads": "Manage leads"
+    "manageLeads": "Manage leads",
+    "tabs": {
+      "opted_out": "Opted out"
+    },
+    "opted_out_badge": "Opted out",
+    "opted_out_tip": "Contacts who replied STOP or a similar keyword. Automated messages are skipped. Agents can still send from the inbox.",
+    "empty_opted_out": "No contacts have opted out yet"
   },
   "leads": {
     "title": "Leads",
@@ -910,7 +956,90 @@
         "emptyFile": "This CSV has no data rows.",
         "rowsRequired": "Upload a CSV with at least one row first."
       }
+    },
+    "opted_out_warning": "{{count}} contact will be skipped (opted out)",
+    "opted_out_warning_plural": "{{count}} contacts will be skipped (opted out)",
+    "carousel_template_note": "Carousel templates send with placeholder values in campaigns."
+  },
+  "flows": {
+    "page_title": "Automations",
+    "new_flow": "New flow",
+    "status_draft": "Draft",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "trigger_first_message": "First message",
+    "trigger_any_inbound": "Any inbound",
+    "trigger_keyword": "Keyword",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty_title": "No flows yet",
+    "empty_desc": "Create your first chatbot flow to automate conversations.",
+    "plan_gate": "Flow activation is available on the Advanced plan",
+    "node": {
+      "no_message": "(No message set)",
+      "no_question": "(No question set)",
+      "no_condition": "(No condition set)",
+      "no_options": "No options yet",
+      "no_field": "(No field set)",
+      "no_tag": "(No tag set)",
+      "no_stage": "(No stage set)",
+      "no_agent": "(No teammate set)",
+      "end_preview": "The flow stops here",
+      "wait_preview": "Waits for the contact to reply",
+      "wait_note": "Continues when they answer",
+      "trigger_no_keywords": "No keywords set yet",
+      "option_count_one": "{{count}} option",
+      "option_count_other": "{{count}} options"
+    },
+    "config": {
+      "message": "Message",
+      "question": "Question",
+      "buttons": "Reply buttons",
+      "list_button": "Open list button label",
+      "list_button_placeholder": "e.g. Choose an option",
+      "rows": "List rows",
+      "option_title": "Option label",
+      "add_option": "Add option",
+      "remove_option": "Remove option",
+      "variables": "Insert a value",
+      "field": "Field",
+      "value": "Value",
+      "tag": "Tag name",
+      "tag_placeholder": "e.g. interested",
+      "stage": "Move the contact to",
+      "stage_pick": "Pick a stage",
+      "stage_settings": "Open settings",
+      "agent": "Hand the chat to",
+      "agent_pick": "Pick a teammate",
+      "trigger_type": "Starts when",
+      "keywords": "Keywords",
+      "add_keyword": "Add keyword",
+      "remove_keyword": "Remove keyword",
+      "operator": "Condition",
+      "check": "Value to check",
+      "delete_step": "Delete step"
+    },
+    "issue": {
+      "title": "Before this flow can go live",
+      "count_one": "{{count}} issue",
+      "count_other": "{{count}} issues",
+      "blocked": "{{label}} node has no outgoing connection"
     }
+  },
+  "api_keys": {
+    "page_title": "API Keys",
+    "generate": "Generate key",
+    "revoke": "Revoke",
+    "name_label": "Key name",
+    "prefix_label": "Key",
+    "last_used": "Last used",
+    "never_used": "Never used",
+    "save_warning": "Save this key now — it will not be shown again.",
+    "empty_title": "No API keys",
+    "empty_desc": "Generate a key to send WhatsApp messages via the Trigger API.",
+    "plan_gate": "API keys are available on the Basic plan and above"
   },
   "billing": {
     "title": "Billing",
@@ -1188,6 +1317,22 @@
     "disconnectedBanner": {
       "body": "WhatsApp is not connected. Connect a WABA to use inbox, templates, and campaigns.",
       "cta": "Connect WhatsApp"
+    },
+    "campaigns": {
+      "optedOutWarning": "{{count}} contacts are opted out and will be skipped automatically."
+    },
+    "contacts": {
+      "optedOut": "Opted out"
+    },
+    "template": {
+      "subtype": {
+        "lto": "Limited Time Offer",
+        "authentication": "Authentication",
+        "carousel": "Carousel"
+      }
+    },
+    "composer": {
+      "optedOutWarning": "This contact has opted out. They will not receive automated messages, but you can still send manually."
     }
   },
   "invite": {

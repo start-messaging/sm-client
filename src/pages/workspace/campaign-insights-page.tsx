@@ -38,7 +38,13 @@ function StatusPill({ status }: { status: CampaignStatus }) {
   const { t } = useTranslation();
   const { bg, text } = STATUS_PILL[status];
   return (
-    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', bg, text)}>
+    <span
+      className={cn(
+        'text-[10px] font-semibold px-[6px] py-px rounded-full',
+        bg,
+        text,
+      )}
+    >
       {t(`campaigns.status.${status}`)}
     </span>
   );

@@ -54,7 +54,13 @@ function StatusPill({ status }: { status: CampaignStatus }) {
   const { t } = useTranslation();
   const { bg, text } = STATUS_PILL[status];
   return (
-    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', bg, text)}>
+    <span
+      className={cn(
+        'text-[10px] font-semibold px-[6px] py-px rounded-full',
+        bg,
+        text,
+      )}
+    >
       {t(`campaigns.status.${status}`)}
     </span>
   );
@@ -96,7 +102,9 @@ export function CampaignsPage() {
   const createPath = `/w/${ws.slug}/campaigns/new`;
 
   const tabCounts = useMemo(() => {
-    const counts: Partial<Record<StatusTab, number>> = { ALL: campaigns.length };
+    const counts: Partial<Record<StatusTab, number>> = {
+      ALL: campaigns.length,
+    };
     for (const c of campaigns) {
       counts[c.status] = (counts[c.status] ?? 0) + 1;
     }
@@ -174,7 +182,11 @@ export function CampaignsPage() {
           </p>
           <div className="mt-1">
             <Button variant="outline" size="sm" asChild>
-              <a href={META_MANAGER_URL} target="_blank" rel="noopener noreferrer">
+              <a
+                href={META_MANAGER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ExternalLink className="mr-1.5 size-3.5" />
                 {t('education.META_PAYMENT_REQUIRED.cta')}
               </a>
@@ -197,8 +209,12 @@ export function CampaignsPage() {
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <Megaphone className="text-[#a1a1aa] size-10" />
             <div>
-              <p className="font-medium text-[#18181b]">{t('campaigns.empty.title')}</p>
-              <p className="text-[13px] text-[#71717a] mt-0.5">{t('campaigns.empty.body')}</p>
+              <p className="font-medium text-[#18181b]">
+                {t('campaigns.empty.title')}
+              </p>
+              <p className="text-[13px] text-[#71717a] mt-0.5">
+                {t('campaigns.empty.body')}
+              </p>
             </div>
             <Button size="sm" asChild>
               <Link to={createPath}>{t('campaigns.createCta')}</Link>
@@ -226,7 +242,9 @@ export function CampaignsPage() {
                     : 'border-transparent text-[#71717a] hover:text-[#18181b]',
                 )}
               >
-                {tab === 'ALL' ? t('campaigns.tabs.all', 'All') : t(`campaigns.status.${tab}`)}
+                {tab === 'ALL'
+                  ? t('campaigns.tabs.all', 'All')
+                  : t(`campaigns.status.${tab}`)}
                 {(tabCounts[tab] ?? 0) > 0 && (
                   <span
                     className={cn(
@@ -288,7 +306,9 @@ export function CampaignsPage() {
                     <TableRow
                       key={c.id}
                       className="cursor-pointer hover:bg-[#fafafa]"
-                      onClick={() => navigate(`/w/${ws.slug}/campaigns/${c.id}`)}
+                      onClick={() =>
+                        navigate(`/w/${ws.slug}/campaigns/${c.id}`)
+                      }
                     >
                       <TableCell className="text-[13px] font-medium text-[#18181b]">
                         {c.name}
@@ -303,13 +323,19 @@ export function CampaignsPage() {
                         <StatCell value={c.stats.sent} total={c.stats.total} />
                       </TableCell>
                       <TableCell>
-                        <StatCell value={c.stats.delivered} total={c.stats.total} />
+                        <StatCell
+                          value={c.stats.delivered}
+                          total={c.stats.total}
+                        />
                       </TableCell>
                       <TableCell>
                         <StatCell value={c.stats.read} total={c.stats.total} />
                       </TableCell>
                       <TableCell>
-                        <StatCell value={c.stats.failed} total={c.stats.total} />
+                        <StatCell
+                          value={c.stats.failed}
+                          total={c.stats.total}
+                        />
                       </TableCell>
                       <TableCell
                         className="text-right"
@@ -340,7 +366,8 @@ export function CampaignsPage() {
                             >
                               {t('campaigns.action.viewInsights')}
                             </DropdownMenuItem>
-                            {(c.status === 'DRAFT' || c.status === 'SCHEDULED') && (
+                            {(c.status === 'DRAFT' ||
+                              c.status === 'SCHEDULED') && (
                               <DropdownMenuItem
                                 disabled={launchBlocked}
                                 onSelect={() => handleLaunch(c.id)}
@@ -349,7 +376,9 @@ export function CampaignsPage() {
                               </DropdownMenuItem>
                             )}
                             {c.status === 'RUNNING' && (
-                              <DropdownMenuItem onSelect={() => handlePause(c.id)}>
+                              <DropdownMenuItem
+                                onSelect={() => handlePause(c.id)}
+                              >
                                 {t('campaigns.action.pause')}
                               </DropdownMenuItem>
                             )}
@@ -361,7 +390,9 @@ export function CampaignsPage() {
                                 {t('campaigns.action.resume')}
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onSelect={() => handleDuplicate(c.id)}>
+                            <DropdownMenuItem
+                              onSelect={() => handleDuplicate(c.id)}
+                            >
                               {t('campaigns.action.duplicate')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>

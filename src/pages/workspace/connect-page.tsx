@@ -226,7 +226,9 @@ function ConnectedCard({
           {status.displayName ?? t('connect.title')}
         </p>
         {status.phoneNumber && (
-          <p className="text-[13px] text-[#71717a] mt-0.5">{status.phoneNumber}</p>
+          <p className="text-[13px] text-[#71717a] mt-0.5">
+            {status.phoneNumber}
+          </p>
         )}
         {status.wabaId && (
           <p className="text-[12px] text-[#a1a1aa] mt-1">
@@ -245,7 +247,9 @@ function ConnectedCard({
           disabled={syncing}
           onClick={onSync}
         >
-          <RefreshCw className={cn('mr-1 size-3.5', syncing && 'animate-spin')} />
+          <RefreshCw
+            className={cn('mr-1 size-3.5', syncing && 'animate-spin')}
+          />
           {t('connect.sync.cta')}
         </Button>
         <Button
@@ -289,7 +293,9 @@ function NotConnectedCard({
         <p className="text-[14px] font-semibold text-[#18181b]">
           {t('connect.title')}
         </p>
-        <p className="text-[13px] text-[#71717a] mt-0.5">{t('connect.subtitle')}</p>
+        <p className="text-[13px] text-[#71717a] mt-0.5">
+          {t('connect.subtitle')}
+        </p>
 
         <div className="flex flex-wrap items-center gap-2 mt-4">
           {env.meta.appId ? (
@@ -304,7 +310,9 @@ function NotConnectedCard({
               {t('connect.cta')}
             </Button>
           ) : (
-            <p className="text-[12px] text-[#a1a1aa]">{t('connect.sdkNotReady')}</p>
+            <p className="text-[12px] text-[#a1a1aa]">
+              {t('connect.sdkNotReady')}
+            </p>
           )}
           <Button
             type="button"
@@ -314,11 +322,15 @@ function NotConnectedCard({
             disabled={syncing}
             onClick={onSync}
           >
-            <RefreshCw className={cn('mr-1 size-3.5', syncing && 'animate-spin')} />
+            <RefreshCw
+              className={cn('mr-1 size-3.5', syncing && 'animate-spin')}
+            />
             {t('connect.sync.cta')}
           </Button>
         </div>
-        <p className="text-[11px] text-[#a1a1aa] mt-2">{t('connect.sync.hint')}</p>
+        <p className="text-[11px] text-[#a1a1aa] mt-2">
+          {t('connect.sync.hint')}
+        </p>
       </div>
     </div>
   );
@@ -343,7 +355,12 @@ function PaymentMissingCard() {
           {t('connect.metaPayChecklist.body')}
         </p>
         <div className="mt-3">
-          <Button variant="ghost" size="sm" className="text-[12px] px-0 gap-1 text-[#18181b]" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[12px] px-0 gap-1 text-[#18181b]"
+            asChild
+          >
             <a
               href="https://business.facebook.com/billing_hub/accounts"
               target="_blank"
@@ -376,8 +393,15 @@ function AnotherWabaCard() {
         <p className="mt-0.5 text-[13px] leading-relaxed text-[#71717a]">
           {t('connect.anotherWaba.body')}
         </p>
-        <Button size="sm" variant="outline" className="mt-3 text-[12px]" asChild>
-          <Link to="/services/whatsapp/new">{t('connect.anotherWaba.cta')}</Link>
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3 text-[12px]"
+          asChild
+        >
+          <Link to="/services/whatsapp/new">
+            {t('connect.anotherWaba.cta')}
+          </Link>
         </Button>
       </div>
     </div>
@@ -400,7 +424,12 @@ function PinPendingCard({ onOpen }: { onOpen: () => void }) {
         <p className="text-[13px] text-[#71717a] mt-0.5">
           {t('connect.pin.pendingBody')}
         </p>
-        <Button size="sm" variant="outline" className="mt-3 text-[12px]" onClick={onOpen}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3 text-[12px]"
+          onClick={onOpen}
+        >
           {t('connect.pin.openCta')}
         </Button>
       </div>
@@ -468,7 +497,13 @@ function WabaHealthCard({ status }: { status: WabaConnectionStatus }) {
             <p className="text-[11px] font-medium text-[#a1a1aa] mb-1">
               {t('connect.health.qualityRating')}
             </p>
-            <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full', qPill.bg, qPill.text)}>
+            <span
+              className={cn(
+                'text-[10px] font-semibold px-[6px] py-px rounded-full',
+                qPill.bg,
+                qPill.text,
+              )}
+            >
               {status.qualityRating}
             </span>
           </div>
@@ -545,7 +580,9 @@ export function ConnectPage() {
       const session = sessionRef.current;
       const body: ConnectWhatsAppBody = {
         code,
-        ...(session ? { wabaId: session.wabaId, phoneNumberId: session.phoneNumberId } : {}),
+        ...(session
+          ? { wabaId: session.wabaId, phoneNumberId: session.phoneNumberId }
+          : {}),
       };
       await postConnect(body);
     } finally {
@@ -612,9 +649,7 @@ export function ConnectPage() {
         <PaymentMissingCard />
       )}
 
-      {isConnected && (
-        <WabaHealthCard status={wabaStatus} />
-      )}
+      {isConnected && <WabaHealthCard status={wabaStatus} />}
 
       <AnotherWabaCard />
 

@@ -152,6 +152,7 @@
     "dashboard": "डैशबोर्ड",
     "inbox": "इनबॉक्स",
     "campaigns": "कैंपेन",
+    "automations": "ऑटोमेशन",
     "templates": "टेम्पलेट",
     "contacts": "संपर्क",
     "leads": "लीड्स",
@@ -358,7 +359,9 @@
       "send": "भेजें",
       "sendTemplate": "टेम्पलेट भेजें",
       "pickTemplate": "अनुमोदित टेम्पलेट चुनें…",
-      "noApprovedTemplates": "अभी कोई अनुमोदित टेम्पलेट नहीं। पहले टेम्पलेट बनाएँ और अनुमोदन प्राप्त करें।"
+      "noApprovedTemplates": "अभी कोई अनुमोदित टेम्पलेट नहीं। पहले टेम्पलेट बनाएँ और अनुमोदन प्राप्त करें।",
+      "tab_interactive": "इंटरएक्टिव",
+      "opted_out_agent_info": "इस संपर्क ने स्वचालित मैसेज से ऑप्ट-आउट किया है। एजेंट सेंड की अनुमति है।"
     },
     "newConversation": {
       "trigger": "नई बातचीत",
@@ -408,6 +411,24 @@
       "editAttributes": "विशेषताएँ संपादित करें",
       "addAttribute": "विशेषता जोड़ें",
       "dueFollowUp": "देय फ़ॉलो-अप"
+    },
+    "interactive": {
+      "type_button": "रिप्लाई बटन",
+      "type_list": "लिस्ट मैसेज",
+      "body_label": "मैसेज बॉडी",
+      "footer_label": "फुटर (वैकल्पिक)",
+      "button_title": "बटन {{n}}",
+      "add_button": "बटन जोड़ें",
+      "button_label_hint": "लिस्ट खोलता है",
+      "add_row": "पंक्ति जोड़ें",
+      "row_title": "पंक्ति शीर्षक",
+      "row_description": "विवरण (वैकल्पिक)",
+      "send": "इंटरएक्टिव भेजें",
+      "plan_gate": "इंटरएक्टिव मैसेज बेसिक और उससे ऊपर के प्लान पर उपलब्ध हैं",
+      "opted_out_warning": "इस संपर्क ने ऑप्ट-आउट किया है। सर्वर इस सेंड को अस्वीकार करेगा।"
+    },
+    "bubble": {
+      "interactive_reply_label": "चुना गया विकल्प"
     }
   },
   "templates": {
@@ -486,7 +507,26 @@
       "REJECTED": "अस्वीकृत",
       "PAUSED": "रोका गया",
       "DISABLED": "अक्षम"
-    }
+    },
+    "subtype_label": "टेम्पलेट प्रकार",
+    "subtype_standard": "मानक",
+    "subtype_lto": "सीमित समय ऑफर",
+    "subtype_authentication": "प्रमाणीकरण / OTP",
+    "subtype_carousel": "कैरोसेल",
+    "buttons_section_title": "बटन",
+    "add_button": "बटन जोड़ें",
+    "button_limit_hint": "अधिकतम 3 बटन",
+    "button_mix_warning": "क्विक रिप्लाई बटन को URL या फ़ोन बटन के साथ नहीं मिलाया जा सकता",
+    "lto_expiry_toggle": "काउंटडाउन टाइमर दिखाएँ",
+    "lto_expiry_hint": "Meta WhatsApp में काउंटडाउन दिखाता है।",
+    "auth_body_preview": "आपका वेरिफिकेशन कोड {{1}} है। इसे किसी के साथ साझा न करें।",
+    "auth_copy_code": "कोड कॉपी करें बटन",
+    "auth_expiry_minutes": "कोड समाप्ति (मिनट)",
+    "carousel_header_format": "कार्ड मीडिया प्रकार",
+    "carousel_card_count": "कार्डों की संख्या",
+    "carousel_button_type": "सभी कार्डों के लिए बटन प्रकार",
+    "carousel_note": "Meta की मंज़ूरी के बाद प्रत्येक कार्ड में चित्र और बॉडी टेक्स्ट जोड़े जाते हैं।",
+    "carousel_preview_note": "कैरोसेल टेम्पलेट — {{n}} कार्ड"
   },
   "campaigns": {
     "title": "कैंपेन",
@@ -612,7 +652,98 @@
         "emptyFile": "इस CSV में कोई डेटा पंक्ति नहीं है।",
         "rowsRequired": "पहले कम से कम एक पंक्ति वाली CSV अपलोड करें।"
       }
+    },
+    "opted_out_warning": "{{count}} संपर्क छोड़ा जाएगा (ऑप्ट-आउट)",
+    "opted_out_warning_plural": "{{count}} संपर्क छोड़े जाएंगे (ऑप्ट-आउट)",
+    "carousel_template_note": "कैरोसेल टेम्पलेट कैंपेन में प्लेसहोल्डर मानों के साथ भेजे जाते हैं।"
+  },
+  "flows": {
+    "page_title": "ऑटोमेशन",
+    "new_flow": "नया फ़्लो",
+    "status_draft": "ड्राफ्ट",
+    "status_active": "सक्रिय",
+    "status_inactive": "निष्क्रिय",
+    "trigger_first_message": "पहला मैसेज",
+    "trigger_any_inbound": "कोई भी इनबाउंड",
+    "trigger_keyword": "कीवर्ड",
+    "activate": "सक्रिय करें",
+    "deactivate": "निष्क्रिय करें",
+    "edit": "संपादित करें",
+    "delete": "हटाएँ",
+    "empty_title": "अभी कोई फ़्लो नहीं",
+    "empty_desc": "बातचीत को स्वचालित करने के लिए अपना पहला चैटबॉट फ़्लो बनाएँ।",
+    "plan_gate": "फ़्लो सक्रिय करना एडवांस्ड प्लान पर उपलब्ध है",
+    "node": {
+      "no_message": "(कोई संदेश नहीं)",
+      "no_question": "(कोई प्रश्न नहीं)",
+      "no_condition": "(कोई शर्त नहीं)",
+      "no_options": "अभी कोई विकल्प नहीं",
+      "no_field": "(कोई फ़ील्ड नहीं)",
+      "no_tag": "(कोई टैग नहीं)",
+      "no_stage": "(कोई स्टेज नहीं)",
+      "no_agent": "(कोई टीममेट नहीं)",
+      "end_preview": "फ़्लो यहाँ रुकता है",
+      "wait_preview": "संपर्क के जवाब का इंतज़ार करता है",
+      "wait_note": "जवाब मिलने पर जारी रहता है",
+      "trigger_no_keywords": "अभी कोई कीवर्ड नहीं",
+      "option_count_one": "{{count}} विकल्प",
+      "option_count_other": "{{count}} विकल्प"
+    },
+    "config": {
+      "message": "संदेश",
+      "question": "प्रश्न",
+      "buttons": "रिप्लाई बटन",
+      "list_button": "लिस्ट बटन लेबल",
+      "list_button_placeholder": "जैसे: एक विकल्प चुनें",
+      "rows": "लिस्ट पंक्तियाँ",
+      "option_title": "विकल्प लेबल",
+      "add_option": "विकल्प जोड़ें",
+      "remove_option": "विकल्प हटाएँ",
+      "variables": "एक मान डालें",
+      "field": "फ़ील्ड",
+      "value": "मान",
+      "tag": "टैग नाम",
+      "tag_placeholder": "जैसे: रुचि",
+      "stage": "संपर्क को ले जाएँ",
+      "stage_pick": "स्टेज चुनें",
+      "stage_settings": "सेटिंग खोलें",
+      "agent": "चैट सौंपें",
+      "agent_pick": "टीममेट चुनें",
+      "trigger_type": "कब शुरू होता है",
+      "keywords": "कीवर्ड",
+      "add_keyword": "कीवर्ड जोड़ें",
+      "remove_keyword": "कीवर्ड हटाएँ",
+      "operator": "शर्त",
+      "check": "जाँचने का मान",
+      "delete_step": "चरण हटाएँ"
+    },
+    "issue": {
+      "title": "फ़्लो लाइव करने से पहले",
+      "count_one": "{{count}} समस्या",
+      "count_other": "{{count}} समस्याएँ",
+      "blocked": "{{label}} नोड में कोई कनेक्शन नहीं"
     }
+  },
+  "api_keys": {
+    "page_title": "API कुंजियाँ",
+    "generate": "कुंजी बनाएँ",
+    "revoke": "रद्द करें",
+    "name_label": "कुंजी का नाम",
+    "prefix_label": "कुंजी",
+    "last_used": "आखिरी उपयोग",
+    "never_used": "कभी उपयोग नहीं हुई",
+    "save_warning": "इस कुंजी को अभी सहेजें — यह दोबारा नहीं दिखाई जाएगी।",
+    "empty_title": "कोई API कुंजी नहीं",
+    "empty_desc": "Trigger API से WhatsApp मैसेज भेजने के लिए एक कुंजी बनाएँ।",
+    "plan_gate": "API कुंजियाँ बेसिक प्लान और उससे ऊपर उपलब्ध हैं"
+  },
+  "contacts": {
+    "tabs": {
+      "opted_out": "ऑप्ट-आउट किया"
+    },
+    "opted_out_badge": "ऑप्ट-आउट",
+    "opted_out_tip": "जिन संपर्कों ने STOP या ऐसा कीवर्ड रिप्लाई किया। उन्हें स्वचालित मैसेज नहीं भेजे जाते। एजेंट इनबॉक्स से मैन्युअल रूप से भेज सकते हैं।",
+    "empty_opted_out": "अभी किसी संपर्क ने ऑप्ट-आउट नहीं किया"
   },
   "errors": {
     "title": "कुछ गलत हो गया",
@@ -845,6 +976,22 @@
     "disconnectedBanner": {
       "body": "WhatsApp कनेक्ट नहीं है। इनबॉक्स, टेम्पलेट और कैंपेन के लिए WABA कनेक्ट करें।",
       "cta": "WhatsApp कनेक्ट करें"
+    },
+    "campaigns": {
+      "optedOutWarning": "{{count}} संपर्कों ने ऑप्ट-आउट किया है और उन्हें स्वचालित रूप से छोड़ दिया जाएगा।"
+    },
+    "contacts": {
+      "optedOut": "ऑप्ट-आउट किया"
+    },
+    "template": {
+      "subtype": {
+        "lto": "सीमित समय का ऑफर",
+        "authentication": "प्रमाणीकरण",
+        "carousel": "कैरोसेल"
+      }
+    },
+    "composer": {
+      "optedOutWarning": "इस संपर्क ने ऑप्ट-आउट किया है। उन्हें स्वचालित संदेश नहीं मिलेंगे, लेकिन आप मैन्युअल रूप से भेज सकते हैं।"
     }
   },
   "invite": {

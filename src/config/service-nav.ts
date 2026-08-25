@@ -10,6 +10,7 @@ import {
   Users,
   Contact,
   Link2,
+  Zap,
 } from 'lucide-react';
 
 export interface ServiceNavItem {
@@ -51,6 +52,11 @@ export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
       segment: 'campaigns',
       labelKey: 'nav.campaigns',
       icon: Megaphone,
+    },
+    {
+      segment: 'automations',
+      labelKey: 'nav.automations',
+      icon: Zap,
     },
   ],
 };

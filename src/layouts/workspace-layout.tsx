@@ -29,7 +29,9 @@ function WorkspaceHeader({ workspace }: { workspace: { serviceKey: string } }) {
     <header className="flex h-[52px] shrink-0 items-center justify-between gap-2 border-b border-[#e4e4e7] bg-white px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1 text-[#71717a]" />
-        <span className="text-[15px] font-semibold text-[#18181b]">{title}</span>
+        <span className="text-[15px] font-semibold text-[#18181b]">
+          {title}
+        </span>
       </div>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon" className="size-8 text-[#71717a]">

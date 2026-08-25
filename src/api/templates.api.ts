@@ -13,8 +13,7 @@ export type TemplateStatus =
 export type TemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
 
 /**
- * One button in a BUTTONS component.
- * Matches Meta Business Management API template button shapes:
+ * One button in a BUTTONS component (Meta API shape, used in TemplateComponent).
  *   QUICK_REPLY  → { type, text }
  *   URL          → { type, text, url, example?: [string] }
  *   PHONE_NUMBER → { type, text, phone_number }
@@ -31,6 +30,24 @@ export interface TemplateButton {
   example?: string[];
   /** PHONE_NUMBER buttons: E.164 phone number. */
   phone_number?: string;
+}
+
+/**
+ * Flattened button shape returned by the server on WaTemplate.buttons.
+ * Wider type set than the Meta-raw TemplateButton — includes Feature-5A types.
+ */
+export interface WaTemplateButton {
+  type:
+    | 'QUICK_REPLY'
+    | 'URL'
+    | 'PHONE_NUMBER'
+    | 'COPY_CODE'
+    | 'REQUEST_CONTACT_INFO'
+    | 'OTP';
+  text: string;
+  url?: string;
+  phoneNumber?: string;
+  example?: string;
 }
 
 export interface TemplateComponent {
@@ -64,6 +81,12 @@ export interface WaTemplate {
   qualityScore: string | null;
   createdAt: string;
   updatedAt: string;
+  // Feature 5A — advanced template components
+  hasButtons: boolean;
+  buttons: WaTemplateButton[] | null;
+  templateSubtype: 'standard' | 'lto' | 'authentication' | 'carousel';
+  isCarousel: boolean;
+  carouselCardCount: number | null;
 }
 
 export interface TemplateListResult {

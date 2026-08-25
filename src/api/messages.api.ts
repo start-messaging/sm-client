@@ -14,6 +14,22 @@ export type MessageMediaType =
   | 'document'
   | 'sticker';
 
+export type MessageType =
+  | 'text'
+  | 'media'
+  | 'template'
+  | 'interactive_button'
+  | 'interactive_list'
+  | 'interactive_reply';
+
+export interface InteractiveData {
+  interactiveType?: 'button_reply' | 'list_reply';
+  replyId?: string;
+  replyTitle?: string;
+  /** Full interactive payload for outbound button/list messages. */
+  payload?: Record<string, unknown>;
+}
+
 export interface WaMessage {
   id: string;
   conversationId: string;
@@ -37,6 +53,10 @@ export interface WaMessage {
   mediaMime?: string | null;
   /** Original filename (primarily for document messages). */
   mediaFilename?: string | null;
+  /** Discriminates text / media / template / interactive_* messages. */
+  messageType?: MessageType | null;
+  /** Structured payload for interactive outbound and inbound reply messages. */
+  interactiveData?: InteractiveData | null;
 }
 
 export type ConversationTab = 'all' | 'active' | 'mine';
@@ -123,6 +143,41 @@ export interface SendTemplateMessageBody {
 
 export type SendMessageBody = SendTextMessageBody | SendTemplateMessageBody;
 
+export interface InteractiveButton {
+  id: string;
+  title: string;
+}
+
+export interface InteractiveListRow {
+  id: string;
+  title: string;
+  description?: string;
+}
+
+export interface InteractiveListSection {
+  title?: string;
+  rows: InteractiveListRow[];
+}
+
+export interface SendInteractiveButtonBody {
+  type: 'button';
+  body: string;
+  footer?: string;
+  buttons: InteractiveButton[];
+}
+
+export interface SendInteractiveListBody {
+  type: 'list';
+  body: string;
+  footer?: string;
+  buttonLabel: string;
+  sections: InteractiveListSection[];
+}
+
+export type SendInteractiveMessageBody =
+  | SendInteractiveButtonBody
+  | SendInteractiveListBody;
+
 export interface CreateConversationBody {
   contactPhone: string;
   contactName?: string;
@@ -158,6 +213,16 @@ export const messagesApi = {
 
   send: (slug: string, conversationId: string, body: SendMessageBody) =>
     apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), body),
+
+  sendInteractive: (
+    slug: string,
+    conversationId: string,
+    body: SendInteractiveMessageBody,
+  ) =>
+    apiPost<WaMessage>(
+      endpoints.messages.sendInteractive(slug, conversationId),
+      body,
+    ),
 
   /**
    * Upload and send a media message via multipart/form-data.

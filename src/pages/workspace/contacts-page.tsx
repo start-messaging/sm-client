@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Download, KanbanSquare, Search, Trash2, Users, X } from 'lucide-react';
+import { InfoTip } from '@/components/shared/info-tip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,9 +47,9 @@ import { ImportContactsDialog } from './components/import-contacts-dialog';
 
 const SOURCE_STYLE: Record<ContactSource, { bg: string; text: string }> = {
   whatsapp: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
-  manual:   { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
-  csv:      { bg: 'bg-[#e0f2fe]', text: 'text-[#0284c7]' },
-  link:     { bg: 'bg-[#ede9fe]', text: 'text-[#7c3aed]' },
+  manual: { bg: 'bg-[#f4f4f5]', text: 'text-[#71717a]' },
+  csv: { bg: 'bg-[#e0f2fe]', text: 'text-[#0284c7]' },
+  link: { bg: 'bg-[#ede9fe]', text: 'text-[#7c3aed]' },
 };
 
 function SourcePill({ source }: { source?: ContactSource }) {
@@ -56,7 +57,13 @@ function SourcePill({ source }: { source?: ContactSource }) {
   if (!source) return <span className="text-[12px] text-[#a1a1aa]">—</span>;
   const { bg, text } = SOURCE_STYLE[source];
   return (
-    <span className={cn('text-[10px] font-semibold px-[6px] py-px rounded-full capitalize', bg, text)}>
+    <span
+      className={cn(
+        'text-[10px] font-semibold px-[6px] py-px rounded-full capitalize',
+        bg,
+        text,
+      )}
+    >
       {t(`contacts.source.${source}`)}
     </span>
   );
@@ -163,6 +170,7 @@ export function ContactsPage() {
   const deleteContact = useDeleteContact(ws.slug);
 
   const [pendingDelete, setPendingDelete] = useState<WaContact | null>(null);
+  const [tabFilter, setTabFilter] = useState<'all' | 'opted_out'>('all');
   const [tagFilter, setTagFilter] = useState('');
   const [stageFilter, setStageFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
@@ -178,16 +186,22 @@ export function ContactsPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
+  const baseContacts = useMemo(
+    () =>
+      tabFilter === 'opted_out' ? contacts.filter((c) => !c.optedIn) : contacts,
+    [contacts, tabFilter],
+  );
+
   const filtered = useMemo(
     () =>
       applyFilters(
-        contacts,
+        baseContacts,
         tagFilter,
         stageFilter,
         assigneeFilter,
         followUpFilter,
       ),
-    [contacts, tagFilter, stageFilter, assigneeFilter, followUpFilter],
+    [baseContacts, tagFilter, stageFilter, assigneeFilter, followUpFilter],
   );
 
   const hasActiveFilter =
@@ -232,7 +246,9 @@ export function ContactsPage() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-baseline gap-2">
           {contacts.length > 0 && (
-            <span className="text-[13px] text-[#a1a1aa]">{contacts.length}</span>
+            <span className="text-[13px] text-[#a1a1aa]">
+              {contacts.length}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -304,6 +320,33 @@ export function ContactsPage() {
       {/* Filters + table */}
       {!isLoading && contacts.length > 0 && (
         <>
+          {/* Tab pills */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setTabFilter('all')}
+              className={cn(
+                'text-xs px-3 py-1.5 rounded-full font-medium transition-colors',
+                tabFilter === 'all'
+                  ? 'bg-[#18181b] text-white'
+                  : 'bg-[#f4f4f5] text-[#71717a] hover:bg-[#e4e4e7]',
+              )}
+            >
+              {t('inbox.tabs.all')}
+            </button>
+            <button
+              onClick={() => setTabFilter('opted_out')}
+              className={cn(
+                'flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium transition-colors',
+                tabFilter === 'opted_out'
+                  ? 'bg-[#18181b] text-white'
+                  : 'bg-[#f4f4f5] text-[#71717a] hover:bg-[#e4e4e7]',
+              )}
+            >
+              {t('contacts.tabs.opted_out')}
+              <InfoTip content={t('contacts.opted_out_tip')} />
+            </button>
+          </div>
+
           {/* Filter bar */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Tag filter */}
@@ -448,7 +491,9 @@ export function ContactsPage() {
                       colSpan={9}
                       className="text-muted-foreground py-10 text-center text-sm"
                     >
-                      {t('contacts.empty.title')}
+                      {tabFilter === 'opted_out'
+                        ? t('contacts.empty_opted_out')
+                        : t('contacts.empty.title')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -518,7 +563,14 @@ function ContactRow({
   return (
     <TableRow className={isOverdue ? 'bg-[#fee2e2]/30' : undefined}>
       <TableCell className="text-[13px] font-medium text-[#18181b]">
-        {c.name ?? <span className="text-[#a1a1aa]">—</span>}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {c.name ?? <span className="text-[#a1a1aa]">—</span>}
+          {!c.optedIn && (
+            <span className="text-[10px] font-semibold px-[6px] py-px rounded-full bg-[#fef3c7] text-[#d97706]">
+              {t('contacts.opted_out_badge')}
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell className="font-mono text-[12px] text-[#71717a]">
         {c.phoneE164}
@@ -552,9 +604,13 @@ function ContactRow({
         )}
       </TableCell>
       <TableCell className="text-[13px] text-[#71717a]">
-        {c.assignedToUserId
-          ? (memberMap[c.assignedToUserId] ?? <span className="text-[#a1a1aa]">—</span>)
-          : <span className="text-[#a1a1aa]">—</span>}
+        {c.assignedToUserId ? (
+          (memberMap[c.assignedToUserId] ?? (
+            <span className="text-[#a1a1aa]">—</span>
+          ))
+        ) : (
+          <span className="text-[#a1a1aa]">—</span>
+        )}
       </TableCell>
       <TableCell>
         {followUpDate ? (

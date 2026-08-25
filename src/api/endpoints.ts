@@ -140,6 +140,11 @@ export const endpoints = {
     // Upload and send a media message (multipart/form-data).
     sendMedia: (slug: string, conversationId: string) =>
       v1(`/workspaces/${slug}/whatsapp/conversations/${conversationId}/media`),
+    // Send an interactive (reply-button or list) message within the 24h window.
+    sendInteractive: (slug: string, conversationId: string) =>
+      v1(
+        `/workspaces/${slug}/whatsapp/conversations/${conversationId}/interactive`,
+      ),
     // SSE live inbox updates (pair with ?access_token= for EventSource).
     events: (slug: string) => v1(`/workspaces/${slug}/whatsapp/events`),
     // Count of conversations with unread messages (for the nav badge).
@@ -211,8 +216,7 @@ export const endpoints = {
 
   // ── Auto-reply rules ──────────────────────────────────────────────────────
   autoReplies: {
-    list: (slug: string) =>
-      v1(`/workspaces/${slug}/whatsapp/auto-reply-rules`),
+    list: (slug: string) => v1(`/workspaces/${slug}/whatsapp/auto-reply-rules`),
     create: (slug: string) =>
       v1(`/workspaces/${slug}/whatsapp/auto-reply-rules`),
     byId: (slug: string, id: string) =>
@@ -223,5 +227,26 @@ export const endpoints = {
   push: {
     fcmWeb: v1('/me/push/fcm-web'),
     fcmWebStatus: v1('/me/push/fcm-web/status'),
+  },
+
+  // ── Flows (no-code chatbot automations) ──────────────────────────────────
+  flows: {
+    list: (slug: string) => v1(`/workspaces/${slug}/flows`),
+    create: (slug: string) => v1(`/workspaces/${slug}/flows`),
+    get: (slug: string, id: string) => v1(`/workspaces/${slug}/flows/${id}`),
+    patch: (slug: string, id: string) => v1(`/workspaces/${slug}/flows/${id}`),
+    delete: (slug: string, id: string) => v1(`/workspaces/${slug}/flows/${id}`),
+    activate: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/flows/${id}/activate`),
+    deactivate: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/flows/${id}/deactivate`),
+  },
+
+  // ── API Keys (for Outbound Trigger API) ──────────────────────────────────
+  apiKeys: {
+    list: (slug: string) => v1(`/workspaces/${slug}/api-keys`),
+    create: (slug: string) => v1(`/workspaces/${slug}/api-keys`),
+    revoke: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/api-keys/${id}`),
   },
 } as const;

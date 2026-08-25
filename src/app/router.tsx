@@ -98,6 +98,9 @@ export const router = createBrowserRouter([
               { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'campaigns/new', element: <CreateCampaignPage /> },
               { path: 'campaigns/:id', element: <CampaignInsightsPage /> },
+              // Placeholders until automations-list-page / flow-editor-page land.
+              { path: 'automations', element: <></> },
+              { path: 'automations/:id/edit', element: <></> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
               { path: 'settings', element: <SettingsPage /> },
