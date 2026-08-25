@@ -977,6 +977,7 @@
     "empty_title": "No flows yet",
     "empty_desc": "Create your first chatbot flow to automate conversations.",
     "plan_gate": "Flow activation is available on the Advanced plan",
+    "plan_gate_info": "You can build and save flows on this plan. Upgrade to Advanced to activate them and start automating conversations.",
     "node": {
       "no_message": "(No message set)",
       "no_question": "(No question set)",

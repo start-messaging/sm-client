@@ -27,6 +27,8 @@ import { CreateCampaignPage } from '@/pages/workspace/create-campaign-page';
 import { CampaignInsightsPage } from '@/pages/workspace/campaign-insights-page';
 import { BillingPage } from '@/pages/workspace/billing-page';
 import { SettingsPage } from '@/pages/workspace/settings-page';
+import { AutomationsListPage } from '@/pages/workspace/automations-list-page';
+import FlowEditorPage from '@/pages/workspace/flow-editor-page';
 
 /**
  * The single, declarative route config (React Router library mode). Branches:
@@ -98,9 +100,8 @@ export const router = createBrowserRouter([
               { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'campaigns/new', element: <CreateCampaignPage /> },
               { path: 'campaigns/:id', element: <CampaignInsightsPage /> },
-              // Placeholders until automations-list-page / flow-editor-page land.
-              { path: 'automations', element: <></> },
-              { path: 'automations/:id/edit', element: <></> },
+              { path: 'automations', element: <AutomationsListPage /> },
+              { path: 'automations/:id/edit', element: <FlowEditorPage /> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
               { path: 'settings', element: <SettingsPage /> },

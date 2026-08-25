@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MoreHorizontal, Plus, Zap } from 'lucide-react';
@@ -313,6 +315,14 @@ export function AutomationsListPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-5">
+        {!canActivate && (
+          <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+            <Info className="size-4 text-amber-600" />
+            <AlertDescription>
+              {t('flows.plan_gate_info')}
+            </AlertDescription>
+          </Alert>
+        )}
         {/* Action bar */}
         <div className="flex items-center justify-between">
           <h1 className="text-[15px] font-semibold text-[#18181b]">
