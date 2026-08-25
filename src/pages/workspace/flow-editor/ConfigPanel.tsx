@@ -49,7 +49,9 @@ const CONDITION_OPERATORS = ['equals', 'contains', 'not_equals'];
 
 interface ConfigPanelProps {
   selectedNode: FlowEditorNode | null;
+  triggerType: string;
   triggerKeywords: string[];
+  onTriggerTypeChange: (type: string) => void;
   onTriggerKeywordsChange: (keywords: string[]) => void;
   onDataChange: (nodeId: string, patch: FlowEditorNodeData) => void;
   onDeleteNode: (nodeId: string) => void;
@@ -429,12 +431,16 @@ function AssignAgentFields({
 
 function NodeFields({
   node,
+  triggerType,
   triggerKeywords,
+  onTriggerTypeChange,
   onTriggerKeywordsChange,
   onChange,
 }: {
   node: FlowEditorNode;
+  triggerType: string;
   triggerKeywords: string[];
+  onTriggerTypeChange: (type: string) => void;
   onTriggerKeywordsChange: (keywords: string[]) => void;
   onChange: FieldChange;
 }) {
@@ -443,19 +449,33 @@ function NodeFields({
 
   switch (node.type) {
     case 'trigger': {
-      const triggerType = data.triggerType ?? 'first_message';
       return (
         <>
           <Section
             label={t('flows.config.trigger_type', 'Starts when')}
             hint={t(
               'flows.config.trigger_type_hint',
-              'Chosen when the flow was created.',
+              'Controls which inbound messages start a new session of this flow.',
             )}
           >
-            <p className="rounded-lg bg-[#f4f4f5] px-2.5 py-2 text-[13px] text-[#18181b]">
-              {t(`flows.trigger_${triggerType}`)}
-            </p>
+            <Select value={triggerType} onValueChange={onTriggerTypeChange}>
+              <SelectTrigger className="h-8 text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="first_message">
+                    {t('flows.trigger_first_message', 'First message')}
+                  </SelectItem>
+                  <SelectItem value="keyword">
+                    {t('flows.trigger_keyword', 'Keyword')}
+                  </SelectItem>
+                  <SelectItem value="any_inbound">
+                    {t('flows.trigger_any_inbound', 'Any inbound message')}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </Section>
           {triggerType === 'keyword' && (
             <Section
@@ -715,7 +735,9 @@ function NodeFields({
 /** Right rail that slides in with the selected step's settings. */
 export function ConfigPanel({
   selectedNode,
+  triggerType,
   triggerKeywords,
+  onTriggerTypeChange,
   onTriggerKeywordsChange,
   onDataChange,
   onDeleteNode,
@@ -759,11 +781,10 @@ export function ConfigPanel({
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-3">
               <NodeFields
                 node={selectedNode}
+                triggerType={triggerType}
                 triggerKeywords={triggerKeywords}
-                onTriggerKeywordsChange={(keywords) => {
-                  onTriggerKeywordsChange(keywords);
-                  onDataChange(selectedNode.id, { triggerKeywords: keywords });
-                }}
+                onTriggerTypeChange={onTriggerTypeChange}
+                onTriggerKeywordsChange={onTriggerKeywordsChange}
                 onChange={(patch) => onDataChange(selectedNode.id, patch)}
               />
             </div>

@@ -47,9 +47,9 @@ export const queryKeys = {
     overview: (slug: string) => ['analytics', 'overview', slug] as const,
   },
 
-  // ── Template Examples (admin-curated gallery) ─────────────────────────────
+  // ── Template Examples (admin-curated gallery — global, not workspace-scoped) ──
   templateExamples: {
-    list: (slug: string) => ['template-examples', slug] as const,
+    list: () => ['template-examples'] as const,
   },
 
   // ── Templates ─────────────────────────────────────────────────────────────

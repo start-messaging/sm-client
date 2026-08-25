@@ -130,6 +130,7 @@ function stableStringify(value: unknown): string {
 
 function graphSnapshot(
   name: string,
+  triggerType: string,
   keywords: string[],
   nodes: FlowNode[],
   edges: FlowEdge[],
@@ -137,6 +138,7 @@ function graphSnapshot(
   const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : 1);
   return stableStringify({
     name: name.trim(),
+    triggerType,
     keywords,
     nodes: [...nodes].sort(byId),
     edges: [...edges].sort(byId),
@@ -227,6 +229,7 @@ export function useFlowEditor(slug: string, flowId: string) {
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowEditorNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [name, setName] = useState('');
+  const [triggerType, setTriggerType] = useState<string>('first_message');
   const [triggerKeywords, setTriggerKeywords] = useState<string[]>([]);
   const [showIssues, setShowIssues] = useState(false);
 
@@ -238,6 +241,7 @@ export function useFlowEditor(slug: string, flowId: string) {
     setNodes(toEditorNodes(flow));
     setEdges(flow.edges);
     setName(flow.name);
+    setTriggerType(flow.triggerType);
     setTriggerKeywords(flow.triggerKeywords);
     // The graph arrives after mount, so the `fitView` prop has nothing to fit.
     requestAnimationFrame(() => void fitView({ maxZoom: 1, padding: 0.2 }));
@@ -248,6 +252,7 @@ export function useFlowEditor(slug: string, flowId: string) {
       flow
         ? graphSnapshot(
             flow.name,
+            flow.triggerType,
             flow.triggerKeywords,
             toApiNodes(toEditorNodes(flow)),
             toApiEdges(flow.edges),
@@ -260,11 +265,12 @@ export function useFlowEditor(slug: string, flowId: string) {
     () =>
       graphSnapshot(
         name,
+        triggerType,
         triggerKeywords,
         toApiNodes(nodes),
         toApiEdges(edges),
       ),
-    [name, triggerKeywords, nodes, edges],
+    [name, triggerType, triggerKeywords, nodes, edges],
   );
 
   const isDirty = savedSnapshot !== null && savedSnapshot !== localSnapshot;
@@ -386,6 +392,36 @@ export function useFlowEditor(slug: string, flowId: string) {
     );
   }, [setNodes]);
 
+  /** Updates trigger type state and syncs the trigger node's display data. */
+  const setTriggerTypeAndSync = useCallback(
+    (type: string) => {
+      setTriggerType(type);
+      setNodes((current) =>
+        current.map((node) =>
+          node.type === 'trigger'
+            ? { ...node, data: { ...node.data, triggerType: type } }
+            : node,
+        ),
+      );
+    },
+    [setNodes],
+  );
+
+  /** Updates trigger keywords state and syncs the trigger node's display data. */
+  const setTriggerKeywordsAndSync = useCallback(
+    (keywords: string[]) => {
+      setTriggerKeywords(keywords);
+      setNodes((current) =>
+        current.map((node) =>
+          node.type === 'trigger'
+            ? { ...node, data: { ...node.data, triggerKeywords: keywords } }
+            : node,
+        ),
+      );
+    },
+    [setNodes],
+  );
+
   const autoArrange = useCallback(() => {
     setNodes((current) => autoLayout(current, edges));
     requestAnimationFrame(() => void fitView({ duration: 250 }));
@@ -396,6 +432,7 @@ export function useFlowEditor(slug: string, flowId: string) {
       id: flowId,
       body: {
         name: name.trim() || (flow?.name ?? ''),
+        triggerType: triggerType as WaFlow['triggerType'],
         triggerKeywords,
         nodes: toApiNodes(nodes),
         edges: toApiEdges(edges),
@@ -404,9 +441,10 @@ export function useFlowEditor(slug: string, flowId: string) {
     // Adopt the server's normalisation (trimmed name, de-duped keywords) so the
     // dirty check settles.
     setName(saved.name);
+    setTriggerType(saved.triggerType);
     setTriggerKeywords(saved.triggerKeywords);
     return saved;
-  }, [patchMutation, flowId, name, flow?.name, triggerKeywords, nodes, edges]);
+  }, [patchMutation, flowId, name, flow?.name, triggerType, triggerKeywords, nodes, edges]);
 
   const save = useCallback(async () => {
     try {
@@ -463,8 +501,10 @@ export function useFlowEditor(slug: string, flowId: string) {
 
     name,
     setName,
+    triggerType,
+    setTriggerType: setTriggerTypeAndSync,
     triggerKeywords,
-    setTriggerKeywords,
+    setTriggerKeywords: setTriggerKeywordsAndSync,
 
     selectedNode,
     updateNodeData,

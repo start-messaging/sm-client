@@ -1,13 +1,8 @@
 import { apiGet } from '@/lib/http';
 import { endpoints } from '@/api/endpoints';
 import type { TemplateCategory, TemplateComponent } from '@/api/templates.api';
-import type { TemplateExample } from '@/lib/template-examples';
 
-/**
- * Shape of each row from GET /v1/whatsapp/template-examples
- * (server returns a published entity array inside the success envelope).
- */
-export interface ApiTemplateExample {
+export interface TemplateExample {
   id: string;
   slug: string;
   suggestedName: string;
@@ -17,27 +12,48 @@ export interface ApiTemplateExample {
   useWhen: string;
   metaTip: string;
   sortOrder: number;
-  status?: string;
-}
-
-export function mapApiExample(api: ApiTemplateExample): TemplateExample {
-  return {
-    id: api.slug || api.id,
-    suggestedName: api.suggestedName,
-    category: api.category,
-    language: api.language,
-    components: api.components,
-    useWhen: api.useWhen,
-    metaTip: api.metaTip,
-  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const templateExamplesApi = {
-  list: async (): Promise<TemplateExample[]> => {
-    const result = await apiGet<
-      ApiTemplateExample[] | { examples: ApiTemplateExample[] }
-    >(endpoints.templateExamples.list());
-    const rows = Array.isArray(result) ? result : (result.examples ?? []);
-    return rows.map(mapApiExample);
-  },
+  list: () => apiGet<TemplateExample[]>(endpoints.templateExamples.list()),
 };
+
+export function examplesByCategory(
+  examples: TemplateExample[],
+  category: TemplateCategory | 'ALL',
+): TemplateExample[] {
+  if (category === 'ALL') return examples;
+  return examples.filter((e) => e.category === category);
+}
+
+export function exampleBodyPreview(example: TemplateExample): string {
+  return (
+    example.components.find((c) => c.type === 'BODY')?.text ??
+    example.components
+      .map((c) => c.text)
+      .filter(Boolean)
+      .join(' ')
+  );
+}
+
+/** 3–4 cards for the templates home: prefer Utility, include one Marketing. */
+export function featuredExamples(
+  examples: TemplateExample[],
+  limit = 4,
+): TemplateExample[] {
+  const utility = examples.filter((e) => e.category === 'UTILITY');
+  const marketing = examples.filter((e) => e.category === 'MARKETING');
+  const picked: TemplateExample[] = [];
+  for (const e of utility) {
+    if (picked.length >= Math.min(3, limit)) break;
+    picked.push(e);
+  }
+  if (picked.length < limit && marketing[0]) picked.push(marketing[0]);
+  for (const e of examples) {
+    if (picked.length >= limit) break;
+    if (!picked.includes(e)) picked.push(e);
+  }
+  return picked.slice(0, limit);
+}

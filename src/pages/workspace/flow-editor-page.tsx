@@ -90,7 +90,9 @@ function FlowEditor({ flowId }: { flowId: string }) {
 
         <ConfigPanel
           selectedNode={editor.selectedNode}
+          triggerType={editor.triggerType}
           triggerKeywords={editor.triggerKeywords}
+          onTriggerTypeChange={editor.setTriggerType}
           onTriggerKeywordsChange={editor.setTriggerKeywords}
           onDataChange={editor.updateNodeData}
           onDeleteNode={editor.deleteNode}

@@ -40,15 +40,17 @@ function PaletteTile({
     >
       <Icon className="size-3.5 shrink-0 text-[#a1a1aa]" aria-hidden="true" />
       <span className="truncate">{t(meta.labelKey, meta.label)}</span>
-      {disabled && (
-        <InfoTip
-          className="ml-auto"
-          content={t(
-            'flows.palette.trigger_placed',
-            'A flow starts at one trigger only. Select the trigger step to change how it fires.',
-          )}
-        />
-      )}
+      <InfoTip
+        className="ml-auto"
+        content={
+          disabled
+            ? t(
+                'flows.palette.trigger_placed',
+                'A flow starts at one trigger only. Select the trigger step to change how it fires.',
+              )
+            : t(meta.descriptionKey, meta.description)
+        }
+      />
     </div>
   );
 }
