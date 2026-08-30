@@ -31,8 +31,12 @@ export interface FlowEditorNodeData extends Record<string, unknown> {
   stageName?: string;
   userId?: string | null;
   userName?: string;
+  delayAmount?: number;
+  delayUnit?: 'minutes' | 'hours' | 'days';
   triggerType?: FlowTriggerType;
   triggerKeywords?: string[];
+  /** Amber health warning injected by findFlowHealthWarnings — display only, never persisted. */
+  healthWarning?: string;
 }
 
 export type FlowEditorNode = Node<FlowEditorNodeData, FlowNodeType>;
@@ -63,6 +67,7 @@ interface FlowNodeCardProps {
   selected?: boolean;
   hasInput?: boolean;
   outputs?: FlowNodeOutput[];
+  healthWarning?: string;
 }
 
 function handleOffset(index: number, total: number): string {
@@ -77,6 +82,7 @@ export function FlowNodeCard({
   selected = false,
   hasInput = true,
   outputs = SINGLE_OUTPUT,
+  healthWarning,
 }: FlowNodeCardProps) {
   const { t } = useTranslation();
   const meta = NODE_TYPE_META[type];
@@ -91,6 +97,15 @@ export function FlowNodeCard({
     >
       {hasInput && (
         <Handle type="target" position={Position.Top} style={HANDLE_STYLE} />
+      )}
+
+      {healthWarning && (
+        <div
+          title={healthWarning}
+          className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-white"
+        >
+          !
+        </div>
       )}
 
       <div className="flex items-center gap-1.5">

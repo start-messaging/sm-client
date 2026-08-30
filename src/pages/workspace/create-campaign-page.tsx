@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FieldError, FieldLabel } from '@/components/ui/field';
@@ -31,10 +30,12 @@ import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { useTemplates } from '@/api/hooks/use-templates';
 import { useContacts } from '@/api/hooks/use-contacts';
+import { useFlows } from '@/api/hooks/use-flows';
 import {
   useCreateCampaign,
   useLaunchCampaign,
   useUploadCampaignAudienceCsv,
+  useLastMarketingSend,
 } from '@/api/hooks/use-campaigns';
 import { useWabaStatus } from '@/api/hooks/use-whatsapp';
 import { parseCsv, readFileAsText } from '@/lib/csv';
@@ -44,6 +45,8 @@ import type { TemplateComponent, WaTemplate } from '@/api/templates.api';
 import type { WaContact } from '@/api/contacts.api';
 
 type AudienceMode = 'contacts' | 'csv';
+
+const _moduleLoadTime = Date.now();
 
 function extractBodyVars(components: TemplateComponent[]): number[] {
   const body = components.find((c) => c.type === 'BODY');
@@ -164,13 +167,13 @@ export function CreateCampaignPage() {
   const ws = useCurrentWorkspace();
   const { data: tplData } = useTemplates(ws.slug);
   const { data: contactsData } = useContacts(ws.slug);
+  const { data: flowsData } = useFlows(ws.slug);
   const { data: wabaStatus } = useWabaStatus(ws.slug);
   const createMutation = useCreateCampaign(ws.slug);
   const launchMutation = useLaunchCampaign(ws.slug);
   const uploadAudienceCsvMutation = useUploadCampaignAudienceCsv(ws.slug);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [tagFilter, setTagFilter] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3>(1);  const [tagFilter, setTagFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showOptedOut, setShowOptedOut] = useState(false);
   const [audienceMode, setAudienceMode] = useState<AudienceMode>('contacts');
@@ -186,6 +189,7 @@ export function CreateCampaignPage() {
   // never assigned at render time — updating a ref during render is unsafe.
   const varMappingRef = useRef(varMapping);
   const [mappingError, setMappingError] = useState('');
+  const [flowId, setFlowId] = useState<string | null>(null);
 
   const launchBlocked = wabaStatus?.metaPaymentReady === false;
   const listPath = `/w/${ws.slug}/campaigns`;
@@ -193,6 +197,10 @@ export function CreateCampaignPage() {
   const approvedTemplates: WaTemplate[] = useMemo(
     () => (tplData?.templates ?? []).filter((tpl) => tpl.status === 'APPROVED'),
     [tplData],
+  );
+  const activeFlows = useMemo(
+    () => (flowsData?.flows ?? []).filter((f) => f.status === 'active'),
+    [flowsData],
   );
   const allContacts = contactsData?.contacts ?? [];
 
@@ -219,6 +227,20 @@ export function CreateCampaignPage() {
   const audienceIds = useWatch({ control, name: 'audienceIds' }) ?? [];
 
   const selectedTemplate = approvedTemplates.find((x) => x.id === templateId);
+  const isMarketingTemplate = selectedTemplate?.category === 'MARKETING';
+
+  const { data: lastMarketingSendData } = useLastMarketingSend(
+    ws.slug,
+    isMarketingTemplate,
+  );
+
+  const marketingSpacingHoursAgo = useMemo(() => {
+    if (!lastMarketingSendData?.lastSentAt) return null;
+    const diffMs = _moduleLoadTime - new Date(lastMarketingSendData.lastSentAt).getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    return diffHours < 48 ? diffHours : null;
+  }, [lastMarketingSendData]);
+
   const templateVars = selectedTemplate
     ? extractBodyVars(selectedTemplate.components)
     : [];
@@ -362,6 +384,7 @@ export function CreateCampaignPage() {
         templateLanguage: selectedTemplate.language,
         audienceIds: audienceIdsForCreate,
         variableMapping: buildVarMappingPayload(),
+        ...(flowId ? { flowId } : {}),
       })) as Campaign;
 
       if (audienceMode === 'csv') {
@@ -491,6 +514,14 @@ export function CreateCampaignPage() {
               {errors.templateId && (
                 <FieldError>{t(errors.templateId.message ?? '')}</FieldError>
               )}
+              {marketingSpacingHoursAgo !== null && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-800">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    You sent a marketing campaign {marketingSpacingHoursAgo}h ago. Spacing campaigns ≥48h apart protects your number quality.
+                  </span>
+                </div>
+              )}
               {selectedTemplate?.isCarousel && (
                 <p className="text-muted-foreground text-xs">
                   {t('campaigns.carousel_template_note')}
@@ -530,6 +561,29 @@ export function CreateCampaignPage() {
                   />
                 ))}
                 {mappingError && <FieldError>{mappingError}</FieldError>}
+              </div>
+            )}
+
+            {activeFlows.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>{t('campaigns.create.followUpFlow', 'Follow-up flow (optional)')}</FieldLabel>
+                <p className="text-muted-foreground text-xs">
+                  {t('campaigns.create.followUpFlowHint', 'After the campaign message is sent, enroll the contact in this flow for automated follow-up.')}
+                </p>
+                <Select
+                  value={flowId ?? ''}
+                  onValueChange={(v) => setFlowId(v || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('campaigns.create.followUpFlowNone', 'None — send once and stop')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t('campaigns.create.followUpFlowNone', 'None — send once and stop')}</SelectItem>
+                    {activeFlows.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -856,6 +910,17 @@ export function CreateCampaignPage() {
                   );
                 })}
               </ul>
+            </div>
+          )}
+
+          {flowId && (
+            <div className="text-sm">
+              <p className="text-muted-foreground mb-0.5">
+                {t('campaigns.create.followUpFlow', 'Follow-up flow')}
+              </p>
+              <p className="font-medium">
+                {activeFlows.find((f) => f.id === flowId)?.name ?? flowId}
+              </p>
             </div>
           )}
 

@@ -63,6 +63,7 @@ import {
 } from '@/api/messages.api';
 import type { WorkspaceRole } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 import { QuickReplyTypeahead } from '@/components/inbox/quick-reply-typeahead';
 import { useInboxPresence } from '@/api/hooks/use-inbox-presence';
 import type { PresenceViewer } from '@/api/inbox-presence.api';
@@ -451,6 +452,23 @@ function TemplateComposer({
   const selected = approvedTemplates.find((tpl) => tpl.id === selectedId);
   const placeholders = selected ? bodyPlaceholders(selected) : [];
 
+  const bodyText =
+    selected?.components.find((c) => c.type === 'BODY')?.text ?? '';
+  const headerComp = selected?.components.find((c) => c.type === 'HEADER');
+  const previewHeaderText =
+    headerComp?.format === 'TEXT' ? (headerComp.text ?? undefined) : undefined;
+  const previewFooterText =
+    selected?.components.find((c) => c.type === 'FOOTER')?.text ?? undefined;
+  const previewButtonLabels = (selected?.buttons ?? [])
+    .map((b) => b.text)
+    .filter((t): t is string => !!t);
+
+  // Live preview: substitute only filled values; keep {{n}} as placeholder chips for empty
+  const previewBody = bodyText.replace(/\{\{(\d+)\}\}/g, (match, n: string) => {
+    const val = paramValues[Number(n)];
+    return val?.trim() ? val : match;
+  });
+
   function handleSelect(id: string) {
     setSelectedId(id);
     setParamValues({});
@@ -458,21 +476,19 @@ function TemplateComposer({
 
   function handleSend() {
     if (!selected) return;
-    for (const n of placeholders) {
-      if (!paramValues[n]?.trim()) {
-        toast.error(t('inbox.composer.paramRequired', { n }));
-        return;
-      }
-    }
+    const hydratedBody = bodyText.replace(/\{\{(\d+)\}\}/g, (_, n: string) =>
+      paramValues[Number(n)]?.trim() ?? '',
+    );
     send.mutate(
       {
         type: 'template',
         templateName: selected.name,
         templateLanguage: selected.language,
+        _hydratedBody: hydratedBody || undefined,
         ...(placeholders.length
           ? {
               parameters: placeholders.map((n) => ({
-                text: paramValues[n]!.trim(),
+                text: paramValues[n]?.trim() ?? '',
               })),
             }
           : {}),
@@ -497,10 +513,7 @@ function TemplateComposer({
     );
   }
 
-  const canSend =
-    !!selected &&
-    placeholders.every((n) => !!paramValues[n]?.trim()) &&
-    !send.isPending;
+  const canSend = !!selected && !send.isPending;
 
   return (
     <div className="border-t p-3 flex flex-col gap-2">
@@ -546,9 +559,15 @@ function TemplateComposer({
       )}
 
       {selected && (
-        <p className="text-muted-foreground text-xs line-clamp-3">
-          {selected.components.find((c) => c.type === 'BODY')?.text ?? ''}
-        </p>
+        <WaMessagePreview
+          bodyText={previewBody}
+          headerText={previewHeaderText}
+          footerText={previewFooterText}
+          templateName={selected.name}
+          buttonLabels={previewButtonLabels}
+          isCarousel={selected.isCarousel}
+          carouselCardCount={selected.carouselCardCount ?? undefined}
+        />
       )}
     </div>
   );

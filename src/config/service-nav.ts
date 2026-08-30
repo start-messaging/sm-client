@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  BarChart2,
   CreditCard,
   Inbox,
   KanbanSquare,
@@ -57,6 +58,11 @@ export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
       segment: 'automations',
       labelKey: 'nav.automations',
       icon: Zap,
+    },
+    {
+      segment: 'analytics',
+      labelKey: 'nav.analytics',
+      icon: BarChart2,
     },
   ],
 };

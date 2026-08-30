@@ -45,6 +45,10 @@ export const queryKeys = {
   // ── WhatsApp analytics ────────────────────────────────────────────────────
   analytics: {
     overview: (slug: string) => ['analytics', 'overview', slug] as const,
+    agentStats: (slug: string, from?: string, to?: string) =>
+      ['analytics', 'agents', slug, from, to] as const,
+    messageErrors: (slug: string, from?: string, to?: string) =>
+      ['analytics', 'errors', slug, from, to] as const,
   },
 
   // ── Template Examples (admin-curated gallery — global, not workspace-scoped) ──

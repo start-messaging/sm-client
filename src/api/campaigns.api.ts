@@ -75,6 +75,7 @@ export interface CreateCampaignBody {
   scheduledAt?: string;
   /** Per-variable contact field mapping, e.g. { "1": "name", "2": "phone", "3": "attr:company" }. */
   variableMapping?: Record<string, string>;
+  flowId?: string;
 }
 
 export interface UpdateCampaignBody {
@@ -125,5 +126,10 @@ export const campaignsApi = {
       {
         rows,
       },
+    ),
+
+  getLastMarketingSend: (slug: string) =>
+    apiGet<{ lastSentAt: string | null }>(
+      endpoints.campaigns.lastMarketingSend(slug),
     ),
 };

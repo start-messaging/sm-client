@@ -59,6 +59,7 @@ export interface TemplateComponent {
   example?: {
     body_text?: string[][];
     header_text?: string[];
+    header_handle?: string[];
   };
   /** BUTTONS component only: 1–3 buttons. */
   buttons?: TemplateButton[];
@@ -115,4 +116,10 @@ export const templatesApi = {
 
   sync: (slug: string) =>
     apiPost<TemplateListResult>(endpoints.templates.sync(slug), {}),
+
+  uploadMedia: (slug: string, file: File): Promise<{ handle: string }> => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiPost<{ handle: string }>(endpoints.templates.mediaUpload(slug), form);
+  },
 };

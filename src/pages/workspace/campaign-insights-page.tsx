@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import {
@@ -208,6 +208,20 @@ export function CampaignInsightsPage() {
                   captionClassName="text-[12px] text-[#dc2626]"
                 />
               </div>
+
+              {stats.failed > 0 && (
+                <div className="flex items-center gap-1.5 text-[12px]">
+                  <span className="text-[#dc2626]">
+                    {stats.failed} failed sends.
+                  </span>
+                  <Link
+                    to={`/w/${ws.slug}/analytics${campaign.launchedAt ? `?from=${new Date(campaign.launchedAt).toISOString().slice(0, 10)}` : ''}`}
+                    className="text-[#2563eb] underline underline-offset-2"
+                  >
+                    View error details →
+                  </Link>
+                </div>
+              )}
 
               <Card>
                 <CardHeader>

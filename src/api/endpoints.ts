@@ -77,6 +77,10 @@ export const endpoints = {
     // Dashboard overview widget: today's counts, avg response, top agents.
     overview: (slug: string) =>
       v1(`/workspaces/${slug}/whatsapp/analytics/overview`),
+    agentStats: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/analytics/agents`),
+    messageErrors: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/analytics/message-errors`),
   },
 
   // ── Template Examples (admin-curated gallery, published only) ────────────
@@ -95,6 +99,8 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/templates/${id}`),
     // Sync template statuses from Meta.
     sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates/sync`),
+    mediaUpload: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/templates/media-upload`),
   },
 
   // ── Messages / Inbox ──────────────────────────────────────────────────────
@@ -201,6 +207,8 @@ export const endpoints = {
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/analytics`),
     audienceCsv: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/whatsapp/campaigns/${id}/audience-csv`),
+    lastMarketingSend: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/campaigns/last-marketing-send`),
   },
 
   // ── Billing (CRM subscription) ────────────────────────────────────────────
@@ -240,6 +248,8 @@ export const endpoints = {
       v1(`/workspaces/${slug}/flows/${id}/activate`),
     deactivate: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/flows/${id}/deactivate`),
+    trigger: (slug: string, id: string) =>
+      v1(`/workspaces/${slug}/flows/${id}/trigger`),
   },
 
   // ── API Keys (for Outbound Trigger API) ──────────────────────────────────

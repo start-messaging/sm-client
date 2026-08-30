@@ -7,8 +7,7 @@ import {
   Timer,
   Users,
   TrendingUp,
-} from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+} from 'lucide-react';import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -27,8 +26,47 @@ import { useAuthStore } from '@/stores/auth.store';
 import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 import type { ChecklistStep } from '@/components/education/setup-checklist';
 
-// ── Greeting ─────────────────────────────────────────────────────────────────
+// ── NumberHealthWidget ────────────────────────────────────────────────────────
 
+function NumberHealthWidget({ qualityRating }: { qualityRating: string | null }) {
+  if (!qualityRating || qualityRating === 'UNKNOWN') return null;
+  const isGreen = qualityRating === 'GREEN';
+  const isYellow = qualityRating === 'YELLOW';
+  return (
+    <div
+      className={`rounded-lg border p-3 text-sm ${
+        isGreen
+          ? 'border-green-200 bg-green-50 text-green-800'
+          : isYellow
+            ? 'border-amber-200 bg-amber-50 text-amber-800'
+            : 'border-red-200 bg-red-50 text-red-800'
+      }`}
+    >
+      <span className="font-medium">Number quality: {qualityRating}</span>
+      {isGreen ? (
+        <span className="ml-2">Your number is in good standing.</span>
+      ) : (
+        <>
+          <span className="ml-2">
+            {isYellow
+              ? 'Reduce marketing volume and ensure opt-outs are respected.'
+              : "Message sending may be restricted. Review Meta's guidance."}
+          </span>
+          <a
+            href="https://business.facebook.com/wa/manage/phone-numbers/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 underline"
+          >
+            Manage in Meta
+          </a>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Greeting ─────────────────────────────────────────────────────────────────
 function timeGreeting(): 'morning' | 'afternoon' | 'evening' {
   const h = new Date().getHours();
   if (h < 12) return 'morning';
@@ -238,9 +276,13 @@ export function WorkspaceDashboardPage() {
         <DateRangeControl value={range} onChange={setRange} />
       </div>
 
+      {/* Number health widget — shown only when connected */}
+      {isConnected && (
+        <NumberHealthWidget qualityRating={wabaStatus?.qualityRating ?? null} />
+      )}
+
       {/* Setup checklist — secondary once all steps are done */}
       {!setupDone && <SetupChecklist steps={setupSteps} />}
-
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

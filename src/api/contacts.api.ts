@@ -71,6 +71,7 @@ export interface ImportContactsResult {
 export interface ImportContactsMappedBody {
   rows: Record<string, string>[];
   mapping: Record<string, string>;
+  filenameTag?: string;
 }
 
 // ── API calls ──────────────────────────────────────────────────────────────

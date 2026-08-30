@@ -17,6 +17,7 @@ export function SendMessageNode({ data, selected }: FlowNodeComponentProps) {
       type="send_message"
       selected={selected}
       preview={preview || t('flows.node.no_message', '(No message set)')}
+      healthWarning={data.healthWarning}
     />
   );
 }

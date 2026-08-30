@@ -7,6 +7,7 @@ export type FlowNodeType =
   | 'trigger'
   | 'send_message'
   | 'wait_for_reply'
+  | 'wait_delay'
   | 'button_branch'
   | 'list_branch'
   | 'condition'
@@ -76,4 +77,6 @@ export const flowsApi = {
     apiPost<WaFlow>(endpoints.flows.activate(slug, id), {}),
   deactivate: (slug: string, id: string) =>
     apiPost<WaFlow>(endpoints.flows.deactivate(slug, id), {}),
+  triggerOnContact: (slug: string, id: string, contactId: string) =>
+    apiPost<{ sessionId: string }>(endpoints.flows.trigger(slug, id), { contactId }),
 };

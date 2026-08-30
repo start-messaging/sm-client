@@ -40,6 +40,7 @@ import { toast } from '@/lib/toast';
 import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
 import { exampleBodyPreview, featuredExamples } from '@/api/template-examples.api';
 import { cn } from '@/lib/utils';
+import { TemplatePreviewPopover } from '@/components/whatsapp/template-preview-popover';
 
 const STATUS_PILL: Record<TemplateStatus, { bg: string; text: string }> = {
   APPROVED: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
@@ -385,11 +386,11 @@ export function TemplatesPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((example) => (
-              <Link
-                key={example.id}
-                to={`/w/${ws.slug}/templates/new?example=${encodeURIComponent(example.id)}`}
-                className="flex flex-col gap-2 rounded-[10px] border border-[#e4e4e7] bg-white p-4 hover:bg-[#fafafa] transition-colors"
-              >
+              <TemplatePreviewPopover key={example.id} components={example.components}>
+                <Link
+                  to={`/w/${ws.slug}/templates/new?example=${encodeURIComponent(example.id)}`}
+                  className="flex flex-col gap-2 rounded-[10px] border border-[#e4e4e7] bg-white p-4 hover:bg-[#fafafa] transition-colors"
+                >
                 <div className="flex items-start justify-between gap-2">
                   <p className="truncate font-mono text-[13px] font-medium text-[#18181b]">
                     {example.suggestedName}
@@ -404,7 +405,8 @@ export function TemplatesPage() {
                 <span className="text-[12px] font-medium text-[#18181b]">
                   {t('templates.examples.apply')}
                 </span>
-              </Link>
+                </Link>
+              </TemplatePreviewPopover>
             ))}
           </div>
         </section>
@@ -503,12 +505,9 @@ export function TemplatesPage() {
         {!isLoading && visible.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((tpl) => (
-              <TemplateCard
-                key={tpl.id}
-                tpl={tpl}
-                slug={ws.slug}
-                onDelete={handleDelete}
-              />
+              <TemplatePreviewPopover key={tpl.id} components={tpl.components}>
+                <TemplateCard tpl={tpl} slug={ws.slug} onDelete={handleDelete} />
+              </TemplatePreviewPopover>
             ))}
           </div>
         )}

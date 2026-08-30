@@ -102,8 +102,16 @@ export function ImportContactsDialog({ slug }: { slug: string }) {
       mapping[header] = target === 'attr' ? `attr:${header}` : target;
     }
 
+    const filenameTag = file
+      ? (file.name
+          .replace(/\.csv$/i, '')
+          .replace(/[^a-zA-Z0-9 _-]/g, ' ')
+          .trim()
+          .slice(0, 80) || undefined)
+      : undefined;
+
     importMutation.mutate(
-      { rows: csvRows, mapping },
+      { rows: csvRows, mapping, filenameTag },
       {
         onSuccess: (result) => {
           toast.success(
@@ -205,6 +213,13 @@ export function ImportContactsDialog({ slug }: { slug: string }) {
             <p className="text-muted-foreground text-xs">
               {t('contacts.import.mapping.hint')}
             </p>
+            {file && (
+              <p className="text-muted-foreground text-xs">
+                {t('contacts.import.mapping.filenameTagNote', {
+                  tag: file.name.replace(/\.csv$/i, ''),
+                })}
+              </p>
+            )}
             <div className="max-h-72 overflow-y-auto rounded-md border">
               <Table>
                 <TableHeader>

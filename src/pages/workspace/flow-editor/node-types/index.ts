@@ -10,6 +10,7 @@ import {
   PenLine,
   Tag,
   TagIcon,
+  Timer,
   UserCheck,
   Zap,
   type LucideIcon,
@@ -19,6 +20,7 @@ import { ActionNode } from './ActionNode';
 import { BranchNode } from './BranchNode';
 import { SendMessageNode } from './SendMessageNode';
 import { TriggerNode } from './TriggerNode';
+import { WaitDelayNode } from './WaitDelayNode';
 import { WaitForReplyNode } from './WaitForReplyNode';
 
 export type {
@@ -61,6 +63,13 @@ export const NODE_TYPE_META: Record<FlowNodeType, NodeTypeMeta> = {
     label: 'Wait for reply',
     descriptionKey: 'flows.node.wait_for_reply_desc',
     description: 'Pauses the flow until the contact replies, or until an optional timeout expires and the flow continues automatically.',
+  },
+  wait_delay: {
+    icon: Timer,
+    labelKey: 'flows.node.wait_delay',
+    label: 'Wait',
+    descriptionKey: 'flows.node.wait_delay_desc',
+    description: 'Pause the flow for a set amount of time before continuing.',
   },
   button_branch: {
     icon: GitBranch,
@@ -132,6 +141,7 @@ export const PALETTE_NODE_TYPES: FlowNodeType[] = [
   'trigger',
   'send_message',
   'wait_for_reply',
+  'wait_delay',
   'button_branch',
   'list_branch',
   'condition',
@@ -147,6 +157,7 @@ export const nodeTypes = {
   trigger: TriggerNode,
   send_message: SendMessageNode,
   wait_for_reply: WaitForReplyNode,
+  wait_delay: WaitDelayNode,
   button_branch: BranchNode,
   list_branch: BranchNode,
   condition: BranchNode,

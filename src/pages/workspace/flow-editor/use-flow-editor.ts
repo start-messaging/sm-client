@@ -24,6 +24,7 @@ import {
   type FlowEditorNode,
   type FlowEditorNodeData,
 } from './node-types';
+import { findFlowHealthWarnings } from './flow-health';
 
 /** The drag payload the palette writes and the canvas reads. */
 export const NODE_DRAG_MIME = 'application/reactflow-node-type';
@@ -301,15 +302,28 @@ export function useFlowEditor(slug: string, flowId: string) {
     return ids;
   }, [issues]);
 
+  const healthWarnings = useMemo(
+    () => findFlowHealthWarnings(nodes, edges),
+    [nodes, edges],
+  );
+
+  const healthWarningMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const w of healthWarnings) map.set(w.nodeId, w.message);
+    return map;
+  }, [healthWarnings]);
+
   /** Nodes as rendered: validation rings are view-only, never persisted. */
   const displayNodes = useMemo(() => {
-    if (invalidNodeIds.size === 0) return nodes;
-    return nodes.map((node) =>
-      invalidNodeIds.has(node.id)
+    return nodes.map((node) => {
+      const withRing = invalidNodeIds.has(node.id)
         ? { ...node, className: 'rounded-[10px] ring-2 ring-red-400' }
-        : node,
-    );
-  }, [nodes, invalidNodeIds]);
+        : node;
+      const warning = healthWarningMap.get(node.id);
+      if (warning === withRing.data.healthWarning) return withRing;
+      return { ...withRing, data: { ...withRing.data, healthWarning: warning } };
+    });
+  }, [nodes, invalidNodeIds, healthWarningMap]);
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.selected) ?? null,

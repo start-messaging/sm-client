@@ -533,6 +533,45 @@ function NodeFields({
         </p>
       );
 
+    case 'wait_delay':
+      return (
+        <Section label={t('flows.config.wait_delay_duration', 'Duration')}>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              min={1}
+              max={365}
+              value={data.delayAmount ?? 1}
+              onChange={(e) =>
+                onChange({ delayAmount: Number(e.target.value) })
+              }
+              className="h-8 w-24 text-[13px]"
+            />
+            <Select
+              value={data.delayUnit ?? 'hours'}
+              onValueChange={(val) => onChange({ delayUnit: val })}
+            >
+              <SelectTrigger className="h-8 text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="minutes">
+                    {t('flows.config.delay_minutes', 'minutes')}
+                  </SelectItem>
+                  <SelectItem value="hours">
+                    {t('flows.config.delay_hours', 'hours')}
+                  </SelectItem>
+                  <SelectItem value="days">
+                    {t('flows.config.delay_days', 'days')}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </Section>
+      );
+
     case 'button_branch':
       return (
         <>

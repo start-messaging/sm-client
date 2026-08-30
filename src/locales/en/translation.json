@@ -166,7 +166,8 @@
     "serviceGroup": {
       "whatsapp": "WHATSAPP"
     },
-    "commonGroup": "COMMON"
+    "commonGroup": "COMMON",
+    "analytics": "Analytics"
   },
   "createWorkspace": {
     "back": "All services",
@@ -748,6 +749,7 @@
         "target": "Maps to",
         "required": "Required",
         "phoneRequiredError": "Map at least one column to Phone number to continue.",
+        "filenameTagNote": "Contacts will be tagged \"{{tag}}\" based on the filename.",
         "optionPhone": "Phone number",
         "optionName": "Name",
         "optionEmail": "Email",
@@ -990,6 +992,10 @@
       "end_preview": "The flow stops here",
       "wait_preview": "Waits for the contact to reply",
       "wait_note": "Continues when they answer",
+      "wait_delay": "Wait",
+      "wait_delay_desc": "Pause the flow for a set amount of time before continuing.",
+      "wait_delay_preview": "Wait {{amount}} {{unit}}",
+      "wait_delay_unconfigured": "Set a duration…",
       "trigger_no_keywords": "No keywords set yet",
       "option_count_one": "{{count}} option",
       "option_count_other": "{{count}} options"
@@ -1020,8 +1026,18 @@
       "remove_keyword": "Remove keyword",
       "operator": "Condition",
       "check": "Value to check",
-      "delete_step": "Delete step"
+      "delete_step": "Delete step",
+      "wait_delay_duration": "Duration",
+      "delay_minutes": "minutes",
+      "delay_hours": "hours",
+      "delay_days": "days"
     },
+    "trigger_manually": "Trigger manually",
+    "trigger_success": "Flow started for contact",
+    "trigger_dialog_title": "Trigger flow manually",
+    "trigger_dialog_desc": "Start \"{{name}}\" immediately for a contact.",
+    "trigger_search_placeholder": "Search by name or phone…",
+    "trigger_confirm": "Start flow",
     "issue": {
       "title": "Before this flow can go live",
       "count_one": "{{count}} issue",
@@ -1352,5 +1368,11 @@
     "invalidTitle": "Invitation unavailable",
     "invalid": "This invitation link is invalid.",
     "expired": "This invitation has expired. Ask for a new one."
+  },
+  "analytics": {
+    "agentPerformance": "Agent Performance",
+    "failedMessages": "Failed Message Errors",
+    "noData": "No data for this period.",
+    "noErrors": "No failed messages in this period."
   }
 }

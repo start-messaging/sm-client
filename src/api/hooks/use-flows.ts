@@ -82,3 +82,10 @@ export function useDeactivateFlow(slug: string) {
     },
   });
 }
+
+export function useTriggerFlow(slug: string) {
+  return useMutation({
+    mutationFn: ({ id, contactId }: { id: string; contactId: string }) =>
+      flowsApi.triggerOnContact(slug, id, contactId),
+  });
+}

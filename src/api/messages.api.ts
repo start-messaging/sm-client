@@ -139,6 +139,8 @@ export interface SendTemplateMessageBody {
   templateLanguage: string;
   /** Parameter values for dynamic template components. */
   parameters?: Record<string, string>[];
+  /** Client-only: pre-hydrated body for optimistic bubble display. Stripped before API send. */
+  _hydratedBody?: string;
 }
 
 export type SendMessageBody = SendTextMessageBody | SendTemplateMessageBody;

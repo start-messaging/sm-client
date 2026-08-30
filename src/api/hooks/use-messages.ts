@@ -119,8 +119,14 @@ export function useSendMessage(slug: string, conversationId: string) {
   const listKey = queryKeys.messages.list(slug, conversationId);
 
   return useMutation({
-    mutationFn: (body: SendMessageBody) =>
-      messagesApi.send(slug, conversationId, body),
+    mutationFn: (body: SendMessageBody) => {
+      if (body.type === 'template') {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _hydratedBody: _h, ...apiBody } = body;
+        return messagesApi.send(slug, conversationId, apiBody);
+      }
+      return messagesApi.send(slug, conversationId, body);
+    },
     onMutate: async (body) => {
       await qc.cancelQueries({ queryKey: listKey });
       const previous = qc.getQueryData<MessageListResult>(listKey);
@@ -130,7 +136,12 @@ export function useSendMessage(slug: string, conversationId: string) {
         conversationId,
         direction: 'outbound',
         status: 'queued',
-        body: body.type === 'text' ? body.text : null,
+        body:
+          body.type === 'text'
+            ? body.text
+            : body.type === 'template'
+              ? (body._hydratedBody ?? null)
+              : null,
         templateName: body.type === 'template' ? body.templateName : null,
         timestamp: new Date().toISOString(),
         failureCode: null,

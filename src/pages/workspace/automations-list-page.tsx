@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MoreHorizontal, Plus, Zap } from 'lucide-react';
+import { MoreHorizontal, Play, Plus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -61,7 +61,9 @@ import {
   useActivateFlow,
   useDeactivateFlow,
   useDeleteFlow,
+  useTriggerFlow,
 } from '@/api/hooks/use-flows';
+import { useContacts } from '@/api/hooks/use-contacts';
 import { hasFeature } from '@/lib/plan';
 import { formatRelativeShort } from '@/lib/relative-time';
 import { toast } from '@/lib/toast';
@@ -255,6 +257,104 @@ function CreateFlowDialog({ open, onOpenChange, slug }: CreateFlowDialogProps) {
   );
 }
 
+// ── Manual trigger dialog ──────────────────────────────────────────────────────
+
+interface TriggerFlowDialogProps {
+  flow: WaFlow | null;
+  onOpenChange: (v: boolean) => void;
+  slug: string;
+}
+
+function TriggerFlowDialog({ flow, onOpenChange, slug }: TriggerFlowDialogProps) {
+  const { t } = useTranslation();
+  const triggerMutation = useTriggerFlow(slug);
+  const [search, setSearch] = useState('');
+  const [selectedContactId, setSelectedContactId] = useState('');
+
+  const { data: contactsData } = useContacts(slug, search || undefined);
+  const contacts = contactsData?.contacts ?? [];
+
+  function handleOpenChange(v: boolean) {
+    if (!v) {
+      setSearch('');
+      setSelectedContactId('');
+    }
+    onOpenChange(v);
+  }
+
+  async function handleConfirm() {
+    if (!flow || !selectedContactId) return;
+    try {
+      await triggerMutation.mutateAsync({ id: flow.id, contactId: selectedContactId });
+      toast.success(t('flows.trigger_success', 'Flow started for contact'));
+      handleOpenChange(false);
+    } catch (err) {
+      toast.error(err);
+    }
+  }
+
+  return (
+    <Dialog open={!!flow} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {t('flows.trigger_dialog_title', 'Trigger flow manually')}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <p className="text-[13px] text-[#71717a]">
+            {t(
+              'flows.trigger_dialog_desc',
+              'Start "{{name}}" immediately for a contact.',
+              { name: flow?.name ?? '' },
+            )}
+          </p>
+          <Input
+            placeholder={t('flows.trigger_search_placeholder', 'Search by name or phone…')}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setSelectedContactId('');
+            }}
+            className="h-8 text-[13px]"
+          />
+          {contacts.length > 0 && (
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-[#e4e4e7]">
+              {contacts.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`w-full px-3 py-2 text-left text-[13px] hover:bg-[#fafafa] ${
+                    selectedContactId === c.id ? 'bg-[#f4f4f5]' : ''
+                  }`}
+                  onClick={() => setSelectedContactId(c.id)}
+                >
+                  <span className="font-medium">{c.name ?? c.phoneE164}</span>
+                  {c.name && (
+                    <span className="ml-2 text-[12px] text-[#71717a]">{c.phoneE164}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedContactId || triggerMutation.isPending}
+          >
+            {triggerMutation.isPending && <Spinner className="mr-1.5 size-3.5" />}
+            {t('flows.trigger_confirm', 'Start flow')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AutomationsListPage() {
@@ -269,6 +369,7 @@ export function AutomationsListPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<WaFlow | null>(null);
+  const [triggerTarget, setTriggerTarget] = useState<WaFlow | null>(null);
 
   const flows = data?.flows ?? [];
   const canActivate = hasFeature(ws, 'chatbot_flows');
@@ -469,6 +570,14 @@ export function AutomationsListPage() {
                                 {t('flows.deactivate')}
                               </DropdownMenuItem>
                             )}
+                            {flow.status === 'active' && (
+                              <DropdownMenuItem
+                                onSelect={() => setTriggerTarget(flow)}
+                              >
+                                <Play className="mr-1.5 size-3.5" />
+                                {t('flows.trigger_manually', 'Trigger manually')}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onSelect={() => setDeleteTarget(flow)}
@@ -490,6 +599,13 @@ export function AutomationsListPage() {
         <CreateFlowDialog
           open={createOpen}
           onOpenChange={setCreateOpen}
+          slug={ws.slug}
+        />
+
+        {/* Manual trigger dialog */}
+        <TriggerFlowDialog
+          flow={triggerTarget}
+          onOpenChange={(v) => !v && setTriggerTarget(null)}
           slug={ws.slug}
         />
 

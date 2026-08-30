@@ -12,3 +12,21 @@ export function useAnalyticsOverview(slug: string) {
     staleTime: STALE.STANDARD,
   });
 }
+
+export function useAgentStats(slug: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.agentStats(slug, from, to),
+    queryFn: () => analyticsApi.getAgentStats(slug, from, to),
+    enabled: slug.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}
+
+export function useMessageErrors(slug: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: queryKeys.analytics.messageErrors(slug, from, to),
+    queryFn: () => analyticsApi.getMessageErrors(slug, from, to),
+    enabled: slug.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}

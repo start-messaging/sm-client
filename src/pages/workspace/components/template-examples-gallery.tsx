@@ -10,6 +10,7 @@ import {
   type TemplateExample,
 } from '@/api/template-examples.api';
 import { useResolvedTemplateExamples } from '@/api/hooks/use-template-examples';
+import { TemplatePreviewPopover } from '@/components/whatsapp/template-preview-popover';
 
 const CATEGORY_TABS: { value: TemplateCategory | 'ALL'; labelKey: string }[] = [
   { value: 'ALL', labelKey: 'templates.examples.tabAll' },
@@ -79,11 +80,12 @@ export function TemplateExamplesGallery({
             <TabsContent key={tab.value} value={tab.value} className="mt-0">
               <div className="grid gap-3 sm:grid-cols-2">
                 {filterByCategory(examples, tab.value).map((example) => (
-                  <ExampleCard
-                    key={example.id}
-                    example={example}
-                    onApply={() => onApply(example)}
-                  />
+                  <TemplatePreviewPopover key={example.id} components={example.components}>
+                    <ExampleCard
+                      example={example}
+                      onApply={() => onApply(example)}
+                    />
+                  </TemplatePreviewPopover>
                 ))}
               </div>
             </TabsContent>

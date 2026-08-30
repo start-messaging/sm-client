@@ -88,3 +88,12 @@ export function useCampaignAnalytics(slug: string, id: string) {
     staleTime: STALE.STANDARD,
   });
 }
+
+export function useLastMarketingSend(slug: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['campaigns', slug, 'last-marketing-send'] as const,
+    queryFn: () => campaignsApi.getLastMarketingSend(slug),
+    enabled: enabled && slug.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}

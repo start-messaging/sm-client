@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateTemplate } from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
+import { templatesApi } from '@/api/templates.api';
 import type {
   TemplateCategory,
   TemplateComponent,
@@ -25,6 +26,11 @@ import type {
 } from '@/api/templates.api';
 import type { TemplateExample } from '@/lib/template-examples';
 import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
+import {
+  findTemplateShapeViolation,
+  findContentWarnings,
+  type ContentWarning,
+} from '@/lib/template-validation';
 import { TemplateEditorButtons } from './template-editor-buttons';
 
 const TEMPLATE_NAME_RE = /^[a-z0-9_]{1,512}$/;
@@ -82,21 +88,15 @@ const HEADER_FORMATS: NonNullable<TemplateComponent['format']>[] = [
 const AUTH_BODY =
   'Your verification code is {{1}}. Do not share it with anyone.';
 
-const schema = z
-  .object({
-    name: z.string().regex(TEMPLATE_NAME_RE, 'templates.create.nameInvalid'),
-    language: z.string().min(2),
-    category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
-    bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
-    headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
-    headerText: z.string().max(60).optional(),
-    headerLink: z.string().max(2048).optional(),
-    footerText: z.string().max(60).optional(),
-  })
-  .refine((v) => v.headerFormat === 'TEXT' || !!v.headerLink?.trim(), {
-    message: 'templates.create.headerLinkRequired',
-    path: ['headerLink'],
-  });
+const schema = z.object({
+  name: z.string().regex(TEMPLATE_NAME_RE, 'templates.create.nameInvalid'),
+  language: z.string().min(2),
+  category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
+  bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
+  headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
+  headerText: z.string().max(60).optional(),
+  footerText: z.string().max(60).optional(),
+});
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateTemplateSeed {
@@ -107,7 +107,6 @@ export interface CreateTemplateSeed {
   bodySamples?: string[];
   headerFormat?: TemplateComponent['format'];
   headerText?: string;
-  headerLink?: string;
   footerText?: string;
   buttons?: TemplateButton[];
   banner?: 'copyApproved' | 'resubmitRejected';
@@ -139,13 +138,7 @@ function seedFromComponents(
   components: TemplateComponent[],
 ): Pick<
   CreateTemplateSeed,
-  | 'bodyText'
-  | 'bodySamples'
-  | 'headerFormat'
-  | 'headerText'
-  | 'headerLink'
-  | 'footerText'
-  | 'buttons'
+  'bodyText' | 'bodySamples' | 'headerFormat' | 'headerText' | 'footerText' | 'buttons'
 > {
   const header = components.find((c) => c.type === 'HEADER');
   const body = components.find((c) => c.type === 'BODY');
@@ -154,7 +147,6 @@ function seedFromComponents(
     bodySamples: body?.example?.body_text?.[0],
     headerFormat: header?.format,
     headerText: header?.text,
-    headerLink: header?.link,
     footerText: components.find((c) => c.type === 'FOOTER')?.text,
     buttons: buttonsFromComponents(components),
   };
@@ -209,6 +201,13 @@ export function TemplateEditorForm({
     return init;
   });
   const [bodySampleError, setBodySampleError] = useState('');
+  const [bodyShapeError, setBodyShapeError] = useState<string | null>(null);
+  const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
+
+  // Media header upload state
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [headerMediaHandle, setHeaderMediaHandle] = useState<string | null>(null);
+  const [headerMediaPreviewUrl, setHeaderMediaPreviewUrl] = useState<string | null>(null);
 
   // LTO state
   const [ltoHasExpiry, setLtoHasExpiry] = useState(false);
@@ -242,7 +241,6 @@ export function TemplateEditorForm({
       bodyText: seed?.bodyText ?? '',
       headerFormat: seed?.headerFormat ?? 'TEXT',
       headerText: seed?.headerText ?? '',
-      headerLink: seed?.headerLink ?? '',
       footerText: seed?.footerText ?? '',
     },
   });
@@ -254,6 +252,21 @@ export function TemplateEditorForm({
   const headerFormat = useWatch({ control, name: 'headerFormat' });
   const headerText = useWatch({ control, name: 'headerText' });
   const footerText = useWatch({ control, name: 'footerText' });
+
+  function handleBodyChange(text: string) {
+    setContentWarnings(findContentWarnings(text, category as TemplateCategory));
+    setBodyShapeError(null);
+  }
+
+  function handleBodyBlur() {
+    const error = findTemplateShapeViolation({
+      name,
+      category: category as TemplateCategory,
+      bodyText: bodyText ?? '',
+      headerText: headerFormat === 'TEXT' ? (headerText ?? '') : undefined,
+    });
+    setBodyShapeError(error);
+  }
 
   const bodyVariables = useMemo(
     () =>
@@ -314,6 +327,17 @@ export function TemplateEditorForm({
   }
 
   const onSubmit = (v: FormValues) => {
+    const shapeError = findTemplateShapeViolation({
+      name: v.name,
+      category: v.category as TemplateCategory,
+      bodyText: subtype === 'authentication' ? AUTH_BODY : v.bodyText,
+      headerText: v.headerFormat === 'TEXT' ? v.headerText : undefined,
+    });
+    if (shapeError) {
+      setBodyShapeError(shapeError);
+      return;
+    }
+
     const showButtons = subtype !== 'authentication' && subtype !== 'carousel';
 
     if (showButtons) {
@@ -353,11 +377,14 @@ export function TemplateEditorForm({
         });
       }
     } else {
-      components.push({
+      const headerComp: TemplateComponent = {
         type: 'HEADER',
         format: v.headerFormat,
-        link: v.headerLink?.trim(),
-      });
+      };
+      if (headerMediaHandle) {
+        headerComp.example = { header_handle: [headerMediaHandle] };
+      }
+      components.push(headerComp);
     }
 
     if (subtype === 'authentication') {
@@ -449,10 +476,10 @@ export function TemplateEditorForm({
   }, [subtype, buttons, authCopyCode, t]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_320px]">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex min-w-0 flex-1 flex-col gap-4"
+        className="flex min-w-0 flex-col gap-4"
       >
         {seed?.banner === 'copyApproved' && (
           <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
@@ -580,22 +607,53 @@ export function TemplateEditorForm({
                 {...register('headerText')}
               />
             ) : (
-              <>
-                <Input
-                  id="tpl-header-link"
-                  placeholder="https://cdn.example.com/banner.jpg"
-                  aria-invalid={!!errors.headerLink}
-                  {...register('headerLink')}
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  className="text-sm"
+                  accept={
+                    headerFormat === 'IMAGE'
+                      ? 'image/*'
+                      : headerFormat === 'VIDEO'
+                        ? 'video/*'
+                        : '*'
+                  }
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setMediaUploading(true);
+                    setHeaderMediaHandle(null);
+                    setHeaderMediaPreviewUrl(null);
+                    try {
+                      const { handle } = await templatesApi.uploadMedia(slug, file);
+                      setHeaderMediaHandle(handle);
+                      setHeaderMediaPreviewUrl(URL.createObjectURL(file));
+                    } catch {
+                      toast.error(t('templates.create.mediaUploadError', 'Media upload failed'));
+                    } finally {
+                      setMediaUploading(false);
+                    }
+                  }}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('templates.create.headerLinkHint')}
-                </p>
-                {errors.headerLink && (
-                  <FieldError
-                    errors={[{ message: t(errors.headerLink.message!) }]}
+                {mediaUploading && (
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                    <Spinner className="size-3.5" />
+                    {t('templates.create.mediaUploading', 'Uploading…')}
+                  </p>
+                )}
+                {headerMediaPreviewUrl && headerFormat === 'IMAGE' && (
+                  <img
+                    src={headerMediaPreviewUrl}
+                    className="h-32 rounded object-cover"
+                    alt="header preview"
                   />
                 )}
-              </>
+                {headerMediaHandle && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                    {t('templates.create.mediaUploaded', 'Media uploaded successfully')}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -620,15 +678,32 @@ export function TemplateEditorForm({
               id="tpl-body"
               rows={5}
               placeholder={t('templates.create.bodyPlaceholder')}
-              aria-invalid={!!errors.bodyText}
-              {...register('bodyText')}
+              aria-invalid={!!errors.bodyText || !!bodyShapeError}
+              {...register('bodyText', {
+                onChange: (e) => handleBodyChange(e.target.value),
+              })}
+              onBlur={handleBodyBlur}
             />
             <p className="text-muted-foreground text-xs">
               {t('templates.create.bodyHint')}
             </p>
-            {errors.bodyText && (
-              <FieldError errors={[{ message: t(errors.bodyText.message!) }]} />
+            {(errors.bodyText || bodyShapeError) && (
+              <FieldError
+                errors={[{ message: bodyShapeError ?? t(errors.bodyText!.message!) }]}
+              />
             )}
+            {contentWarnings.map((w) => (
+              <div
+                key={w.code}
+                className={`rounded-md border px-3 py-2 text-xs ${
+                  w.severity === 'warning'
+                    ? 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                    : 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200'
+                }`}
+              >
+                {w.message}
+              </div>
+            ))}
 
             {bodyVariables.length > 0 && (
               <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
@@ -827,7 +902,7 @@ export function TemplateEditorForm({
         </div>
       </form>
 
-      <aside className="hidden w-72 shrink-0 lg:sticky lg:top-0 lg:block lg:self-start">
+      <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
         <WaMessagePreview
           headerText={previewHeaderText}
           bodyText={previewBodyText}
