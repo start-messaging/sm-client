@@ -139,6 +139,10 @@ export interface SendTemplateMessageBody {
   templateLanguage: string;
   /** Parameter values for dynamic template components. */
   parameters?: Record<string, string>[];
+  /** Public URL for the template header media (IMAGE/VIDEO/DOCUMENT). */
+  headerMediaUrl?: string;
+  /** Client-only: file to upload server-side to R2 and use as header media. Sent as multipart. */
+  _headerMediaFile?: File;
   /** Client-only: pre-hydrated body for optimistic bubble display. Stripped before API send. */
   _hydratedBody?: string;
 }
@@ -213,8 +217,18 @@ export const messagesApi = {
   getUnreadCount: (slug: string) =>
     apiGet<UnreadCountResult>(endpoints.messages.unreadCount(slug)),
 
-  send: (slug: string, conversationId: string, body: SendMessageBody) =>
-    apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), body),
+  send: (slug: string, conversationId: string, body: SendMessageBody) => {
+    if (body.type === 'template' && body._headerMediaFile) {
+      const form = new FormData();
+      form.append('type', 'template');
+      form.append('templateName', body.templateName);
+      form.append('templateLanguage', body.templateLanguage);
+      if (body.parameters?.length) form.append('parameters', JSON.stringify(body.parameters));
+      form.append('headerFile', body._headerMediaFile);
+      return apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), form);
+    }
+    return apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), body);
+  },
 
   sendInteractive: (
     slug: string,

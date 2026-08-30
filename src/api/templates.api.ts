@@ -122,4 +122,11 @@ export const templatesApi = {
     form.append('file', file);
     return apiPost<{ handle: string }>(endpoints.templates.mediaUpload(slug), form);
   },
+
+  /** Upload a file to R2 and get back a public URL. Used for header media in campaigns/inbox. */
+  uploadMediaSample: (slug: string, file: File): Promise<{ url: string }> => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiPost<{ url: string }>(endpoints.templates.mediaSample(slug), form);
+  },
 };

@@ -192,7 +192,17 @@ export async function apiPost<T>(
   body?: unknown,
   config?: AxiosRequestConfig,
 ) {
-  return (await http.post<T>(url, body, config)).data;
+  // Let axios set the correct Content-Type + boundary for multipart uploads
+  const formDataHeaders =
+    typeof FormData !== 'undefined' && body instanceof FormData
+      ? { 'Content-Type': undefined }
+      : undefined;
+  return (
+    await http.post<T>(url, body, {
+      ...config,
+      headers: { ...formDataHeaders, ...config?.headers },
+    })
+  ).data;
 }
 export async function apiPatch<T>(
   url: string,

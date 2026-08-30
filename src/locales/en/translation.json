@@ -167,7 +167,8 @@
       "whatsapp": "WHATSAPP"
     },
     "commonGroup": "COMMON",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "metaFlows": "Meta Flows"
   },
   "createWorkspace": {
     "back": "All services",

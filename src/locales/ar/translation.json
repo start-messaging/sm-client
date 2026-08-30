@@ -169,7 +169,8 @@
     "serviceGroup": {
       "whatsapp": "WHATSAPP"
     },
-    "commonGroup": "COMMON"
+    "commonGroup": "COMMON",
+    "metaFlows": "تدفقات ميتا"
   },
   "createWorkspace": {
     "back": "كل الخدمات",

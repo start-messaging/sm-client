@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ImageIcon, Video, FileText } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,18 +15,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Spinner } from '@/components/ui/spinner';
 import { useCreateTemplate } from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
-import { templatesApi } from '@/api/templates.api';
 import type {
   TemplateCategory,
   TemplateComponent,
   TemplateButton,
   WaTemplate,
 } from '@/api/templates.api';
-import type { TemplateExample } from '@/lib/template-examples';
+import type { TemplateExample } from '@/api/template-examples.api';
 import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
+import { Spinner } from '@/components/ui/spinner';
 import {
   findTemplateShapeViolation,
   findContentWarnings,
@@ -78,12 +78,7 @@ const CATEGORIES: { value: TemplateCategory; label: string }[] = [
   { value: 'AUTHENTICATION', label: 'Authentication' },
 ];
 
-const HEADER_FORMATS: NonNullable<TemplateComponent['format']>[] = [
-  'TEXT',
-  'IMAGE',
-  'VIDEO',
-  'DOCUMENT',
-];
+type HeaderType = 'NONE' | 'TEXT' | 'MEDIA';
 
 const AUTH_BODY =
   'Your verification code is {{1}}. Do not share it with anyone.';
@@ -93,7 +88,7 @@ const schema = z.object({
   language: z.string().min(2),
   category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
   bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
-  headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
+  headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']).optional(),
   headerText: z.string().max(60).optional(),
   footerText: z.string().max(60).optional(),
 });
@@ -204,10 +199,18 @@ export function TemplateEditorForm({
   const [bodyShapeError, setBodyShapeError] = useState<string | null>(null);
   const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
 
-  // Media header upload state
-  const [mediaUploading, setMediaUploading] = useState(false);
-  const [headerMediaHandle, setHeaderMediaHandle] = useState<string | null>(null);
-  const [headerMediaPreviewUrl, setHeaderMediaPreviewUrl] = useState<string | null>(null);
+  // Header type selector state
+  const [headerType, setHeaderType] = useState<HeaderType>(() => {
+    if (!seed?.headerFormat) return 'NONE';
+    if (seed.headerFormat === 'TEXT') return 'TEXT';
+    return 'MEDIA';
+  });
+  const [mediaFormat, setMediaFormat] = useState<'IMAGE' | 'VIDEO' | 'DOCUMENT'>(() => {
+    if (seed?.headerFormat && seed.headerFormat !== 'TEXT') {
+      return seed.headerFormat as 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+    }
+    return 'IMAGE';
+  });
 
   // LTO state
   const [ltoHasExpiry, setLtoHasExpiry] = useState(false);
@@ -239,7 +242,7 @@ export function TemplateEditorForm({
       language: seed?.language ?? 'en_US',
       category: seed?.category ?? 'UTILITY',
       bodyText: seed?.bodyText ?? '',
-      headerFormat: seed?.headerFormat ?? 'TEXT',
+      headerFormat: seed?.headerFormat ?? undefined,
       headerText: seed?.headerText ?? '',
       footerText: seed?.footerText ?? '',
     },
@@ -376,15 +379,12 @@ export function TemplateEditorForm({
           text: v.headerText.trim(),
         });
       }
-    } else {
-      const headerComp: TemplateComponent = {
+    } else if (v.headerFormat) {
+      // IMAGE / VIDEO / DOCUMENT — no sample handle needed
+      components.push({
         type: 'HEADER',
         format: v.headerFormat,
-      };
-      if (headerMediaHandle) {
-        headerComp.example = { header_handle: [headerMediaHandle] };
-      }
-      components.push(headerComp);
+      });
     }
 
     if (subtype === 'authentication') {
@@ -578,82 +578,82 @@ export function TemplateEditorForm({
         {/* Header — hidden for carousel (header format is set via carousel controls) */}
         {subtype !== 'carousel' && (
           <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-header-format">
-              {t('templates.create.headerOptional')}
-            </FieldLabel>
-            <Select
-              value={headerFormat}
-              onValueChange={(v) =>
-                setValue('headerFormat', v as FormValues['headerFormat'])
-              }
-            >
-              <SelectTrigger id="tpl-header-format">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {HEADER_FORMATS.map((f) => (
-                  <SelectItem key={f} value={f}>
-                    {t(`templates.create.headerFormat.${f}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <FieldLabel>{t('templates.create.headerOptional')}</FieldLabel>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              {t('templates.create.headerHint', 'Add a title or choose which type of media you will use for this header.')}
+            </p>
 
-            {headerFormat === 'TEXT' ? (
+            {/* Header type selector */}
+            <div className="flex gap-2">
+              {(['NONE', 'TEXT', 'MEDIA'] as HeaderType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setHeaderType(type);
+                    if (type === 'NONE') setValue('headerFormat', undefined);
+                    else if (type === 'TEXT') setValue('headerFormat', 'TEXT');
+                    else setValue('headerFormat', mediaFormat);
+                  }}
+                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                    headerType === type
+                      ? 'border-[#0e8a6a] bg-[#e8f5f2] text-[#0e8a6a] dark:border-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-400'
+                      : 'border-border text-muted-foreground hover:border-foreground/30'
+                  }`}
+                >
+                  {type === 'NONE' ? t('templates.create.headerNone', 'None')
+                    : type === 'TEXT' ? t('templates.create.headerTypeText', 'Text')
+                    : t('templates.create.headerTypeMedia', 'Media')}
+                </button>
+              ))}
+            </div>
+
+            {/* Text header input */}
+            {headerType === 'TEXT' && (
               <Input
                 id="tpl-header"
                 placeholder={t('templates.create.headerPlaceholder')}
                 maxLength={60}
                 {...register('headerText')}
               />
-            ) : (
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  className="text-sm"
-                  accept={
-                    headerFormat === 'IMAGE'
-                      ? 'image/*'
-                      : headerFormat === 'VIDEO'
-                        ? 'video/*'
-                        : '*'
-                  }
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setMediaUploading(true);
-                    setHeaderMediaHandle(null);
-                    setHeaderMediaPreviewUrl(null);
-                    try {
-                      const { handle } = await templatesApi.uploadMedia(slug, file);
-                      setHeaderMediaHandle(handle);
-                      setHeaderMediaPreviewUrl(URL.createObjectURL(file));
-                    } catch {
-                      toast.error(t('templates.create.mediaUploadError', 'Media upload failed'));
-                    } finally {
-                      setMediaUploading(false);
-                    }
-                  }}
-                />
-                {mediaUploading && (
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                    <Spinner className="size-3.5" />
-                    {t('templates.create.mediaUploading', 'Uploading…')}
-                  </p>
-                )}
-                {headerMediaPreviewUrl && headerFormat === 'IMAGE' && (
-                  <img
-                    src={headerMediaPreviewUrl}
-                    className="h-32 rounded object-cover"
-                    alt="header preview"
-                  />
-                )}
-                {headerMediaHandle && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    {t('templates.create.mediaUploaded', 'Media uploaded successfully')}
-                  </p>
-                )}
+            )}
+
+            {/* Media type cards */}
+            {headerType === 'MEDIA' && (
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { value: 'IMAGE', label: t('templates.create.headerFormat.IMAGE', 'Image'), Icon: ImageIcon },
+                    { value: 'VIDEO', label: t('templates.create.headerFormat.VIDEO', 'Video'), Icon: Video },
+                    { value: 'DOCUMENT', label: t('templates.create.headerFormat.DOCUMENT', 'Document'), Icon: FileText },
+                  ] as const
+                ).map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      setMediaFormat(value);
+                      setValue('headerFormat', value);
+                    }}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+                      mediaFormat === value
+                        ? 'border-[#0e8a6a] bg-[#e8f5f2] dark:border-emerald-500 dark:bg-emerald-950/30'
+                        : 'border-border hover:border-foreground/30'
+                    }`}
+                  >
+                    <Icon className="size-8 text-[#6b7280]" />
+                    <span className="text-sm font-medium">{label}</span>
+                  </button>
+                ))}
               </div>
+            )}
+
+            {headerType === 'MEDIA' && (
+              <p className="text-muted-foreground text-xs">
+                {t('templates.create.mediaHint', 'The actual media is set per campaign send. Meta uses a placeholder during template review.')}
+              </p>
             )}
           </div>
         )}
@@ -739,12 +739,23 @@ export function TemplateEditorForm({
         {/* Footer — hidden for auth and carousel */}
         {subtype !== 'authentication' && subtype !== 'carousel' && (
           <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-footer">
-              {t('templates.create.footerOptional')}
-            </FieldLabel>
+            <div className="flex items-center gap-2">
+              <FieldLabel htmlFor="tpl-footer" className="mb-0">
+                {t('templates.create.footerOptional')}
+              </FieldLabel>
+              {footerText && (
+                <button
+                  type="button"
+                  onClick={() => setValue('footerText', '')}
+                  className="text-muted-foreground hover:text-foreground ml-auto text-xs underline"
+                >
+                  {t('common.clear', 'Clear')}
+                </button>
+              )}
+            </div>
             <Input
               id="tpl-footer"
-              placeholder={t('templates.create.footerPlaceholder')}
+              placeholder={t('templates.create.footerPlaceholder', 'Add a footer (optional)')}
               maxLength={60}
               {...register('footerText')}
             />

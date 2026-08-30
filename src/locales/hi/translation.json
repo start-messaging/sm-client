@@ -165,7 +165,8 @@
     "serviceGroup": {
       "whatsapp": "WHATSAPP"
     },
-    "commonGroup": "COMMON"
+    "commonGroup": "COMMON",
+    "metaFlows": "मेटा फ्लो"
   },
   "createWorkspace": {
     "back": "सभी सेवाएँ",

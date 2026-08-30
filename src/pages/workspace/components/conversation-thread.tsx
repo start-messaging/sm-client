@@ -22,6 +22,7 @@ import {
   X,
   Eye,
   List,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -295,22 +296,60 @@ function TextComposer({
 
   // File pending: show preview + caption + send controls instead of text area.
   if (pendingFile) {
+    const isImage = pendingFile.type.startsWith('image/');
+    const isVideo = pendingFile.type.startsWith('video/');
+    const isAudio = pendingFile.type.startsWith('audio/');
+    const objectUrl = URL.createObjectURL(pendingFile);
     return (
       <div className="flex flex-col gap-2 border-t p-3">
-        <div className="flex items-center gap-2 rounded border bg-muted/40 px-3 py-2 text-sm">
-          <FileText className="size-4 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate">{pendingFile.name}</span>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="size-6"
-            onClick={clearPendingFile}
-            disabled={isBusy}
-          >
-            <X className="size-3" />
-          </Button>
-        </div>
+        {isImage && (
+          <div className="relative w-fit">
+            <img
+              src={objectUrl}
+              alt={pendingFile.name}
+              className="max-h-40 rounded-lg object-cover"
+              onLoad={() => URL.revokeObjectURL(objectUrl)}
+            />
+            <Button type="button" size="icon" variant="ghost"
+              className="absolute -right-2 -top-2 size-6 rounded-full border bg-background shadow"
+              onClick={clearPendingFile} disabled={isBusy}>
+              <X className="size-3" />
+            </Button>
+          </div>
+        )}
+        {isVideo && (
+          <div className="relative w-fit">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video src={objectUrl} controls className="max-h-40 rounded-lg"
+              onLoadedMetadata={() => URL.revokeObjectURL(objectUrl)} />
+            <Button type="button" size="icon" variant="ghost"
+              className="absolute -right-2 -top-2 size-6 rounded-full border bg-background shadow"
+              onClick={clearPendingFile} disabled={isBusy}>
+              <X className="size-3" />
+            </Button>
+          </div>
+        )}
+        {isAudio && (
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <audio src={objectUrl} controls className="h-10 flex-1"
+              onLoadedMetadata={() => URL.revokeObjectURL(objectUrl)} />
+            <Button type="button" size="icon" variant="ghost" className="size-6"
+              onClick={clearPendingFile} disabled={isBusy}>
+              <X className="size-3" />
+            </Button>
+          </div>
+        )}
+        {!isImage && !isVideo && !isAudio && (
+          <div className="flex items-center gap-2 rounded border bg-muted/40 px-3 py-2 text-sm">
+            <FileText className="size-4 shrink-0 text-muted-foreground" />
+            <span className="flex-1 truncate">{pendingFile.name}</span>
+            <Button type="button" size="icon" variant="ghost" className="size-6"
+              onClick={clearPendingFile} disabled={isBusy}>
+              <X className="size-3" />
+            </Button>
+          </div>
+        )}
         {!pendingFile.type.startsWith('audio/') && (
           <Input
             value={caption}
@@ -441,6 +480,7 @@ function TemplateComposer({
   const { t } = useTranslation();
   const send = useSendMessage(slug, conversationId);
   const { data } = useTemplates(slug);
+  const headerMediaFileRef = useRef<HTMLInputElement>(null);
 
   const approvedTemplates = (data?.templates ?? []).filter(
     (tpl) => tpl.status === 'APPROVED',
@@ -448,9 +488,18 @@ function TemplateComposer({
 
   const [selectedId, setSelectedId] = useState('');
   const [paramValues, setParamValues] = useState<Record<number, string>>({});
+  const [headerMediaFile, setHeaderMediaFile] = useState<File | null>(null);
+  const [headerMediaUrl, setHeaderMediaUrl] = useState('');
+  const [headerBlobUrl, setHeaderBlobUrl] = useState('');
 
   const selected = approvedTemplates.find((tpl) => tpl.id === selectedId);
   const placeholders = selected ? bodyPlaceholders(selected) : [];
+  const headerMediaFormat = selected?.components
+    .find((c) => c.type === 'HEADER' && c.format && c.format !== 'TEXT')
+    ?.format as 'IMAGE' | 'VIDEO' | 'DOCUMENT' | undefined;
+
+  // Revoke blob URL on unmount
+  useEffect(() => () => { if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl); }, [headerBlobUrl]);
 
   const bodyText =
     selected?.components.find((c) => c.type === 'BODY')?.text ?? '';
@@ -472,6 +521,10 @@ function TemplateComposer({
   function handleSelect(id: string) {
     setSelectedId(id);
     setParamValues({});
+    if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
+    setHeaderMediaFile(null);
+    setHeaderMediaUrl('');
+    setHeaderBlobUrl('');
   }
 
   function handleSend() {
@@ -485,6 +538,8 @@ function TemplateComposer({
         templateName: selected.name,
         templateLanguage: selected.language,
         _hydratedBody: hydratedBody || undefined,
+        ...(headerMediaFile ? { _headerMediaFile: headerMediaFile } : {}),
+        ...(headerMediaUrl.trim() && !headerMediaFile ? { headerMediaUrl: headerMediaUrl.trim() } : {}),
         ...(placeholders.length
           ? {
               parameters: placeholders.map((n) => ({
@@ -499,6 +554,10 @@ function TemplateComposer({
           toast.success(t('inbox.composer.sentTemplate'));
           setSelectedId('');
           setParamValues({});
+          if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
+          setHeaderMediaFile(null);
+          setHeaderMediaUrl('');
+          setHeaderBlobUrl('');
         },
         onError: (err) => toast.error(err),
       },
@@ -558,16 +617,91 @@ function TemplateComposer({
         </div>
       )}
 
+      {selected && headerMediaFormat && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium text-muted-foreground">
+            {headerMediaFormat === 'IMAGE' ? 'Header image' : headerMediaFormat === 'VIDEO' ? 'Header video' : 'Header document'}
+          </p>
+          <input
+            ref={headerMediaFileRef}
+            type="file"
+            className="hidden"
+            accept={
+              headerMediaFormat === 'IMAGE'
+                ? 'image/jpeg,image/png,image/webp,image/gif'
+                : headerMediaFormat === 'VIDEO'
+                  ? 'video/mp4,video/3gpp'
+                  : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            }
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              if (headerMediaFileRef.current) headerMediaFileRef.current.value = '';
+              if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
+              setHeaderMediaFile(f);
+              setHeaderMediaUrl('');
+              setHeaderBlobUrl(f ? URL.createObjectURL(f) : '');
+            }}
+          />
+          <div className="flex gap-1.5">
+            <Input
+              placeholder="https://example.com/image.jpg"
+              value={headerMediaFile ? headerMediaFile.name : headerMediaUrl}
+              readOnly={!!headerMediaFile}
+              onChange={(e) => {
+                if (headerBlobUrl) { URL.revokeObjectURL(headerBlobUrl); setHeaderBlobUrl(''); }
+                setHeaderMediaFile(null);
+                setHeaderMediaUrl(e.target.value);
+              }}
+              className="h-8 flex-1 text-xs"
+            />
+            {headerMediaFile || headerMediaUrl ? (
+              <Button
+                type="button" size="icon" variant="ghost" className="size-8"
+                onClick={() => {
+                  if (headerBlobUrl) { URL.revokeObjectURL(headerBlobUrl); setHeaderBlobUrl(''); }
+                  setHeaderMediaFile(null); setHeaderMediaUrl('');
+                }}
+              ><X className="size-3.5" /></Button>
+            ) : (
+              <Button
+                type="button" size="sm" variant="outline" className="h-8 px-2 text-xs"
+                onClick={() => headerMediaFileRef.current?.click()}
+              ><Upload className="mr-1 size-3" />Upload</Button>
+            )}
+          </div>
+          {(headerBlobUrl || headerMediaUrl) && headerMediaFormat === 'IMAGE' && (
+            <img
+              src={headerBlobUrl || headerMediaUrl}
+              alt="header preview"
+              className="max-h-24 w-auto rounded border object-cover"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          )}
+        </div>
+      )}
+
       {selected && (
-        <WaMessagePreview
-          bodyText={previewBody}
-          headerText={previewHeaderText}
-          footerText={previewFooterText}
-          templateName={selected.name}
-          buttonLabels={previewButtonLabels}
-          isCarousel={selected.isCarousel}
-          carouselCardCount={selected.carouselCardCount ?? undefined}
-        />
+        <div className="rounded-lg bg-[#d9fdd3] px-3 py-2 text-sm text-[#111b21] shadow-sm space-y-1">
+          {previewHeaderText && (
+            <p className="font-semibold">{previewHeaderText}</p>
+          )}
+          <p className="whitespace-pre-wrap">{previewBody}</p>
+          {previewFooterText && (
+            <p className="text-xs text-[#667781]">{previewFooterText}</p>
+          )}
+          {previewButtonLabels.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              {previewButtonLabels.map((label, i) => (
+                <span
+                  key={i}
+                  className="rounded-full border border-[#00a884] px-2 py-0.5 text-xs text-[#00a884]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

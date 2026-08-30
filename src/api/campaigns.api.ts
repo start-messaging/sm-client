@@ -76,6 +76,10 @@ export interface CreateCampaignBody {
   /** Per-variable contact field mapping, e.g. { "1": "name", "2": "phone", "3": "attr:company" }. */
   variableMapping?: Record<string, string>;
   flowId?: string;
+  /** Public URL for the template header media (IMAGE/VIDEO/DOCUMENT). */
+  headerMediaUrl?: string;
+  /** Client-only: file to upload server-side to R2. Sent as multipart. Mutually exclusive with headerMediaUrl. */
+  _headerMediaFile?: File;
 }
 
 export interface UpdateCampaignBody {
@@ -92,8 +96,21 @@ export const campaignsApi = {
   list: (slug: string) =>
     apiGet<CampaignListResult>(endpoints.campaigns.list(slug)),
 
-  create: (slug: string, body: CreateCampaignBody) =>
-    apiPost<Campaign>(endpoints.campaigns.create(slug), body),
+  create: (slug: string, body: CreateCampaignBody) => {
+    if (body._headerMediaFile) {
+      const form = new FormData();
+      form.append('name', body.name);
+      form.append('templateName', body.templateName);
+      form.append('templateLanguage', body.templateLanguage);
+      form.append('audienceIds', JSON.stringify(body.audienceIds));
+      if (body.variableMapping) form.append('variableMapping', JSON.stringify(body.variableMapping));
+      if (body.flowId) form.append('flowId', body.flowId);
+      if (body.scheduledAt) form.append('scheduledAt', body.scheduledAt);
+      form.append('headerFile', body._headerMediaFile);
+      return apiPost<Campaign>(endpoints.campaigns.create(slug), form);
+    }
+    return apiPost<Campaign>(endpoints.campaigns.create(slug), body);
+  },
 
   update: (slug: string, id: string, body: UpdateCampaignBody) =>
     apiPatch<Campaign>(endpoints.campaigns.update(slug, id), body),

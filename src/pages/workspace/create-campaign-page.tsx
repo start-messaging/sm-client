@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';import { useForm, Controlle
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FieldError, FieldLabel } from '@/components/ui/field';
@@ -161,6 +161,98 @@ function VarMappingRow({
   );
 }
 
+// ── Shared header-media input (file upload + URL) ────────────────────────────
+
+const HEADER_MEDIA_ACCEPT: Record<string, string> = {
+  IMAGE: 'image/jpeg,image/png,image/webp,image/gif',
+  VIDEO: 'video/mp4,video/3gpp',
+  DOCUMENT:
+    'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+function HeaderMediaField({
+  format,
+  file,
+  url,
+  blobUrl,
+  fileInputRef,
+  onFileChange,
+  onUrlChange,
+  onClear,
+}: {
+  format: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  file: File | null;
+  url: string;
+  blobUrl: string;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (f: File | null) => void;
+  onUrlChange: (u: string) => void;
+  onClear: () => void;
+}) {
+  const label =
+    format === 'IMAGE' ? 'Header image' : format === 'VIDEO' ? 'Header video' : 'Header document';
+  const previewSrc = blobUrl || (url.trim() ? url.trim() : '');
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <FieldLabel>{label}</FieldLabel>
+      <p className="text-xs text-muted-foreground">
+        Upload a file or paste a public URL. The server uploads files to R2 when you send.
+      </p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept={HEADER_MEDIA_ACCEPT[format]}
+        onChange={(e) => {
+          const f = e.target.files?.[0] ?? null;
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          onFileChange(f);
+        }}
+      />
+      <div className="flex gap-2">
+        <Input
+          placeholder="https://example.com/image.jpg"
+          value={file ? file.name : url}
+          readOnly={!!file}
+          onChange={(e) => onUrlChange(e.target.value)}
+          className="flex-1 text-sm"
+        />
+        {(file || url.trim()) ? (
+          <Button type="button" variant="outline" size="sm" onClick={onClear}>
+            <X className="size-3.5" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="mr-1.5 size-3.5" />
+            Upload
+          </Button>
+        )}
+      </div>
+      {previewSrc && format === 'IMAGE' && (
+        <img
+          src={previewSrc}
+          alt="header preview"
+          className="max-h-32 w-auto rounded border object-cover"
+          onError={(e) => (e.currentTarget.style.display = 'none')}
+        />
+      )}
+      {previewSrc && format === 'VIDEO' && (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video src={previewSrc} controls className="max-h-32 w-auto rounded border" preload="metadata" />
+      )}
+      {file && format === 'DOCUMENT' && (
+        <p className="text-xs text-muted-foreground">{file.name}</p>
+      )}
+    </div>
+  );
+}
+
 export function CreateCampaignPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -190,6 +282,11 @@ export function CreateCampaignPage() {
   const varMappingRef = useRef(varMapping);
   const [mappingError, setMappingError] = useState('');
   const [flowId, setFlowId] = useState<string | null>(null);
+  const [headerMediaFile, setHeaderMediaFile] = useState<File | null>(null);
+  const [headerMediaUrl, setHeaderMediaUrl] = useState('');
+  const headerMediaInputRef = useRef<HTMLInputElement>(null);
+  // Blob URL for local preview — revoked on cleanup / file change
+  const [headerBlobUrl, setHeaderBlobUrl] = useState('');
 
   const launchBlocked = wabaStatus?.metaPaymentReady === false;
   const listPath = `/w/${ws.slug}/campaigns`;
@@ -228,6 +325,9 @@ export function CreateCampaignPage() {
 
   const selectedTemplate = approvedTemplates.find((x) => x.id === templateId);
   const isMarketingTemplate = selectedTemplate?.category === 'MARKETING';
+  const templateHeaderMediaFormat = selectedTemplate?.components
+    .find((c) => c.type === 'HEADER' && c.format && c.format !== 'TEXT')
+    ?.format as 'IMAGE' | 'VIDEO' | 'DOCUMENT' | undefined;
 
   const { data: lastMarketingSendData } = useLastMarketingSend(
     ws.slug,
@@ -385,6 +485,8 @@ export function CreateCampaignPage() {
         audienceIds: audienceIdsForCreate,
         variableMapping: buildVarMappingPayload(),
         ...(flowId ? { flowId } : {}),
+        ...(headerMediaFile ? { _headerMediaFile: headerMediaFile } : {}),
+        ...(headerMediaUrl.trim() && !headerMediaFile ? { headerMediaUrl: headerMediaUrl.trim() } : {}),
       })) as Campaign;
 
       if (audienceMode === 'csv') {
@@ -476,6 +578,9 @@ export function CreateCampaignPage() {
                       if (v !== field.value) {
                         writeVarMapping(() => ({}));
                         setMappingError('');
+                        setHeaderMediaFile(null);
+                        setHeaderMediaUrl('');
+                        if (headerBlobUrl) { URL.revokeObjectURL(headerBlobUrl); setHeaderBlobUrl(''); }
                       }
                       field.onChange(v);
                     }}
@@ -585,6 +690,32 @@ export function CreateCampaignPage() {
                   </SelectContent>
                 </Select>
               </div>
+            )}
+
+            {templateHeaderMediaFormat && (
+              <HeaderMediaField
+                format={templateHeaderMediaFormat}
+                file={headerMediaFile}
+                url={headerMediaUrl}
+                blobUrl={headerBlobUrl}
+                fileInputRef={headerMediaInputRef}
+                onFileChange={(file) => {
+                  if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
+                  setHeaderMediaFile(file);
+                  setHeaderMediaUrl('');
+                  setHeaderBlobUrl(file ? URL.createObjectURL(file) : '');
+                }}
+                onUrlChange={(url) => {
+                  if (headerBlobUrl) { URL.revokeObjectURL(headerBlobUrl); setHeaderBlobUrl(''); }
+                  setHeaderMediaFile(null);
+                  setHeaderMediaUrl(url);
+                }}
+                onClear={() => {
+                  if (headerBlobUrl) { URL.revokeObjectURL(headerBlobUrl); setHeaderBlobUrl(''); }
+                  setHeaderMediaFile(null);
+                  setHeaderMediaUrl('');
+                }}
+              />
             )}
 
             <div className="flex justify-end gap-2 pt-2">

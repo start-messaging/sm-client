@@ -101,6 +101,8 @@ export const endpoints = {
     sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/templates/sync`),
     mediaUpload: (slug: string) =>
       v1(`/workspaces/${slug}/whatsapp/templates/media-upload`),
+    mediaSample: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/templates/media-sample`),
   },
 
   // ── Messages / Inbox ──────────────────────────────────────────────────────
@@ -250,6 +252,12 @@ export const endpoints = {
       v1(`/workspaces/${slug}/flows/${id}/deactivate`),
     trigger: (slug: string, id: string) =>
       v1(`/workspaces/${slug}/flows/${id}/trigger`),
+  },
+
+  // ── Meta Flows (read-only sync from Facebook Business Manager) ───────────
+  metaFlows: {
+    list: (slug: string) => v1(`/workspaces/${slug}/whatsapp/meta-flows`),
+    sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/meta-flows/sync`),
   },
 
   // ── API Keys (for Outbound Trigger API) ──────────────────────────────────

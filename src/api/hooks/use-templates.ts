@@ -42,3 +42,10 @@ export function useSyncTemplates(slug: string) {
     },
   });
 }
+
+/** Upload a file to R2, get back a public URL for header media in campaigns/inbox. */
+export function useUploadMediaSample(slug: string) {
+  return useMutation({
+    mutationFn: (file: File) => templatesApi.uploadMediaSample(slug, file),
+  });
+}

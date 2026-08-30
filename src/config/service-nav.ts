@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   BarChart2,
   CreditCard,
+  GitBranch,
   Inbox,
   KanbanSquare,
   LayoutDashboard,
@@ -38,6 +39,11 @@ export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
       segment: 'templates',
       labelKey: 'nav.templates',
       icon: LayoutTemplate,
+    },
+    {
+      segment: 'meta-flows',
+      labelKey: 'nav.metaFlows',
+      icon: GitBranch,
     },
     {
       segment: 'contacts',

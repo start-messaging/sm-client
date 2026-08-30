@@ -45,7 +45,7 @@ export function TemplatePreviewPopover({ components, children }: Props) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <span
-          className="contents"
+          className="inline-flex"
           onMouseEnter={handleOpen}
           onMouseLeave={handleClose}
         >

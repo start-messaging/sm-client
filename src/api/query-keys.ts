@@ -134,4 +134,9 @@ export const queryKeys = {
   apiKeys: {
     all: (slug: string) => ['apiKeys', slug] as const,
   },
+
+  // ── Meta Flows (synced from Facebook Business Manager) ───────────────────
+  metaFlows: {
+    list: (slug: string) => ['meta-flows', slug] as const,
+  },
 } as const;

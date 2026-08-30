@@ -30,6 +30,7 @@ import { BillingPage } from '@/pages/workspace/billing-page';
 import { SettingsPage } from '@/pages/workspace/settings-page';
 import { AutomationsListPage } from '@/pages/workspace/automations-list-page';
 import FlowEditorPage from '@/pages/workspace/flow-editor-page';
+import { MetaFlowsPage } from '@/pages/workspace/meta-flows-page';
 
 /**
  * The single, declarative route config (React Router library mode). Branches:
@@ -103,6 +104,7 @@ export const router = createBrowserRouter([
               { path: 'campaigns/:id', element: <CampaignInsightsPage /> },
               { path: 'automations', element: <AutomationsListPage /> },
               { path: 'automations/:id/edit', element: <FlowEditorPage /> },
+              { path: 'meta-flows', element: <MetaFlowsPage /> },
               { path: 'analytics', element: <AgentAnalyticsPage /> },
               { path: 'members', element: <MembersPage /> },
               { path: 'billing', element: <BillingPage /> },
