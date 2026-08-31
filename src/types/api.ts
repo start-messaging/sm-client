@@ -186,6 +186,7 @@ export interface CurrentWorkspace extends WorkspaceSummary {
   timezone: string | null;
   planFeatures: PlanFeatures;
   planLimits: PlanLimits;
+  planRoleGates: Record<string, string>;
 }
 
 export interface CreateWorkspaceBody {

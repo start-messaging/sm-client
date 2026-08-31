@@ -42,10 +42,42 @@ function newNodeId(): string {
   return crypto.randomUUID();
 }
 
+/**
+ * Walk backward from `sourceNodeId`. Returns true if a `wait_delay` sits on the
+ * path since the last window-opening node — meaning a free-form send reached
+ * this way may fire after the 24-hr customer-care window has closed. The window
+ * re-opens at `trigger` and `wait_for_reply`, so traversal stops there.
+ */
+function hasDelayInPath(
+  sourceNodeId: string,
+  nodes: FlowEditorNode[],
+  edges: { source: string; target: string }[],
+): boolean {
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const visited = new Set<string>();
+  const stack = [sourceNodeId];
+
+  while (stack.length) {
+    const id = stack.pop()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const node = nodeById.get(id);
+    if (!node) continue;
+    if (node.type === 'wait_delay') return true;
+    if (node.type === 'trigger' || node.type === 'wait_for_reply') continue;
+    for (const edge of edges) {
+      if (edge.target === id) stack.push(edge.source);
+    }
+  }
+  return false;
+}
+
 function defaultNodeData(type: FlowNodeType): FlowEditorNodeData {
   switch (type) {
     case 'send_message':
-      return { message: '' };
+      return { messageType: 'text', message: '' };
+    case 'send_template':
+      return { templateName: '', templateLanguage: '', templateVariables: {} };
     case 'button_branch':
       return { body: '', options: [] };
     case 'list_branch':
@@ -310,8 +342,19 @@ export function useFlowEditor(slug: string, flowId: string) {
   const healthWarningMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const w of healthWarnings) map.set(w.nodeId, w.message);
+    for (const node of nodes) {
+      if (node.type === 'send_message' && hasDelayInPath(node.id, nodes, edges)) {
+        map.set(
+          node.id,
+          t(
+            'flows.health.window_closed',
+            'This node may fire outside the 24-hr window. Replace with Send Template.',
+          ),
+        );
+      }
+    }
     return map;
-  }, [healthWarnings]);
+  }, [healthWarnings, nodes, edges, t]);
 
   /** Nodes as rendered: validation rings are view-only, never persisted. */
   const displayNodes = useMemo(() => {
@@ -336,9 +379,24 @@ export function useFlowEditor(slug: string, flowId: string) {
   );
 
   const onConnect = useCallback(
-    (connection: Connection) =>
-      setEdges((current) => addEdge(connection, current)),
-    [setEdges],
+    (connection: Connection) => {
+      const targetNode = nodes.find((node) => node.id === connection.target);
+      if (
+        targetNode?.type === 'send_message' &&
+        connection.source &&
+        hasDelayInPath(connection.source, nodes, edges)
+      ) {
+        toast.error(
+          t(
+            'flows.connect.window_closed',
+            "Free-form messages can't follow a delay — the 24-hr window may be closed. Use a Send Template node instead.",
+          ),
+        );
+        return;
+      }
+      setEdges((current) => addEdge(connection, current));
+    },
+    [nodes, edges, setEdges, t],
   );
 
   const onDragOver = useCallback((event: ReactDragEvent<HTMLDivElement>) => {

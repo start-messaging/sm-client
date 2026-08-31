@@ -366,6 +366,17 @@ export function CampaignsPage() {
                             >
                               {t('campaigns.action.viewInsights')}
                             </DropdownMenuItem>
+                            {c.status === 'DRAFT' && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate(
+                                    `/w/${ws.slug}/campaigns/create?edit=${c.id}`,
+                                  )
+                                }
+                              >
+                                {t('campaigns.action.edit', 'Edit')}
+                              </DropdownMenuItem>
+                            )}
                             {(c.status === 'DRAFT' ||
                               c.status === 'SCHEDULED') && (
                               <DropdownMenuItem

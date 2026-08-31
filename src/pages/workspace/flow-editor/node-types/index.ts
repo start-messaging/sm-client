@@ -5,6 +5,7 @@ import {
   Filter,
   GitBranch,
   Layers,
+  LayoutTemplate,
   List,
   MessageSquare,
   PenLine,
@@ -19,6 +20,7 @@ import type { FlowNodeType } from '@/api/flows.api';
 import { ActionNode } from './ActionNode';
 import { BranchNode } from './BranchNode';
 import { SendMessageNode } from './SendMessageNode';
+import { SendTemplateNode } from './SendTemplateNode';
 import { TriggerNode } from './TriggerNode';
 import { WaitDelayNode } from './WaitDelayNode';
 import { WaitForReplyNode } from './WaitForReplyNode';
@@ -56,6 +58,13 @@ export const NODE_TYPE_META: Record<FlowNodeType, NodeTypeMeta> = {
     label: 'Send message',
     descriptionKey: 'flows.node.send_message_desc',
     description: 'Sends a text message to the contact. Use {{contact.name}}, {{contact.phone}}, or {{reply}} to personalise.',
+  },
+  send_template: {
+    icon: LayoutTemplate,
+    labelKey: 'flows.node.send_template',
+    label: 'Send Template',
+    descriptionKey: 'flows.node.send_template_desc',
+    description: 'Send an approved template message',
   },
   wait_for_reply: {
     icon: Clock,
@@ -140,6 +149,7 @@ export const NODE_TYPE_META: Record<FlowNodeType, NodeTypeMeta> = {
 export const PALETTE_NODE_TYPES: FlowNodeType[] = [
   'trigger',
   'send_message',
+  'send_template',
   'wait_for_reply',
   'wait_delay',
   'button_branch',
@@ -156,6 +166,7 @@ export const PALETTE_NODE_TYPES: FlowNodeType[] = [
 export const nodeTypes = {
   trigger: TriggerNode,
   send_message: SendMessageNode,
+  send_template: SendTemplateNode,
   wait_for_reply: WaitForReplyNode,
   wait_delay: WaitDelayNode,
   button_branch: BranchNode,

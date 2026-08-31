@@ -362,7 +362,10 @@
       "pickTemplate": "अनुमोदित टेम्पलेट चुनें…",
       "noApprovedTemplates": "अभी कोई अनुमोदित टेम्पलेट नहीं। पहले टेम्पलेट बनाएँ और अनुमोदन प्राप्त करें।",
       "tab_interactive": "इंटरएक्टिव",
-      "opted_out_agent_info": "इस संपर्क ने स्वचालित मैसेज से ऑप्ट-आउट किया है। एजेंट सेंड की अनुमति है।"
+      "opted_out_agent_info": "इस संपर्क ने स्वचालित मैसेज से ऑप्ट-आउट किया है। एजेंट सेंड की अनुमति है।",
+      "attachFile": "फ़ाइल संलग्न करें",
+      "captionPlaceholder": "कैप्शन जोड़ें (वैकल्पिक)…",
+      "sendFile": "भेजें"
     },
     "newConversation": {
       "trigger": "नई बातचीत",
@@ -667,6 +670,7 @@
     "trigger_first_message": "पहला मैसेज",
     "trigger_any_inbound": "कोई भी इनबाउंड",
     "trigger_keyword": "कीवर्ड",
+    "trigger_manual": "केवल मैन्युअल",
     "activate": "सक्रिय करें",
     "deactivate": "निष्क्रिय करें",
     "edit": "संपादित करें",
@@ -677,6 +681,9 @@
     "plan_gate_info": "आप इस प्लान पर फ़्लो बना और सेव कर सकते हैं। बातचीत को स्वचालित करने के लिए एडवांस्ड में अपग्रेड करें।",
     "node": {
       "no_message": "(कोई संदेश नहीं)",
+      "no_template": "(कोई टेम्पलेट नहीं चुना)",
+      "send_template": "टेम्पलेट भेजें",
+      "send_template_desc": "एक स्वीकृत टेम्पलेट संदेश भेजें",
       "no_question": "(कोई प्रश्न नहीं)",
       "no_condition": "(कोई शर्त नहीं)",
       "no_options": "अभी कोई विकल्प नहीं",
@@ -717,7 +724,34 @@
       "remove_keyword": "कीवर्ड हटाएँ",
       "operator": "शर्त",
       "check": "जाँचने का मान",
-      "delete_step": "चरण हटाएँ"
+      "delete_step": "चरण हटाएँ",
+      "trigger_manual_hint": "यह फ़्लो मैन्युअल रूप से या कैंपेन एनरोलमेंट से शुरू होता है। कोई इनबाउंड मैसेज इसे अपने आप शुरू नहीं करेगा।",
+      "field_placeholder": "जैसे: userName",
+      "set_field_hint": "कोई भी नाम टाइप करें। उपयोगकर्ता के अंतिम संदेश को इस वेरिएबल में सहेजने के लिए मान के रूप में {{reply}} का उपयोग करें। बाद के नोड्स अपने टेक्स्ट में {{name}} का उपयोग कर सकते हैं।",
+      "mode_text": "टेक्स्ट",
+      "mode_media": "मीडिया",
+      "mode_interactive": "इंटरैक्टिव",
+      "media_type": "मीडिया प्रकार",
+      "media_image": "छवि",
+      "media_video": "वीडियो",
+      "media_document": "दस्तावेज़",
+      "media_url": "मीडिया URL",
+      "media_url_hint": "एक सार्वजनिक लिंक जहाँ से WhatsApp फ़ाइल ला सके।",
+      "media_caption": "कैप्शन (वैकल्पिक)",
+      "interactive_buttons": "बटन",
+      "interactive_list": "सूची",
+      "template": "टेम्पलेट",
+      "template_empty": "अभी कोई स्वीकृत टेम्पलेट नहीं। टेम्पलेट पेज पर बनाएँ और स्वीकृत कराएँ।",
+      "template_pick": "टेम्पलेट चुनें",
+      "template_header_media": "हेडर मीडिया URL",
+      "template_variables": "वेरिएबल",
+      "template_variables_hint": "संपर्क मान डालने के लिए {{token}} टाइप करें, या एक निश्चित स्ट्रिंग।"
+    },
+    "connect": {
+      "window_closed": "फ्री-फॉर्म संदेश देरी के बाद नहीं आ सकते — 24-घंटे की विंडो बंद हो सकती है। इसके बजाय Send Template नोड का उपयोग करें।"
+    },
+    "health": {
+      "window_closed": "यह नोड 24-घंटे की विंडो के बाहर चल सकता है। इसे Send Template से बदलें।"
     },
     "issue": {
       "title": "फ़्लो लाइव करने से पहले",

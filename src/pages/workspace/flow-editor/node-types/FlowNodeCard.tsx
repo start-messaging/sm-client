@@ -1,5 +1,6 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import { useTranslation } from 'react-i18next';
+import type { LucideIcon } from 'lucide-react';
 import type { FlowNodeType, FlowTriggerType } from '@/api/flows.api';
 import { cn } from '@/lib/utils';
 import { NODE_TYPE_META } from './index';
@@ -35,6 +36,23 @@ export interface FlowEditorNodeData extends Record<string, unknown> {
   delayUnit?: 'minutes' | 'hours' | 'days';
   triggerType?: FlowTriggerType;
   triggerKeywords?: string[];
+  /** send_message mode: plain text, media by URL, or an interactive message. */
+  messageType?: 'text' | 'media' | 'interactive';
+  mediaType?: 'image' | 'video' | 'document';
+  mediaUrl?: string;
+  mediaCaption?: string;
+  interactiveType?: 'buttons' | 'list';
+  interactiveBody?: string;
+  interactiveButtons?: { id: string; title: string }[];
+  interactiveListSections?: {
+    title: string;
+    rows: { id: string; title: string }[];
+  }[];
+  /** send_template config. */
+  templateName?: string;
+  templateLanguage?: string;
+  templateVariables?: Record<string, string>;
+  headerMediaUrl?: string;
   /** Amber health warning injected by findFlowHealthWarnings — display only, never persisted. */
   healthWarning?: string;
 }
@@ -68,6 +86,8 @@ interface FlowNodeCardProps {
   hasInput?: boolean;
   outputs?: FlowNodeOutput[];
   healthWarning?: string;
+  /** Overrides the type's default icon, e.g. the send_message mode icon. */
+  icon?: LucideIcon;
 }
 
 function handleOffset(index: number, total: number): string {
@@ -83,10 +103,11 @@ export function FlowNodeCard({
   hasInput = true,
   outputs = SINGLE_OUTPUT,
   healthWarning,
+  icon,
 }: FlowNodeCardProps) {
   const { t } = useTranslation();
   const meta = NODE_TYPE_META[type];
-  const Icon = meta.icon;
+  const Icon = icon ?? meta.icon;
 
   return (
     <div

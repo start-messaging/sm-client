@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
@@ -32,8 +33,10 @@ import { useTemplates } from '@/api/hooks/use-templates';
 import { useContacts } from '@/api/hooks/use-contacts';
 import { useFlows } from '@/api/hooks/use-flows';
 import {
+  useCampaign,
   useCreateCampaign,
   useLaunchCampaign,
+  useUpdateCampaign,
   useUploadCampaignAudienceCsv,
   useLastMarketingSend,
 } from '@/api/hooks/use-campaigns';
@@ -102,6 +105,24 @@ function isMappingComplete(
     }
     return entry.type === 'name' || entry.type === 'phone';
   });
+}
+
+function parseServerVarMapping(value: string): VarMappingEntry {
+  if (value === 'name') return { type: 'name', attrKey: '' };
+  if (value === 'phone') return { type: 'phone', attrKey: '' };
+  if (value.startsWith('text:')) {
+    return { type: 'text', attrKey: value.slice('text:'.length) };
+  }
+  const attrKey = value.startsWith('attr:')
+    ? value.slice('attr:'.length)
+    : value;
+  return { type: 'attr', attrKey };
+}
+
+function contactHasAttribute(contact: WaContact, key: string): boolean {
+  const raw = contact.attributes?.[key];
+  if (raw == null) return false;
+  return String(raw).trim().length > 0;
 }
 
 function VarMappingRow({
@@ -256,16 +277,26 @@ function HeaderMediaField({
 export function CreateCampaignPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editCampaignId = searchParams.get('edit') ?? '';
+  const isEditMode = editCampaignId.length > 0;
   const ws = useCurrentWorkspace();
   const { data: tplData } = useTemplates(ws.slug);
   const { data: contactsData } = useContacts(ws.slug);
   const { data: flowsData } = useFlows(ws.slug);
   const { data: wabaStatus } = useWabaStatus(ws.slug);
+  const { data: editCampaign, isLoading: editCampaignLoading } = useCampaign(
+    ws.slug,
+    editCampaignId,
+  );
   const createMutation = useCreateCampaign(ws.slug);
+  const updateMutation = useUpdateCampaign(ws.slug);
   const launchMutation = useLaunchCampaign(ws.slug);
   const uploadAudienceCsvMutation = useUploadCampaignAudienceCsv(ws.slug);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);  const [tagFilter, setTagFilter] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [editHydrated, setEditHydrated] = useState(false);
+  const [tagFilter, setTagFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showOptedOut, setShowOptedOut] = useState(false);
   const [audienceMode, setAudienceMode] = useState<AudienceMode>('contacts');
@@ -378,12 +409,65 @@ export function CreateCampaignPage() {
       if (entry.type === 'name') result[key] = 'name';
       else if (entry.type === 'phone') result[key] = 'phone';
       else if (entry.type === 'attr' && (entry.attrKey ?? '').trim())
-        result[key] = `attr:${entry.attrKey.trim()}`;
+        result[key] = entry.attrKey.trim();
       else if (entry.type === 'text' && (entry.attrKey ?? '').trim())
         result[key] = `text:${entry.attrKey.trim()}`;
     }
     return result;
   }
+
+  useEffect(() => {
+    if (!isEditMode || !editCampaign || editHydrated) return;
+    if (approvedTemplates.length === 0 && tplData !== undefined) return;
+
+    setValue('name', editCampaign.name);
+    const tpl = approvedTemplates.find(
+      (x) =>
+        x.name === editCampaign.templateName &&
+        x.language === editCampaign.templateLanguage,
+    );
+    if (tpl) setValue('templateId', tpl.id);
+    setValue('audienceIds', editCampaign.audienceIds ?? []);
+
+    const mapping: Record<string, VarMappingEntry> = {};
+    for (const [key, value] of Object.entries(
+      editCampaign.variableMapping ?? {},
+    )) {
+      mapping[key] = parseServerVarMapping(value);
+    }
+    writeVarMapping(() => mapping);
+
+    setFlowId(editCampaign.flowId ?? null);
+    setHeaderMediaUrl(editCampaign.headerMediaUrl ?? '');
+
+    if ((editCampaign.audienceCsv?.length ?? 0) > 0) {
+      setAudienceMode('csv');
+      setCsvFileName(
+        t('campaigns.wizard.csv.existingAudience', 'Saved CSV audience'),
+      );
+      const rows = editCampaign.audienceCsv!.map((entry) => ({
+        phone: entry.phoneE164,
+        ...(entry.name ? { name: entry.name } : {}),
+        ...(entry.attrs ?? {}),
+      }));
+      const headerSet = new Set<string>();
+      for (const row of rows) {
+        for (const key of Object.keys(row)) headerSet.add(key);
+      }
+      setCsvHeaders(['phone', ...[...headerSet].filter((h) => h !== 'phone')]);
+      setCsvRows(rows);
+    }
+
+    setEditHydrated(true);
+  }, [
+    isEditMode,
+    editCampaign,
+    editHydrated,
+    approvedTemplates,
+    tplData,
+    setValue,
+    t,
+  ]);
 
   function toggleContact(id: string, checked: boolean) {
     setValue(
@@ -460,7 +544,7 @@ export function CreateCampaignPage() {
   async function submit(launch: boolean) {
     if (!selectedTemplate) return;
 
-    let audienceIdsForCreate: string[] = [];
+    let audienceIdsForSave: string[] = [];
     if (audienceMode === 'csv') {
       if (csvRows.length === 0) {
         toast.error(t('campaigns.wizard.csv.rowsRequired'));
@@ -474,33 +558,58 @@ export function CreateCampaignPage() {
         toast.error(t('campaigns.create.audienceOptedInRequired'));
         return;
       }
-      audienceIdsForCreate = optedInIds;
+      audienceIdsForSave = optedInIds;
     }
 
+    const variableMapping = buildVarMappingPayload();
+    const sharedPayload = {
+      name: campaignName.trim(),
+      templateName: selectedTemplate.name,
+      templateLanguage: selectedTemplate.language,
+      audienceIds: audienceIdsForSave,
+      variableMapping,
+    };
+
     try {
-      const created = (await createMutation.mutateAsync({
-        name: campaignName.trim(),
-        templateName: selectedTemplate.name,
-        templateLanguage: selectedTemplate.language,
-        audienceIds: audienceIdsForCreate,
-        variableMapping: buildVarMappingPayload(),
-        ...(flowId ? { flowId } : {}),
-        ...(headerMediaFile ? { _headerMediaFile: headerMediaFile } : {}),
-        ...(headerMediaUrl.trim() && !headerMediaFile ? { headerMediaUrl: headerMediaUrl.trim() } : {}),
-      })) as Campaign;
+      let campaign: Campaign;
+      if (isEditMode) {
+        campaign = (await updateMutation.mutateAsync({
+          id: editCampaignId,
+          body: {
+            ...sharedPayload,
+            flowId: flowId ?? null,
+            ...(headerMediaUrl.trim() && !headerMediaFile
+              ? { headerMediaUrl: headerMediaUrl.trim() }
+              : {}),
+          },
+        })) as Campaign;
+      } else {
+        campaign = (await createMutation.mutateAsync({
+          ...sharedPayload,
+          ...(flowId ? { flowId } : {}),
+          ...(headerMediaFile ? { _headerMediaFile: headerMediaFile } : {}),
+          ...(headerMediaUrl.trim() && !headerMediaFile
+            ? { headerMediaUrl: headerMediaUrl.trim() }
+            : {}),
+        })) as Campaign;
+      }
 
       if (audienceMode === 'csv') {
         await uploadAudienceCsvMutation.mutateAsync({
-          id: created.id,
+          id: campaign.id,
           rows: csvRows,
         });
       }
 
       if (launch) {
-        await launchMutation.mutateAsync(created.id);
+        await launchMutation.mutateAsync(campaign.id);
         toast.success(t('campaigns.launched'));
       } else {
-        toast.success(t('campaigns.create.success'));
+        toast.success(
+          isEditMode
+            ? t('campaigns.edit.success', 'Campaign updated')
+            : t('campaigns.create.success'),
+        );
       }
       navigate(listPath);
     } catch (err) {
@@ -510,11 +619,33 @@ export function CreateCampaignPage() {
 
   const pending =
     createMutation.isPending ||
+    updateMutation.isPending ||
     launchMutation.isPending ||
     uploadAudienceCsvMutation.isPending;
   const selectedContacts: WaContact[] = audienceIds
     .map((id) => allContacts.find((c) => c.id === id))
     .filter((c): c is WaContact => Boolean(c));
+
+  const attributeWarnings = useMemo(() => {
+    if (audienceMode !== 'contacts' || audienceIds.length === 0) return [];
+    const warnings: { varIndex: number; key: string }[] = [];
+    for (const n of templateVars) {
+      const entry = varMapping[String(n)];
+      if (entry?.type !== 'attr' || !(entry.attrKey ?? '').trim()) continue;
+      const key = entry.attrKey.trim();
+      const missing = selectedContacts.some((c) => !contactHasAttribute(c, key));
+      if (missing) warnings.push({ varIndex: n, key });
+    }
+    return warnings;
+  }, [audienceMode, audienceIds.length, templateVars, varMapping, selectedContacts]);
+
+  if (isEditMode && editCampaignLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -526,7 +657,9 @@ export function CreateCampaignPage() {
           </Link>
         </Button>
         <h1 className="text-2xl font-semibold tracking-tight">
-          {t('campaigns.create.title')}
+          {isEditMode
+            ? t('campaigns.edit.title', 'Edit Campaign')
+            : t('campaigns.create.title')}
         </h1>
         <p className="text-muted-foreground text-sm">
           {t('campaigns.create.subtitle')}
@@ -541,7 +674,9 @@ export function CreateCampaignPage() {
           >
             {n}.{' '}
             {n === 1
-              ? t('campaigns.wizard.stepMessage', 'Message')
+              ? isEditMode
+                ? t('campaigns.edit.stepMessage', 'Edit Campaign')
+                : t('campaigns.wizard.stepMessage', 'Message')
               : n === 2
                 ? t('campaigns.wizard.stepAudience', 'Audience')
                 : t('campaigns.wizard.stepReview', 'Review')}
@@ -833,6 +968,22 @@ export function CreateCampaignPage() {
                 </div>
               )}
 
+              {attributeWarnings.map(({ varIndex, key }) => (
+                <div
+                  key={`${varIndex}-${key}`}
+                  className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300"
+                >
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                  <span>
+                    {t(
+                      'campaigns.create.missingAttributeWarning',
+                      "Some contacts are missing the '{{key}}' attribute and will receive an empty value for variable {{var}}.",
+                      { key, var: `{{${varIndex}}}` },
+                    )}
+                  </span>
+                </div>
+              ))}
+
               <div className="rounded-md border">
                 {visibleContacts.length === 0 ? (
                   <p className="text-muted-foreground p-4 text-sm">
@@ -898,7 +1049,7 @@ export function CreateCampaignPage() {
               <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-xs leading-relaxed">
                 {t(
                   'campaigns.wizard.csv.hint',
-                  'CSV needs a "phone" column (E.164, e.g. +919876543210). Add an optional "name" column and "attr:<key>" columns for template variables.',
+                  'Add any extra columns — e.g. `company`, `city`. They map to contact attributes automatically.',
                 )}
               </p>
 
@@ -1030,7 +1181,7 @@ export function CreateCampaignPage() {
                   const entry = varMapping[String(n)];
                   const label =
                     entry?.type === 'attr'
-                      ? `attr:${entry.attrKey}`
+                      ? entry.attrKey
                       : entry?.type === 'text'
                         ? `"${entry.attrKey}"`
                         : (entry?.type ?? '—');
@@ -1073,7 +1224,9 @@ export function CreateCampaignPage() {
               onClick={() => void handleSubmit(() => submit(false))()}
             >
               {pending && <Spinner className="mr-2 size-4" />}
-              {t('campaigns.wizard.saveDraft', 'Create draft')}
+              {isEditMode
+                ? t('campaigns.wizard.saveDraftEdit', 'Save changes')
+                : t('campaigns.wizard.saveDraft', 'Create draft')}
             </Button>
             <Button
               type="button"
@@ -1086,7 +1239,9 @@ export function CreateCampaignPage() {
               onClick={() => void handleSubmit(() => submit(true))()}
             >
               {pending && <Spinner className="mr-2 size-4" />}
-              {t('campaigns.wizard.createLaunch', 'Create and launch')}
+              {isEditMode
+                ? t('campaigns.wizard.saveLaunchEdit', 'Save and launch')
+                : t('campaigns.wizard.createLaunch', 'Create and launch')}
             </Button>
           </div>
         </div>

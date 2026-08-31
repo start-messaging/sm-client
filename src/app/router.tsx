@@ -101,6 +101,7 @@ export const router = createBrowserRouter([
               { path: 'leads', element: <LeadsPage /> },
               { path: 'campaigns', element: <CampaignsPage /> },
               { path: 'campaigns/new', element: <CreateCampaignPage /> },
+              { path: 'campaigns/create', element: <CreateCampaignPage /> },
               { path: 'campaigns/:id', element: <CampaignInsightsPage /> },
               { path: 'automations', element: <AutomationsListPage /> },
               { path: 'automations/:id/edit', element: <FlowEditorPage /> },

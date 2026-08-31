@@ -22,6 +22,10 @@ export interface ServiceNavItem {
   icon: LucideIcon;
   /** Module not built yet — rendered disabled with a "coming soon" InfoTip. */
   comingSoon?: boolean;
+  /** Plan feature key — item hidden when feature is off for this workspace. */
+  feature?: string;
+  /** Capability key — item hidden when the member's role is below the gate. */
+  capability?: string;
 }
 
 /**
@@ -34,42 +38,14 @@ export const SERVICE_NAV: Record<string, ServiceNavItem[]> = {
   whatsapp: [
     { segment: '', labelKey: 'nav.dashboard', icon: LayoutDashboard },
     { segment: 'connect', labelKey: 'nav.connect', icon: Link2 },
-    { segment: 'inbox', labelKey: 'nav.inbox', icon: Inbox },
-    {
-      segment: 'templates',
-      labelKey: 'nav.templates',
-      icon: LayoutTemplate,
-    },
-    {
-      segment: 'meta-flows',
-      labelKey: 'nav.metaFlows',
-      icon: GitBranch,
-    },
-    {
-      segment: 'contacts',
-      labelKey: 'nav.contacts',
-      icon: Contact,
-    },
-    {
-      segment: 'leads',
-      labelKey: 'nav.leads',
-      icon: KanbanSquare,
-    },
-    {
-      segment: 'campaigns',
-      labelKey: 'nav.campaigns',
-      icon: Megaphone,
-    },
-    {
-      segment: 'automations',
-      labelKey: 'nav.automations',
-      icon: Zap,
-    },
-    {
-      segment: 'analytics',
-      labelKey: 'nav.analytics',
-      icon: BarChart2,
-    },
+    { segment: 'inbox', labelKey: 'nav.inbox', icon: Inbox, capability: 'send_messages' },
+    { segment: 'templates', labelKey: 'nav.templates', icon: LayoutTemplate },
+    { segment: 'meta-flows', labelKey: 'nav.metaFlows', icon: GitBranch },
+    { segment: 'contacts', labelKey: 'nav.contacts', icon: Contact, capability: 'manage_contacts' },
+    { segment: 'leads', labelKey: 'nav.leads', icon: KanbanSquare },
+    { segment: 'campaigns', labelKey: 'nav.campaigns', icon: Megaphone, feature: 'wa_campaigns', capability: 'manage_campaigns' },
+    { segment: 'automations', labelKey: 'nav.automations', icon: Zap, feature: 'chatbot_flows' },
+    { segment: 'analytics', labelKey: 'nav.analytics', icon: BarChart2, capability: 'view_analytics' },
   ],
 };
 
@@ -80,21 +56,9 @@ export const FALLBACK_NAV: ServiceNavItem[] = [
 
 /** Modules every workspace has regardless of service (later slices). */
 export const COMMON_NAV: ServiceNavItem[] = [
-  {
-    segment: 'members',
-    labelKey: 'nav.members',
-    icon: Users,
-  },
-  {
-    segment: 'billing',
-    labelKey: 'nav.billing',
-    icon: CreditCard,
-  },
-  {
-    segment: 'settings',
-    labelKey: 'nav.settings',
-    icon: Settings,
-  },
+  { segment: 'members', labelKey: 'nav.members', icon: Users },
+  { segment: 'billing', labelKey: 'nav.billing', icon: CreditCard },
+  { segment: 'settings', labelKey: 'nav.settings', icon: Settings, capability: 'write_settings' },
 ];
 
 export function navForService(serviceKey: string): ServiceNavItem[] {

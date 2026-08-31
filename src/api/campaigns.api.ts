@@ -19,6 +19,10 @@ export interface Campaign {
   templateLanguage: string;
   /** IDs of the contact lists / segments to send to. */
   audienceIds: string[];
+  audienceCsv?: CampaignAudienceCsvEntry[];
+  variableMapping?: Record<string, string>;
+  flowId?: string | null;
+  headerMediaUrl?: string | null;
   scheduledAt: string | null;
   launchedAt: string | null;
   completedAt: string | null;
@@ -88,6 +92,9 @@ export interface UpdateCampaignBody {
   templateLanguage?: string;
   audienceIds?: string[];
   scheduledAt?: string | null;
+  variableMapping?: Record<string, string>;
+  flowId?: string | null;
+  headerMediaUrl?: string | null;
 }
 
 // ── API calls ──────────────────────────────────────────────────────────────
@@ -95,6 +102,9 @@ export interface UpdateCampaignBody {
 export const campaignsApi = {
   list: (slug: string) =>
     apiGet<CampaignListResult>(endpoints.campaigns.list(slug)),
+
+  get: (slug: string, id: string) =>
+    apiGet<Campaign>(endpoints.campaigns.byId(slug, id)),
 
   create: (slug: string, body: CreateCampaignBody) => {
     if (body._headerMediaFile) {

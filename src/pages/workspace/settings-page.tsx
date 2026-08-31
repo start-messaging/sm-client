@@ -78,7 +78,7 @@ import type { WaTemplate } from '@/api/templates.api';
 import { InfoTip } from '@/components/shared/info-tip';
 import { Switch } from '@/components/ui/switch';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
-import { hasFeature } from '@/lib/plan';
+import { hasCapability, hasFeature } from '@/lib/plan';
 import { toast } from '@/lib/toast';
 import { ROLE_RANK, WorkspaceRole, type QuickReply } from '@/types/api';
 import { isApiError } from '@/types/error';
@@ -1532,7 +1532,7 @@ export function SettingsPage() {
   const { t } = useTranslation();
   const ws = useCurrentWorkspace();
   const myRank = ROLE_RANK[ws.role];
-  const canWrite = myRank >= ROLE_RANK[WorkspaceRole.ADMIN];
+  const canWrite = hasCapability(ws, 'write_settings');
   const isAgent = myRank >= ROLE_RANK[WorkspaceRole.AGENT];
 
   const [section, setSection] = useState<SettingsSection>('general');

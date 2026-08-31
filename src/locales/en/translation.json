@@ -449,7 +449,10 @@
       "sentTemplate": "Template submitted to WhatsApp",
       "deliveryFailed": "Message failed to deliver. Check the bubble for Meta’s reason.",
       "tab_interactive": "Interactive",
-      "opted_out_agent_info": "This contact has opted out of automated messages. Agent sends are still allowed."
+      "opted_out_agent_info": "This contact has opted out of automated messages. Agent sends are still allowed.",
+      "attachFile": "Attach file",
+      "captionPlaceholder": "Add a caption (optional)…",
+      "sendFile": "Send"
     },
     "status": {
       "queued": "Sending…",
@@ -949,7 +952,7 @@
       "tabContacts": "From contacts",
       "tabCsv": "Upload CSV",
       "csv": {
-        "hint": "CSV needs a \"phone\" column (E.164, e.g. +919876543210). Add an optional \"name\" column and \"attr:<key>\" columns for template variables.",
+        "hint": "Add any extra columns — e.g. `company`, `city`. They map to contact attributes automatically.",
         "dropzone": "Choose a CSV file…",
         "previewNote": "Showing the first 5 rows. Phone validity and opt-out status are checked when the campaign is created.",
         "rowCount_one": "{{count}} row parsed",
@@ -973,6 +976,7 @@
     "trigger_first_message": "First message",
     "trigger_any_inbound": "Any inbound",
     "trigger_keyword": "Keyword",
+    "trigger_manual": "Manual only",
     "activate": "Activate",
     "deactivate": "Deactivate",
     "edit": "Edit",
@@ -983,6 +987,9 @@
     "plan_gate_info": "You can build and save flows on this plan. Upgrade to Advanced to activate them and start automating conversations.",
     "node": {
       "no_message": "(No message set)",
+      "no_template": "(No template chosen)",
+      "send_template": "Send Template",
+      "send_template_desc": "Send an approved template message",
       "no_question": "(No question set)",
       "no_condition": "(No condition set)",
       "no_options": "No options yet",
@@ -1031,7 +1038,34 @@
       "wait_delay_duration": "Duration",
       "delay_minutes": "minutes",
       "delay_hours": "hours",
-      "delay_days": "days"
+      "delay_days": "days",
+      "trigger_manual_hint": "This flow is started manually or via campaign enrollment. No inbound message will auto-start it.",
+      "field_placeholder": "e.g. userName",
+      "set_field_hint": "Type any name. Use {{reply}} as the value to capture the user's last message into this variable. Later nodes can use {{name}} in their text.",
+      "mode_text": "Text",
+      "mode_media": "Media",
+      "mode_interactive": "Interactive",
+      "media_type": "Media type",
+      "media_image": "Image",
+      "media_video": "Video",
+      "media_document": "Document",
+      "media_url": "Media URL",
+      "media_url_hint": "A public link WhatsApp can fetch the file from.",
+      "media_caption": "Caption (optional)",
+      "interactive_buttons": "Buttons",
+      "interactive_list": "List",
+      "template": "Template",
+      "template_empty": "No approved templates yet. Create and get one approved on the Templates page.",
+      "template_pick": "Pick a template",
+      "template_header_media": "Header media URL",
+      "template_variables": "Variables",
+      "template_variables_hint": "Type {{token}} to insert a contact value, or a fixed string."
+    },
+    "connect": {
+      "window_closed": "Free-form messages can't follow a delay — the 24-hr window may be closed. Use a Send Template node instead."
+    },
+    "health": {
+      "window_closed": "This node may fire outside the 24-hr window. Replace with Send Template."
     },
     "trigger_manually": "Trigger manually",
     "trigger_success": "Flow started for contact",

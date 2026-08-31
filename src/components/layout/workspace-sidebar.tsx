@@ -21,7 +21,7 @@ import { useUnreadCount } from '@/api/hooks/use-messages';
 import { useContactsCount } from '@/api/hooks/use-contacts';
 import { useNotificationStore } from '@/stores/notification.store';
 import { COMMON_NAV, navForService } from '@/config/service-nav';
-import { planLimit } from '@/lib/plan';
+import { hasCapability, hasFeature, planLimit } from '@/lib/plan';
 import { getInitials } from '@/lib/contact-avatar';
 import type { CurrentWorkspace } from '@/types/api';
 import type { ServiceNavItem } from '@/config/service-nav';
@@ -32,7 +32,16 @@ export function WorkspaceSidebar({
   workspace: CurrentWorkspace;
 }) {
   const { t } = useTranslation();
-  const items = navForService(workspace.serviceKey);
+  const allItems = navForService(workspace.serviceKey);
+  const items = allItems.filter(
+    (item) =>
+      (!item.feature || hasFeature(workspace, item.feature)) &&
+      (!item.capability || hasCapability(workspace, item.capability, workspace.role)),
+  );
+  const commonItems = COMMON_NAV.filter(
+    (item) =>
+      (!item.capability || hasCapability(workspace, item.capability, workspace.role)),
+  );
 
   return (
     <Sidebar
@@ -65,7 +74,7 @@ export function WorkspaceSidebar({
           <p className="px-2 pb-1 pt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#a1a1aa]">
             {t('nav.commonGroup')}
           </p>
-          {COMMON_NAV.map((item) => (
+          {commonItems.map((item) => (
             <NavItem key={item.segment} workspace={workspace} item={item} />
           ))}
         </div>

@@ -366,7 +366,10 @@
       "pickTemplate": "اختر قالباً معتمداً…",
       "noApprovedTemplates": "لا توجد قوالب معتمدة بعد. أنشئ قالباً واحصل على موافقة من قسم القوالب أولاً.",
       "tab_interactive": "تفاعلي",
-      "opted_out_agent_info": "انسحبت جهة الاتصال من الرسائل التلقائية. إرسال الوكيل لا يزال مسموحاً."
+      "opted_out_agent_info": "انسحبت جهة الاتصال من الرسائل التلقائية. إرسال الوكيل لا يزال مسموحاً.",
+      "attachFile": "إرفاق ملف",
+      "captionPlaceholder": "أضف تعليقاً (اختياري)…",
+      "sendFile": "إرسال"
     },
     "newConversation": {
       "trigger": "محادثة جديدة",
@@ -671,6 +674,7 @@
     "trigger_first_message": "الرسالة الأولى",
     "trigger_any_inbound": "أي وارد",
     "trigger_keyword": "كلمة مفتاحية",
+    "trigger_manual": "يدوي فقط",
     "activate": "تفعيل",
     "deactivate": "إيقاف",
     "edit": "تعديل",
@@ -681,6 +685,9 @@
     "plan_gate_info": "يمكنك إنشاء التدفقات وحفظها في هذه الخطة. قم بالترقية إلى المتقدمة لتفعيلها وبدء أتمتة المحادثات.",
     "node": {
       "no_message": "(لا توجد رسالة)",
+      "no_template": "(لم يتم اختيار قالب)",
+      "send_template": "إرسال قالب",
+      "send_template_desc": "إرسال رسالة قالب معتمد",
       "no_question": "(لا يوجد سؤال)",
       "no_condition": "(لا يوجد شرط)",
       "no_options": "لا توجد خيارات بعد",
@@ -721,7 +728,34 @@
       "remove_keyword": "إزالة كلمة",
       "operator": "الشرط",
       "check": "القيمة للتحقق",
-      "delete_step": "حذف الخطوة"
+      "delete_step": "حذف الخطوة",
+      "trigger_manual_hint": "يبدأ هذا التدفق يدوياً أو عبر التسجيل في حملة. لن تبدأه أي رسالة واردة تلقائياً.",
+      "field_placeholder": "مثل: userName",
+      "set_field_hint": "اكتب أي اسم. استخدم {{reply}} كقيمة لالتقاط آخر رسالة للمستخدم في هذا المتغير. يمكن للعُقد اللاحقة استخدام {{name}} في نصها.",
+      "mode_text": "نص",
+      "mode_media": "وسائط",
+      "mode_interactive": "تفاعلي",
+      "media_type": "نوع الوسائط",
+      "media_image": "صورة",
+      "media_video": "فيديو",
+      "media_document": "مستند",
+      "media_url": "رابط الوسائط",
+      "media_url_hint": "رابط عام يمكن لواتساب جلب الملف منه.",
+      "media_caption": "تعليق (اختياري)",
+      "interactive_buttons": "أزرار",
+      "interactive_list": "قائمة",
+      "template": "القالب",
+      "template_empty": "لا توجد قوالب معتمدة بعد. أنشئ قالباً واحصل على اعتماده من صفحة القوالب.",
+      "template_pick": "اختر قالباً",
+      "template_header_media": "رابط وسائط الرأس",
+      "template_variables": "المتغيرات",
+      "template_variables_hint": "اكتب {{token}} لإدراج قيمة جهة اتصال، أو نصاً ثابتاً."
+    },
+    "connect": {
+      "window_closed": "لا يمكن أن تتبع الرسائل الحرة تأخيراً — قد تكون نافذة الـ 24 ساعة مغلقة. استخدم عقدة إرسال قالب بدلاً من ذلك."
+    },
+    "health": {
+      "window_closed": "قد تُرسل هذه العقدة خارج نافذة الـ 24 ساعة. استبدلها بإرسال قالب."
     },
     "issue": {
       "title": "قبل تفعيل هذا التدفق",

@@ -2,10 +2,15 @@ import { apiDelete, apiGet, apiPatch, apiPost } from '@/lib/http';
 import { endpoints } from '@/api/endpoints';
 
 export type FlowStatus = 'draft' | 'active' | 'inactive';
-export type FlowTriggerType = 'first_message' | 'any_inbound' | 'keyword';
+export type FlowTriggerType =
+  | 'first_message'
+  | 'any_inbound'
+  | 'keyword'
+  | 'manual';
 export type FlowNodeType =
   | 'trigger'
   | 'send_message'
+  | 'send_template'
   | 'wait_for_reply'
   | 'wait_delay'
   | 'button_branch'

@@ -16,6 +16,15 @@ export function useCampaigns(slug: string) {
   });
 }
 
+export function useCampaign(slug: string, id: string) {
+  return useQuery({
+    queryKey: queryKeys.campaigns.byId(slug, id),
+    queryFn: () => campaignsApi.get(slug, id),
+    enabled: slug.length > 0 && id.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}
+
 function useCampaignMutation<TArgs>(
   slug: string,
   fn: (args: TArgs) => Promise<unknown>,

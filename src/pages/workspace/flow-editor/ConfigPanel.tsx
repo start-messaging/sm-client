@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Info, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,9 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useMembers } from '@/api/hooks/use-members';
 import { usePipelineStages } from '@/api/hooks/use-pipeline-stages';
+import { useTemplates } from '@/api/hooks/use-templates';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import { cn } from '@/lib/utils';
 import {
@@ -427,6 +429,354 @@ function AssignAgentFields({
   );
 }
 
+// ── send_message: text / media / interactive ────────────────────────────────
+
+function SendMessageFields({
+  data,
+  onChange,
+}: {
+  data: FlowEditorNodeData;
+  onChange: FieldChange;
+}) {
+  const { t } = useTranslation();
+  const mode = data.messageType ?? 'text';
+  const interactiveType = data.interactiveType ?? 'buttons';
+  const listRows = data.interactiveListSections?.[0]?.rows ?? [];
+
+  return (
+    <>
+      <Tabs
+        value={mode}
+        onValueChange={(value) =>
+          onChange({ messageType: value as FlowEditorNodeData['messageType'] })
+        }
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="text">
+            {t('flows.config.mode_text', 'Text')}
+          </TabsTrigger>
+          <TabsTrigger value="media">
+            {t('flows.config.mode_media', 'Media')}
+          </TabsTrigger>
+          <TabsTrigger value="interactive">
+            {t('flows.config.mode_interactive', 'Interactive')}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {mode === 'text' && (
+        <Section
+          label={t('flows.config.message', 'Message')}
+          hint={t(
+            'flows.config.message_hint',
+            'Type {{token}} to insert a contact value.',
+            { token: '{{' },
+          )}
+        >
+          <VariableTextarea
+            value={data.message ?? ''}
+            maxLength={LIMITS.body}
+            placeholder={t(
+              'flows.config.message_placeholder',
+              'Hi! How can we help?',
+            )}
+            onValueChange={(message) => onChange({ message })}
+          />
+        </Section>
+      )}
+
+      {mode === 'media' && (
+        <>
+          <Section label={t('flows.config.media_type', 'Media type')}>
+            <Select
+              value={data.mediaType ?? 'image'}
+              onValueChange={(value) =>
+                onChange({
+                  mediaType: value as FlowEditorNodeData['mediaType'],
+                })
+              }
+            >
+              <SelectTrigger className="h-8 w-full text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="image">
+                    {t('flows.config.media_image', 'Image')}
+                  </SelectItem>
+                  <SelectItem value="video">
+                    {t('flows.config.media_video', 'Video')}
+                  </SelectItem>
+                  <SelectItem value="document">
+                    {t('flows.config.media_document', 'Document')}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Section>
+          <Section
+            label={t('flows.config.media_url', 'Media URL')}
+            hint={t(
+              'flows.config.media_url_hint',
+              'A public link WhatsApp can fetch the file from.',
+            )}
+          >
+            <Input
+              value={data.mediaUrl ?? ''}
+              placeholder="https://…"
+              className="h-8 text-[13px]"
+              onChange={(event) => onChange({ mediaUrl: event.target.value })}
+            />
+          </Section>
+          <Section label={t('flows.config.media_caption', 'Caption (optional)')}>
+            <Input
+              value={data.mediaCaption ?? ''}
+              className="h-8 text-[13px]"
+              onChange={(event) =>
+                onChange({ mediaCaption: event.target.value })
+              }
+            />
+          </Section>
+        </>
+      )}
+
+      {mode === 'interactive' && (
+        <>
+          <Tabs
+            value={interactiveType}
+            onValueChange={(value) =>
+              onChange({
+                interactiveType:
+                  value as FlowEditorNodeData['interactiveType'],
+              })
+            }
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="buttons">
+                {t('flows.config.interactive_buttons', 'Buttons')}
+              </TabsTrigger>
+              <TabsTrigger value="list">
+                {t('flows.config.interactive_list', 'List')}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Section label={t('flows.config.question', 'Question')}>
+            <VariableTextarea
+              value={data.interactiveBody ?? ''}
+              maxLength={LIMITS.body}
+              placeholder={t(
+                'flows.config.question_placeholder',
+                'What would you like to do?',
+              )}
+              onValueChange={(interactiveBody) => onChange({ interactiveBody })}
+            />
+          </Section>
+          {interactiveType === 'buttons' ? (
+            <Section
+              label={t('flows.config.buttons', 'Buttons')}
+              hint={t(
+                'flows.config.buttons_hint',
+                'Each button becomes its own path on the canvas.',
+              )}
+            >
+              <OptionsField
+                options={data.interactiveButtons ?? []}
+                withDescription={false}
+                max={LIMITS.maxButtons}
+                titleMax={LIMITS.buttonTitle}
+                onOptionsChange={(options) =>
+                  onChange({
+                    interactiveButtons: options.map((o) => ({
+                      id: o.id,
+                      title: o.title,
+                    })),
+                  })
+                }
+              />
+            </Section>
+          ) : (
+            <>
+              <Section
+                label={t('flows.config.list_button', 'List button label')}
+              >
+                <Input
+                  value={data.buttonLabel ?? ''}
+                  maxLength={LIMITS.buttonLabel}
+                  placeholder={t(
+                    'flows.config.list_button_placeholder',
+                    'Choose',
+                  )}
+                  className="h-8 text-[13px]"
+                  onChange={(event) =>
+                    onChange({ buttonLabel: event.target.value })
+                  }
+                />
+              </Section>
+              <Section label={t('flows.config.rows', 'List options')}>
+                <OptionsField
+                  options={listRows}
+                  withDescription={false}
+                  max={LIMITS.maxRows}
+                  titleMax={LIMITS.rowTitle}
+                  onOptionsChange={(options) =>
+                    onChange({
+                      interactiveListSections: [
+                        {
+                          title: data.interactiveListSections?.[0]?.title ?? '',
+                          rows: options.map((o) => ({
+                            id: o.id,
+                            title: o.title,
+                          })),
+                        },
+                      ],
+                    })
+                  }
+                />
+              </Section>
+            </>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+// ── send_template: picker + per-placeholder variable slots ───────────────────
+
+function SendTemplateFields({
+  data,
+  onChange,
+}: {
+  data: FlowEditorNodeData;
+  onChange: FieldChange;
+}) {
+  const { t } = useTranslation();
+  const workspace = useCurrentWorkspace();
+  const { data: templatesData } = useTemplates(workspace.slug);
+  const templates = (templatesData?.templates ?? []).filter(
+    (template) => template.status === 'APPROVED',
+  );
+
+  const selected = templates.find(
+    (template) =>
+      template.name === data.templateName &&
+      template.language === data.templateLanguage,
+  );
+
+  const bodyText =
+    selected?.components.find((component) => component.type === 'BODY')?.text ??
+    '';
+  const slots = Array.from(
+    new Set(Array.from(bodyText.matchAll(/\{\{(\d+)\}\}/g), (m) => m[1]!)),
+  );
+  const hasMediaHeader = selected?.components.some(
+    (component) =>
+      component.type === 'HEADER' &&
+      component.format &&
+      component.format !== 'TEXT',
+  );
+
+  const templateVariables = data.templateVariables ?? {};
+
+  return (
+    <>
+      <Section
+        label={t('flows.config.template', 'Template')}
+        hint={
+          templates.length === 0
+            ? t(
+                'flows.config.template_empty',
+                'No approved templates yet. Create and get one approved on the Templates page.',
+              )
+            : undefined
+        }
+      >
+        <Select
+          value={
+            data.templateName
+              ? `${data.templateName}::${data.templateLanguage ?? ''}`
+              : undefined
+          }
+          onValueChange={(value) => {
+            const [name, language] = value.split('::');
+            onChange({
+              templateName: name,
+              templateLanguage: language,
+              templateVariables: {},
+            });
+          }}
+        >
+          <SelectTrigger className="h-8 w-full text-[13px]">
+            <SelectValue
+              placeholder={t('flows.config.template_pick', 'Pick a template')}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {templates.map((template) => (
+                <SelectItem
+                  key={template.id}
+                  value={`${template.name}::${template.language}`}
+                >
+                  {template.name} ({template.language})
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Section>
+
+      {hasMediaHeader && (
+        <Section
+          label={t('flows.config.template_header_media', 'Header media URL')}
+        >
+          <Input
+            value={data.headerMediaUrl ?? ''}
+            placeholder="https://…"
+            className="h-8 text-[13px]"
+            onChange={(event) =>
+              onChange({ headerMediaUrl: event.target.value })
+            }
+          />
+        </Section>
+      )}
+
+      {slots.length > 0 && (
+        <Section
+          label={t('flows.config.template_variables', 'Variables')}
+          hint={t(
+            'flows.config.template_variables_hint',
+            'Type {{token}} to insert a contact value, or a fixed string.',
+            { token: '{{' },
+          )}
+        >
+          <div className="flex flex-col gap-1.5">
+            {slots.map((slot) => (
+              <div key={slot} className="flex items-center gap-1.5">
+                <span className="w-8 shrink-0 font-mono text-[12px] text-[#71717a]">
+                  {`{{${slot}}}`}
+                </span>
+                <Input
+                  value={templateVariables[slot] ?? ''}
+                  className="h-8 text-[13px]"
+                  onChange={(event) =>
+                    onChange({
+                      templateVariables: {
+                        ...templateVariables,
+                        [slot]: event.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+    </>
+  );
+}
+
 // ── Per-type body ────────────────────────────────────────────────────────────
 
 function NodeFields({
@@ -473,10 +823,22 @@ function NodeFields({
                   <SelectItem value="any_inbound">
                     {t('flows.trigger_any_inbound', 'Any inbound message')}
                   </SelectItem>
+                  <SelectItem value="manual">
+                    {t('flows.trigger_manual', 'Manual only')}
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
           </Section>
+          {triggerType === 'manual' && (
+            <p className="flex gap-1.5 text-[12px] leading-relaxed text-[#71717a]">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-[#a1a1aa]" />
+              {t(
+                'flows.config.trigger_manual_hint',
+                'This flow is started manually or via campaign enrollment. No inbound message will auto-start it.',
+              )}
+            </p>
+          )}
           {triggerType === 'keyword' && (
             <Section
               label={t('flows.config.keywords', 'Keywords')}
@@ -502,26 +864,10 @@ function NodeFields({
     }
 
     case 'send_message':
-      return (
-        <Section
-          label={t('flows.config.message', 'Message')}
-          hint={t(
-            'flows.config.message_hint',
-            'Type {{token}} to insert a contact value.',
-            { token: '{{' },
-          )}
-        >
-          <VariableTextarea
-            value={data.message ?? ''}
-            maxLength={LIMITS.body}
-            placeholder={t(
-              'flows.config.message_placeholder',
-              'Hi! How can we help?',
-            )}
-            onValueChange={(message) => onChange({ message })}
-          />
-        </Section>
-      );
+      return <SendMessageFields data={data} onChange={onChange} />;
+
+    case 'send_template':
+      return <SendTemplateFields data={data} onChange={onChange} />;
 
     case 'wait_for_reply':
       return (
@@ -549,7 +895,9 @@ function NodeFields({
             />
             <Select
               value={data.delayUnit ?? 'hours'}
-              onValueChange={(val) => onChange({ delayUnit: val })}
+              onValueChange={(val) =>
+                onChange({ delayUnit: val as FlowEditorNodeData['delayUnit'] })
+              }
             >
               <SelectTrigger className="h-8 text-[13px]">
                 <SelectValue />
@@ -702,26 +1050,24 @@ function NodeFields({
       return (
         <>
           <Section label={t('flows.config.field', 'Save into')}>
-            <Select
-              value={data.field ?? 'reply'}
-              onValueChange={(field) => onChange({ field })}
-            >
-              <SelectTrigger className="h-8 w-full text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="reply">reply</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <Input
+              value={data.field ?? ''}
+              placeholder={t(
+                'flows.config.field_placeholder',
+                'e.g. userName',
+              )}
+              className="h-8 text-[13px]"
+              onChange={(event) => onChange({ field: event.target.value })}
+            />
           </Section>
           <Section
             label={t('flows.config.value', 'Value')}
-            hint={t(
-              'flows.config.set_field_hint',
-              'Stored for this conversation only — later steps can use it.',
-            )}
+            hint={t('flows.config.set_field_hint', {
+              defaultValue:
+                "Type any name. Use {{reply}} as the value to capture the user's last message into this variable. Later nodes can use {{name}} in their text.",
+              reply: '{{reply}}',
+              name: '{{yourVariableName}}',
+            })}
           >
             <Input
               value={data.value ?? ''}
