@@ -735,9 +735,9 @@ export function TemplateEditorForm({
                   className="hidden"
                   accept={
                     mediaFormat === 'IMAGE'
-                      ? 'image/jpeg,image/png,image/webp'
+                      ? 'image/jpeg,image/png'
                       : mediaFormat === 'VIDEO'
-                        ? 'video/mp4,video/3gpp'
+                        ? 'video/mp4'
                         : 'application/pdf'
                   }
                   onChange={(e) => {

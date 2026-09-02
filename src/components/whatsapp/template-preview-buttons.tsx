@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 
 export function previewButtonLabel(
   btn: Pick<TemplateButton, 'type' | 'text' | 'icon'>,
-  t: (key: string, fallback?: string) => string,
+  t: (key: string, defaultValue: string) => string,
 ): string {
   const custom = btn.text?.trim();
   if (custom) return custom;
@@ -108,6 +108,7 @@ export function TemplatePreviewMedia({
   url?: string;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   const height = compact ? 'h-20' : 'h-24';
   if (format === 'IMAGE' && url) {
     return (
@@ -140,6 +141,7 @@ export function TemplatePreviewMedia({
         : format === 'LOCATION'
           ? MapPin
           : Image;
+  const label = t(`templates.create.media.types.${format}`, format.toLowerCase());
   return (
     <div
       className={cn(

@@ -247,11 +247,13 @@ export const messagesApi = {
     slug: string,
     conversationId: string,
     body: SendInteractiveMessageBody,
-  ) =>
-    apiPost<WaMessage>(
+  ) => {
+    const { type, ...rest } = body;
+    return apiPost<WaMessage>(
       endpoints.messages.sendInteractive(slug, conversationId),
-      body,
-    ),
+      { interactiveType: type, ...rest },
+    );
+  },
 
   /**
    * Upload and send a media message via multipart/form-data.

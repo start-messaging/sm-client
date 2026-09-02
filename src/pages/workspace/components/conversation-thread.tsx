@@ -832,6 +832,7 @@ function InteractiveComposer({
   const [footer, setFooter] = useState('');
   const [buttons, setButtons] = useState([{ id: 'btn_1', title: '' }]);
   const [buttonLabel, setButtonLabel] = useState('');
+  const [sectionTitle, setSectionTitle] = useState('');
   const [rows, setRows] = useState([
     { id: 'row_1', title: '', description: '' },
   ]);
@@ -844,6 +845,7 @@ function InteractiveComposer({
       setFooter('');
       setButtons([{ id: 'btn_1', title: '' }]);
       setButtonLabel('');
+      setSectionTitle('');
       setRows([{ id: 'row_1', title: '', description: '' }]);
       toast.success(t('inbox.interactive.send'));
     },
@@ -880,6 +882,7 @@ function InteractiveComposer({
         buttonLabel: buttonLabel.trim(),
         sections: [
           {
+            ...(sectionTitle.trim() ? { title: sectionTitle.trim() } : {}),
             rows: validRows.map((r) => ({
               id: r.id,
               title: r.title.trim(),
@@ -894,9 +897,17 @@ function InteractiveComposer({
   }
 
   const isBusy = send.isPending;
+  const canSend =
+    !!body.trim() &&
+    (interactiveType === 'button'
+      ? buttons.some((b) => b.title.trim())
+      : !!buttonLabel.trim() && rows.some((r) => r.title.trim()));
 
   return (
     <div className="border-t p-3 flex flex-col gap-3">
+      <p className="text-muted-foreground text-xs leading-relaxed">
+        {t('inbox.interactive.hint')}
+      </p>
       {isContactOptedOut && (
         <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
@@ -965,6 +976,7 @@ function InteractiveComposer({
                   setButtons(next);
                 }}
                 maxLength={20}
+                placeholder={t('inbox.interactive.button_placeholder')}
                 className="h-8 flex-1 text-sm"
                 disabled={isBusy}
               />
@@ -991,7 +1003,7 @@ function InteractiveComposer({
               onClick={() =>
                 setButtons([
                   ...buttons,
-                  { id: `btn_${buttons.length + 1}`, title: '' },
+                  { id: `btn_${Date.now()}`, title: '' },
                 ])
               }
               disabled={isBusy}
@@ -1006,7 +1018,18 @@ function InteractiveComposer({
             value={buttonLabel}
             onChange={(e) => setButtonLabel(e.target.value)}
             maxLength={20}
-            placeholder={t('inbox.interactive.button_label_hint')}
+            placeholder={t('inbox.interactive.button_label')}
+            className="h-8 text-sm"
+            disabled={isBusy}
+          />
+          <p className="text-muted-foreground -mt-1 text-[11px]">
+            {t('inbox.interactive.button_label_hint')}
+          </p>
+          <Input
+            value={sectionTitle}
+            onChange={(e) => setSectionTitle(e.target.value)}
+            maxLength={24}
+            placeholder={t('inbox.interactive.section_title')}
             className="h-8 text-sm"
             disabled={isBusy}
           />
@@ -1061,7 +1084,11 @@ function InteractiveComposer({
               onClick={() =>
                 setRows([
                   ...rows,
-                  { id: `row_${rows.length + 1}`, title: '', description: '' },
+                  {
+                    id: `row_${Date.now()}`,
+                    title: '',
+                    description: '',
+                  },
                 ])
               }
               disabled={isBusy}
@@ -1076,7 +1103,7 @@ function InteractiveComposer({
         <Button
           size="sm"
           onClick={handleSend}
-          disabled={isBusy || !body.trim()}
+          disabled={isBusy || !canSend}
         >
           {isBusy && <Spinner className="mr-1.5" />}
           {t('inbox.interactive.send')}
