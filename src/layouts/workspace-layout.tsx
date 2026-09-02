@@ -17,6 +17,7 @@ import { WabaRequiredGate } from '@/components/whatsapp/waba-required-gate';
 import { useWorkspace } from '@/api/hooks/use-workspaces';
 import { queryKeys } from '@/api/query-keys';
 import { useMeSync } from '@/hooks/use-me-sync';
+import { useSyncWhatsApp } from '@/api/hooks/use-whatsapp';
 import { toast } from '@/lib/toast';
 import { errorMessage } from '@/lib/errors';
 import { useAuthStore } from '@/stores/auth.store';
@@ -73,6 +74,21 @@ export function WorkspaceLayout() {
   const clearActiveContext = useAuthStore((s) => s.clearActiveContext);
   const workspace = useWorkspace(slug);
   useMeSync();
+  const syncWaba = useSyncWhatsApp(slug ?? '');
+
+  // Fire a full Meta sync once per browser session so the user always sees
+  // fresh health metrics, template analytics, and conversation analytics on
+  // app open. sessionStorage clears on tab/window close, so each new session
+  // triggers exactly one sync call.
+  useEffect(() => {
+    if (!slug) return;
+    const key = `wa_synced_${slug}`;
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      syncWaba.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   // Remember where the user works so `/` brings them straight back.
   useEffect(() => {

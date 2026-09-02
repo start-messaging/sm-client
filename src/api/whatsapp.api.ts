@@ -3,6 +3,15 @@ import { endpoints } from '@/api/endpoints';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export interface ConversationAnalyticsSnapshot {
+  month: string;
+  marketing: number;
+  utility: number;
+  authentication: number;
+  service: number;
+  total: number;
+}
+
 export type WabaStatus = 'connected' | 'disconnected' | 'not_connected';
 
 export interface WabaConnectionStatus {
@@ -29,6 +38,8 @@ export interface WabaConnectionStatus {
   qualityRating: string | null;
   /** Meta display-name review state: APPROVED | PENDING_REVIEW | DECLINED. */
   displayNameStatus: string | null;
+  /** Current-month Meta billing breakdown. Null until first sync after connect. */
+  conversationAnalytics: ConversationAnalyticsSnapshot | null;
 }
 
 export interface ConnectWhatsAppBody {

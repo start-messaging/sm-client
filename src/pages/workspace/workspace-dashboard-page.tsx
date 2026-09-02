@@ -25,6 +25,7 @@ import { useAnalyticsOverview } from '@/api/hooks/use-analytics';
 import { useAuthStore } from '@/stores/auth.store';
 import { getAvatarColors, getInitials } from '@/lib/contact-avatar';
 import type { ChecklistStep } from '@/components/education/setup-checklist';
+import type { ConversationAnalyticsSnapshot } from '@/api/whatsapp.api';
 
 // ── NumberHealthWidget ────────────────────────────────────────────────────────
 
@@ -172,6 +173,56 @@ function FrrBadge({ rate }: { rate: number }) {
   );
 }
 
+// ── Meta billing breakdown ────────────────────────────────────────────────────
+
+function BillingCategory({
+  label,
+  count,
+  color,
+}: {
+  label: string;
+  count: number;
+  color: string;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={`text-[11px] font-medium uppercase tracking-wide ${color}`}>
+        {label}
+      </span>
+      <span className="text-[22px] font-bold text-[#18181b] leading-none">
+        {count.toLocaleString()}
+      </span>
+    </div>
+  );
+}
+
+function MetaBillingPanel({ analytics }: { analytics: ConversationAnalyticsSnapshot }) {
+  const { t } = useTranslation();
+  return (
+    <Card className="border-[#e4e4e7]">
+      <CardContent className="p-[18px]">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[13px] font-semibold text-[#18181b]">
+            {t('dashboard.metaBilling.title')}
+          </span>
+          <span className="text-[11px] text-[#a1a1aa]">
+            {t('dashboard.metaBilling.month', { month: analytics.month })}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <BillingCategory label={t('dashboard.metaBilling.marketing')} count={analytics.marketing} color="text-[#7c3aed]" />
+          <BillingCategory label={t('dashboard.metaBilling.utility')} count={analytics.utility} color="text-[#0369a1]" />
+          <BillingCategory label={t('dashboard.metaBilling.authentication')} count={analytics.authentication} color="text-[#059669]" />
+          <BillingCategory label={t('dashboard.metaBilling.service')} count={analytics.service} color="text-[#b45309]" />
+        </div>
+        <p className="mt-3 text-[11px] text-[#a1a1aa]">
+          {t('dashboard.metaBilling.hint')}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function WorkspaceDashboardPage() {
@@ -230,9 +281,14 @@ export function WorkspaceDashboardPage() {
       id: 'firstSend',
       label: t('education.steps.firstSend.label'),
       description: t('education.steps.firstSend.description'),
-      status: isConnected && hasApprovedTemplate ? 'pending' : 'blocked',
+      status:
+        !isConnected || !hasApprovedTemplate
+          ? 'blocked'
+          : wabaStatus?.metaPaymentReady === true
+            ? 'done'
+            : 'pending',
       cta:
-        isConnected && hasApprovedTemplate
+        isConnected && hasApprovedTemplate && wabaStatus?.metaPaymentReady !== true
           ? { label: t('inbox.title'), onClick: () => navigate('inbox') }
           : undefined,
     },
@@ -376,6 +432,11 @@ export function WorkspaceDashboardPage() {
             </Table>
           </CardContent>
         </Card>
+      )}
+
+      {/* Meta billing breakdown — shown when connected and analytics data available */}
+      {isConnected && wabaStatus?.conversationAnalytics && (
+        <MetaBillingPanel analytics={wabaStatus.conversationAnalytics} />
       )}
 
       {/* Setup checklist in secondary position once all done */}

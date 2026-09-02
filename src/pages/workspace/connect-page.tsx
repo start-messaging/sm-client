@@ -639,7 +639,7 @@ export function ConnectPage() {
         <PinPendingCard onOpen={() => setPinOpen(true)} />
       )}
 
-      {isConnected && <MetaPayInstructCard />}
+      {isConnected && wabaStatus?.metaPaymentReady !== true && <MetaPayInstructCard />}
 
       {isConnected && <WabaHealthCard status={wabaStatus} />}
 

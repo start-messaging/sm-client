@@ -98,6 +98,12 @@ export interface WaTemplate {
   rejectionReason: string | null;
   /** Meta quality signal: 'HIGH' | 'MEDIUM' | 'LOW'. Null until first quality webhook. */
   qualityScore: string | null;
+  /** Rolling 30-day metrics from Meta template_analytics. Null until first sync. */
+  metaSentCount: number | null;
+  metaDeliveredCount: number | null;
+  metaReadCount: number | null;
+  topBlockReason: string | null;
+  analyticsUpdatedAt: string | null;
   createdAt: string;
   updatedAt: string;
   // Feature 5A — advanced template components

@@ -211,6 +211,18 @@ function TemplateCard({
   const quality = tpl.qualityScore ?? '—';
   const analyticsHint = t('templates.list.analyticsHint');
 
+  const deliveryRate =
+    tpl.metaSentCount && tpl.metaDeliveredCount != null
+      ? `${Math.round((tpl.metaDeliveredCount / tpl.metaSentCount) * 100)}%`
+      : '—';
+  const readRate =
+    tpl.metaSentCount && tpl.metaReadCount != null
+      ? `${Math.round((tpl.metaReadCount / tpl.metaSentCount) * 100)}%`
+      : '—';
+  const blockReason = tpl.topBlockReason
+    ? tpl.topBlockReason.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase())
+    : '—';
+
   return (
     <div className="flex flex-col md:flex-row bg-white border border-[#e4e4e7] rounded-[12px] overflow-hidden hover:shadow-sm transition-shadow">
       <div className="md:w-[280px] shrink-0 p-3 bg-[#ece5dd]">
@@ -241,18 +253,18 @@ function TemplateCard({
           />
           <DetailRow
             label={t('templates.list.delivery')}
-            value="—"
-            hint={analyticsHint}
+            value={deliveryRate}
+            hint={deliveryRate === '—' ? analyticsHint : undefined}
           />
           <DetailRow
             label={t('templates.list.readRate')}
-            value="—"
-            hint={analyticsHint}
+            value={readRate}
+            hint={readRate === '—' ? analyticsHint : undefined}
           />
           <DetailRow
             label={t('templates.list.topBlock')}
-            value="—"
-            hint={analyticsHint}
+            value={blockReason}
+            hint={blockReason === '—' ? analyticsHint : undefined}
           />
           {tpl.status === 'REJECTED' && tpl.rejectionReason && (
             <p className="text-[11px] text-[#dc2626] pt-1">

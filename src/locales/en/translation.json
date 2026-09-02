@@ -124,7 +124,16 @@
     "openConversations": "Open conversations",
     "openConversationsHint": "Unassigned conversations need attention",
     "frr": "FRR",
-    "setupComplete": "Setup complete — you're ready to grow."
+    "setupComplete": "Setup complete — you're ready to grow.",
+    "metaBilling": {
+      "title": "Meta conversation billing (this month)",
+      "month": "{{month}}",
+      "marketing": "Marketing",
+      "utility": "Utility",
+      "authentication": "Authentication",
+      "service": "Service",
+      "hint": "Counts are Meta-billed business-initiated conversations. Refreshed each session."
+    }
   },
   "sidebar": {
     "plan": "plan",
