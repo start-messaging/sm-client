@@ -40,6 +40,8 @@ export const queryKeys = {
   whatsapp: {
     // WABA connection status — keyed by slug (changes on connect/disconnect).
     status: (slug: string) => ['whatsapp', 'status', slug] as const,
+    productCatalogs: (slug: string) =>
+      ['whatsapp', 'product-catalogs', slug] as const,
   },
 
   // ── WhatsApp analytics ────────────────────────────────────────────────────

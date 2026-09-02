@@ -81,4 +81,9 @@ export const whatsappApi = {
 
   disconnect: (slug: string) =>
     apiPost<void>(endpoints.whatsapp.disconnect(slug), {}),
+
+  listProductCatalogs: (slug: string) =>
+    apiGet<Array<{ id: string; name: string }>>(
+      endpoints.whatsapp.productCatalogs(slug),
+    ),
 };

@@ -2,14 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  FileText,
-  Image,
   LayoutTemplate,
   Pencil,
   Plus,
   RefreshCw,
   Trash2,
-  Video,
 } from 'lucide-react';
 import { InfoTip } from '@/components/shared/info-tip';
 import { hydrateTemplate } from '@/lib/template-utils';
@@ -45,6 +42,10 @@ import type { TemplateStatus, WaTemplate } from '@/api/templates.api';
 import { exampleBodyPreview, featuredExamples } from '@/api/template-examples.api';
 import { cn } from '@/lib/utils';
 import { TemplatePreviewPopover } from '@/components/whatsapp/template-preview-popover';
+import {
+  TemplatePreviewButtons,
+  TemplatePreviewMedia,
+} from '@/components/whatsapp/template-preview-buttons';
 
 const STATUS_PILL: Record<TemplateStatus, { bg: string; text: string }> = {
   APPROVED: { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
@@ -111,19 +112,18 @@ function TemplateBubble({ tpl }: { tpl: WaTemplate }) {
   const footer = tpl.components.find((c) => c.type === 'FOOTER');
   const buttons = tpl.components.find((c) => c.type === 'BUTTONS');
   const body = hydrateTemplate(tpl.components);
-  const MediaIcon =
-    header?.format === 'VIDEO'
-      ? Video
-      : header?.format === 'DOCUMENT'
-        ? FileText
-        : Image;
+  const handle = header?.example?.header_handle?.[0];
+  const mediaUrl =
+    header?.link || (handle?.startsWith('http') ? handle : undefined);
 
   return (
     <div className="rounded-lg bg-[#d9fdd3] p-3 text-sm shadow-sm space-y-1.5 min-h-[140px]">
       {header?.format && header.format !== 'TEXT' && (
-        <div className="bg-white/70 rounded-md flex items-center justify-center h-20">
-          <MediaIcon className="size-7 text-[#a1a1aa]" />
-        </div>
+        <TemplatePreviewMedia
+          format={header.format}
+          url={mediaUrl}
+          compact
+        />
       )}
       {header?.format === 'TEXT' && header.text && (
         <p className="font-semibold text-[#111b21] text-[13px]">{header.text}</p>
@@ -139,16 +139,7 @@ function TemplateBubble({ tpl }: { tpl: WaTemplate }) {
         <p className="text-[11px] text-[#667781]">{footer.text}</p>
       )}
       {buttons?.buttons && buttons.buttons.length > 0 && (
-        <div className="pt-1 flex flex-col gap-1">
-          {buttons.buttons.map((btn, i) => (
-            <span
-              key={i}
-              className="rounded-md border border-[#00a884]/40 bg-white/70 px-2 py-0.5 text-center text-[11px] text-[#00a884]"
-            >
-              {btn.text || btn.type}
-            </span>
-          ))}
-        </div>
+        <TemplatePreviewButtons buttons={buttons.buttons} compact />
       )}
     </div>
   );

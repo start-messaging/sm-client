@@ -35,6 +35,16 @@ export function useRegisterPhone(slug: string) {
   });
 }
 
+/** Product catalogs linked to this WABA in WhatsApp Manager. */
+export function useProductCatalogs(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.whatsapp.productCatalogs(slug),
+    queryFn: () => whatsappApi.listProductCatalogs(slug),
+    enabled: slug.length > 0,
+    staleTime: STALE.STANDARD,
+  });
+}
+
 /** Pull connection status from Meta Graph (manual refresh). */
 export function useSyncWhatsApp(slug: string) {
   const qc = useQueryClient();

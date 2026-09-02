@@ -12,12 +12,17 @@ import {
 } from '@/components/ui/select';
 import { InfoTip } from '@/components/shared/info-tip';
 import { useMetaFlows } from '@/api/hooks/use-meta-flows';
+import { useProductCatalogs } from '@/api/hooks/use-whatsapp';
+import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
 import type { TemplateButton, TemplateButtonType } from '@/api/templates.api';
+import { Spinner } from '@/components/ui/spinner';
 
 const MAX_BUTTONS = 10;
 
 const CALLING_MANAGER =
   'https://business.facebook.com/latest/whatsapp_manager/phone_numbers';
+const CATALOG_MANAGER =
+  'https://business.facebook.com/latest/whatsapp_manager/catalog';
 
 const BUTTON_TYPES: { value: TemplateButtonType; labelKey: string }[] = [
   { value: 'QUICK_REPLY', labelKey: 'templates.create.buttons.types.QUICK_REPLY' },
@@ -247,9 +252,7 @@ export function TemplateEditorButtons({
           )}
 
           {(btn.type === 'CATALOG' || btn.type === 'MPM') && (
-            <p className="text-muted-foreground text-xs">
-              {t('templates.create.buttons.catalogHint')}
-            </p>
+            <CatalogAvailabilityHint />
           )}
 
           {errors[idx] && <FieldError errors={[{ message: errors[idx] }]} />}
@@ -447,6 +450,44 @@ function FlowButtonFields({
           </Select>
         )}
       </div>
+    </div>
+  );
+}
+
+function CatalogAvailabilityHint() {
+  const { t } = useTranslation();
+  const ws = useCurrentWorkspace();
+  const { data: catalogs, isLoading } = useProductCatalogs(ws.slug);
+  const linked = catalogs?.[0];
+
+  if (isLoading) {
+    return (
+      <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+        <Spinner className="size-3" />
+        {t('templates.create.buttons.catalogChecking')}
+      </p>
+    );
+  }
+
+  if (linked) {
+    return (
+      <p className="text-xs text-[#0e8a6a]">
+        {t('templates.create.buttons.catalogLinked', { name: linked.name })}
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      <p>{t('templates.create.buttons.catalogMissing')}</p>
+      <a
+        href={CATALOG_MANAGER}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 inline-block font-medium underline-offset-4 hover:underline"
+      >
+        {t('templates.create.buttons.catalogManagerCta')}
+      </a>
     </div>
   );
 }

@@ -70,6 +70,8 @@ export const endpoints = {
     sync: (slug: string) => v1(`/workspaces/${slug}/whatsapp/sync`),
     // Disconnect / revoke WABA.
     disconnect: (slug: string) => v1(`/workspaces/${slug}/whatsapp/disconnect`),
+    productCatalogs: (slug: string) =>
+      v1(`/workspaces/${slug}/whatsapp/product-catalogs`),
   },
 
   // ── WhatsApp analytics ────────────────────────────────────────────────────

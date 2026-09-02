@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Video, FileText, Upload } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -215,10 +215,18 @@ export function TemplateEditorForm({
   const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
   const [headerHandle, setHeaderHandle] = useState<string | undefined>();
   const [headerFileName, setHeaderFileName] = useState('');
+  const [headerPreviewUrl, setHeaderPreviewUrl] = useState('');
   const [headerSampleError, setHeaderSampleError] = useState('');
   const [dirtyExtra, setDirtyExtra] = useState(false);
   const headerFileRef = useRef<HTMLInputElement>(null);
   const bodyAreaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(
+    () => () => {
+      if (headerPreviewUrl) URL.revokeObjectURL(headerPreviewUrl);
+    },
+    [headerPreviewUrl],
+  );
 
   // Header type selector state
   const [headerType, setHeaderType] = useState<HeaderType>(() => {
@@ -313,6 +321,10 @@ export function TemplateEditorForm({
   }, [bodyText, bodySamples, subtype]);
 
   const previewHeaderText = headerFormat === 'TEXT' ? headerText : undefined;
+  const previewHeaderMedia =
+    headerType === 'MEDIA'
+      ? { format: mediaFormat, url: headerPreviewUrl || undefined }
+      : undefined;
 
   function updateBodySample(key: string, value: string) {
     setDirtyExtra(true);
@@ -527,12 +539,14 @@ export function TemplateEditorForm({
     );
   };
 
-  const previewButtonLabels = useMemo(() => {
+  const previewButtons = useMemo(() => {
     if (subtype === 'authentication') {
-      return authCopyCode ? [t('templates.auth_copy_code', 'Copy code')] : [];
+      return authCopyCode
+        ? [{ type: 'COPY_CODE' as const, text: t('templates.auth_copy_code', 'Copy code') }]
+        : [];
     }
     if (subtype === 'carousel') return [];
-    return buttons.map((b) => b.text.trim()).filter(Boolean);
+    return buttons;
   }, [subtype, buttons, authCopyCode, t]);
 
   return (
@@ -732,6 +746,10 @@ export function TemplateEditorForm({
                     if (!file) return;
                     setDirtyExtra(true);
                     setHeaderSampleError('');
+                    setHeaderPreviewUrl((prev) => {
+                      if (prev) URL.revokeObjectURL(prev);
+                      return URL.createObjectURL(file);
+                    });
                     uploadTemplateMedia.mutate(file, {
                       onSuccess: (res) => {
                         setHeaderHandle(res.handle);
@@ -1071,6 +1089,7 @@ export function TemplateEditorForm({
       <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
         <WaMessagePreview
           headerText={previewHeaderText}
+          headerMedia={previewHeaderMedia}
           bodyText={previewBodyText}
           footerText={
             subtype !== 'authentication' && subtype !== 'carousel'
@@ -1078,7 +1097,7 @@ export function TemplateEditorForm({
               : undefined
           }
           templateName={name}
-          buttonLabels={previewButtonLabels}
+          buttons={previewButtons}
           isCarousel={subtype === 'carousel'}
           carouselCardCount={
             subtype === 'carousel' ? carouselCardCount : undefined

@@ -67,15 +67,6 @@ function componentText(
   return components.find((c) => c.type === type)?.text ?? '';
 }
 
-function templateButtonLabels(tpl: WaTemplate): string[] {
-  return (
-    tpl.components
-      .find((c) => c.type === 'BUTTONS')
-      ?.buttons?.map((b) => b.text)
-      .filter(Boolean) ?? []
-  );
-}
-
 type VarMappingType = 'name' | 'phone' | 'attr' | 'text';
 const TAG_FILTER_ALL = '__all__';
 
@@ -888,17 +879,31 @@ export function CreateCampaignPage() {
           {selectedTemplate && (
             <aside className="hidden w-72 shrink-0 lg:block">
               <WaMessagePreview
-                headerText={componentText(
-                  selectedTemplate.components,
-                  'HEADER',
-                )}
+                headerText={
+                  selectedTemplate.components.find(
+                    (c) => c.type === 'HEADER' && c.format === 'TEXT',
+                  )?.text
+                }
+                headerMedia={(() => {
+                  const h = selectedTemplate.components.find(
+                    (c) => c.type === 'HEADER' && c.format && c.format !== 'TEXT',
+                  );
+                  return h?.format
+                    ? { format: h.format }
+                    : undefined;
+                })()}
                 bodyText={componentText(selectedTemplate.components, 'BODY')}
                 footerText={componentText(
                   selectedTemplate.components,
                   'FOOTER',
                 )}
                 templateName={selectedTemplate.name}
-                buttonLabels={templateButtonLabels(selectedTemplate)}
+                buttons={
+                  selectedTemplate.buttons ??
+                  selectedTemplate.components.find((c) => c.type === 'BUTTONS')
+                    ?.buttons ??
+                  []
+                }
               />
             </aside>
           )}

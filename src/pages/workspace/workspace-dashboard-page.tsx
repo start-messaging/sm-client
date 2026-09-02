@@ -30,9 +30,10 @@ import type { ConversationAnalyticsSnapshot } from '@/api/whatsapp.api';
 // ── NumberHealthWidget ────────────────────────────────────────────────────────
 
 function NumberHealthWidget({ qualityRating }: { qualityRating: string | null }) {
-  if (!qualityRating || qualityRating === 'UNKNOWN') return null;
-  const isGreen = qualityRating === 'GREEN';
-  const isYellow = qualityRating === 'YELLOW';
+  const rating = qualityRating?.toUpperCase();
+  if (!rating || rating === 'UNKNOWN') return null;
+  const isGreen = rating === 'GREEN';
+  const isYellow = rating === 'YELLOW';
   return (
     <div
       className={`rounded-lg border p-3 text-sm ${

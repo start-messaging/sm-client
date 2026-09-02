@@ -122,7 +122,7 @@ export function useSendMessage(slug: string, conversationId: string) {
     mutationFn: (body: SendMessageBody) => {
       if (body.type === 'template') {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _hydratedBody: _h, ...apiBody } = body;
+        const { _hydratedBody: _h, _headerPreviewUrl: _p, _headerMediaFormat: _f, ...apiBody } = body;
         return messagesApi.send(slug, conversationId, apiBody);
       }
       return messagesApi.send(slug, conversationId, body);
@@ -131,6 +131,8 @@ export function useSendMessage(slug: string, conversationId: string) {
       await qc.cancelQueries({ queryKey: listKey });
       const previous = qc.getQueryData<MessageListResult>(listKey);
 
+      const headerFormat =
+        body.type === 'template' ? body._headerMediaFormat : undefined;
       const optimistic: WaMessage = {
         id: `optimistic-${Date.now()}`,
         conversationId,
@@ -146,6 +148,16 @@ export function useSendMessage(slug: string, conversationId: string) {
         timestamp: new Date().toISOString(),
         failureCode: null,
         failureReason: null,
+        mediaType:
+          headerFormat === 'IMAGE'
+            ? 'image'
+            : headerFormat === 'VIDEO'
+              ? 'video'
+              : headerFormat === 'DOCUMENT'
+                ? 'document'
+                : null,
+        mediaUrl:
+          body.type === 'template' ? (body._headerPreviewUrl ?? null) : null,
       };
 
       qc.setQueryData<MessageListResult>(listKey, (old) => {

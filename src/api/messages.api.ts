@@ -151,6 +151,10 @@ export interface SendTemplateMessageBody {
   }>;
   /** Client-only: pre-hydrated body for optimistic bubble display. Stripped before API send. */
   _hydratedBody?: string;
+  /** Client-only: blob URL or CDN URL for the header media optimistic preview. */
+  _headerPreviewUrl?: string;
+  /** Client-only: header media type for the optimistic bubble. */
+  _headerMediaFormat?: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
 }
 
 export type SendMessageBody = SendTextMessageBody | SendTemplateMessageBody;

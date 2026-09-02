@@ -35,6 +35,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  TemplatePreviewButtons,
+  TemplatePreviewMedia,
+} from '@/components/whatsapp/template-preview-buttons';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -522,9 +526,9 @@ function TemplateComposer({
     headerComp?.format === 'TEXT' ? (headerComp.text ?? undefined) : undefined;
   const previewFooterText =
     selected?.components.find((c) => c.type === 'FOOTER')?.text ?? undefined;
-  const previewButtonLabels = (selected?.buttons ?? [])
-    .map((b) => b.text)
-    .filter((t): t is string => !!t);
+  const previewButtons = selected?.buttons?.length
+    ? selected.buttons
+    : (selected?.components.find((c) => c.type === 'BUTTONS')?.buttons ?? []);
 
   // Live preview: substitute only filled values; keep {{n}} as placeholder chips for empty
   const previewBody = bodyText.replace(
@@ -586,6 +590,12 @@ function TemplateComposer({
         _hydratedBody: hydratedBody || undefined,
         ...(headerMediaFile ? { _headerMediaFile: headerMediaFile } : {}),
         ...(headerMediaUrl.trim() && !headerMediaFile ? { headerMediaUrl: headerMediaUrl.trim() } : {}),
+        ...(headerMediaFormat
+          ? {
+              _headerPreviewUrl: headerBlobUrl || headerMediaUrl.trim() || undefined,
+              _headerMediaFormat: headerMediaFormat,
+            }
+          : {}),
         ...(placeholders.length
           ? {
               parameters: placeholders.map((n) => ({
@@ -723,7 +733,7 @@ function TemplateComposer({
             className="hidden"
             accept={
               headerMediaFormat === 'IMAGE'
-                ? 'image/jpeg,image/png,image/webp,image/gif'
+                ? 'image/jpeg,image/png,image/gif'
                 : headerMediaFormat === 'VIDEO'
                   ? 'video/mp4,video/3gpp'
                   : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -777,6 +787,13 @@ function TemplateComposer({
 
       {selected && (
         <div className="rounded-lg bg-[#d9fdd3] px-3 py-2 text-sm text-[#111b21] shadow-sm space-y-1">
+          {headerMediaFormat && (
+            <TemplatePreviewMedia
+              format={headerMediaFormat}
+              url={headerBlobUrl || headerMediaUrl.trim() || undefined}
+              compact
+            />
+          )}
           {previewHeaderText && (
             <p className="font-semibold">{previewHeaderText}</p>
           )}
@@ -784,17 +801,8 @@ function TemplateComposer({
           {previewFooterText && (
             <p className="text-xs text-[#667781]">{previewFooterText}</p>
           )}
-          {previewButtonLabels.length > 0 && (
-            <div className="flex flex-wrap gap-1 pt-0.5">
-              {previewButtonLabels.map((label, i) => (
-                <span
-                  key={i}
-                  className="rounded-full border border-[#00a884] px-2 py-0.5 text-xs text-[#00a884]"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
+          {previewButtons.length > 0 && (
+            <TemplatePreviewButtons buttons={previewButtons} compact />
           )}
         </div>
       )}

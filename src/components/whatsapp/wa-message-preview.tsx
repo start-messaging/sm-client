@@ -1,30 +1,37 @@
 import { useTranslation } from 'react-i18next';
+import type { TemplateButton } from '@/api/templates.api';
+import {
+  TemplatePreviewButtons,
+  TemplatePreviewMedia,
+} from './template-preview-buttons';
 
 interface WaMessagePreviewProps {
   headerText?: string;
+  headerMedia?: {
+    format: 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION';
+    url?: string;
+  };
   bodyText?: string;
   footerText?: string;
   templateName?: string;
+  buttons?: Array<Pick<TemplateButton, 'type' | 'text' | 'icon'>>;
+  /** @deprecated use `buttons` */
   buttonLabels?: string[];
   isCarousel?: boolean;
   carouselCardCount?: number;
 }
 
-/**
- * Replaces {{n}} placeholders with inline "example_n" chips that mimic
- * the gray variable pills in the real WhatsApp app.
- */
 function renderBodyWithVariables(text: string): React.ReactNode[] {
-  const parts = text.split(/({{[0-9]+}})/g);
+  const parts = text.split(/(\{\{[0-9a-z_]+\}\})/gi);
   return parts.map((part, i) => {
-    const match = part.match(/^{{([0-9]+)}}$/);
+    const match = part.match(/^\{\{([0-9]+|[a-z][a-z0-9_]*)\}\}$/i);
     if (match) {
       return (
         <span
           key={i}
           className="inline-block rounded bg-black/10 px-1 py-0.5 text-[11px] font-medium leading-none text-emerald-900"
         >
-          example_{match[1]}
+          {/^\d+$/.test(match[1]!) ? `example_${match[1]}` : match[1]}
         </span>
       );
     }
@@ -34,19 +41,30 @@ function renderBodyWithVariables(text: string): React.ReactNode[] {
 
 export function WaMessagePreview({
   headerText,
+  headerMedia,
   bodyText,
   footerText,
   templateName,
+  buttons,
   buttonLabels,
   isCarousel,
   carouselCardCount,
 }: WaMessagePreviewProps) {
   const { t } = useTranslation();
 
+  const previewButtons =
+    buttons ??
+    (buttonLabels ?? []).map((text) => ({
+      type: 'QUICK_REPLY' as const,
+      text,
+    }));
+
   const hasContent = !!(
     headerText?.trim() ||
+    headerMedia ||
     bodyText?.trim() ||
-    footerText?.trim()
+    footerText?.trim() ||
+    previewButtons.length
   );
 
   return (
@@ -55,9 +73,7 @@ export function WaMessagePreview({
         {t('templates.create.previewLabel')}
       </p>
 
-      {/* Phone frame */}
       <div className="relative flex h-[28rem] w-[13.5rem] flex-col overflow-hidden rounded-[2rem] border-[3px] border-zinc-800 bg-zinc-900 shadow-xl">
-        {/* Status bar */}
         <div className="flex h-8 shrink-0 items-center justify-between bg-[#075E54] px-4">
           <span className="text-[10px] font-semibold text-white/90">9:41</span>
           <div className="flex items-center gap-1">
@@ -67,7 +83,6 @@ export function WaMessagePreview({
           </div>
         </div>
 
-        {/* WA chat header bar */}
         <div className="flex h-11 shrink-0 items-center gap-2 bg-[#075E54] px-3">
           <div className="flex size-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
             {templateName ? templateName[0].toUpperCase() : 'T'}
@@ -82,12 +97,10 @@ export function WaMessagePreview({
           </div>
         </div>
 
-        {/* Chat body */}
         <div
           className="relative flex-1 overflow-y-auto p-3"
           style={{ background: '#ECE5DD' }}
         >
-          {/* Subtle pattern overlay */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.04]"
             style={{
@@ -99,12 +112,10 @@ export function WaMessagePreview({
 
           {hasContent ? (
             <div className="relative flex justify-end">
-              {/* Outbound bubble */}
               <div
-                className="relative max-w-[85%] rounded-xl rounded-tr-none px-3 py-2 shadow-sm"
+                className="relative max-w-[85%] overflow-hidden rounded-xl rounded-tr-none px-3 py-2 shadow-sm"
                 style={{ background: '#DCF8C6' }}
               >
-                {/* Bubble tail */}
                 <div
                   className="absolute -right-2 top-0 h-3 w-3"
                   style={{
@@ -113,14 +124,19 @@ export function WaMessagePreview({
                   }}
                 />
 
-                {/* Header */}
+                {headerMedia && (
+                  <TemplatePreviewMedia
+                    format={headerMedia.format}
+                    url={headerMedia.url}
+                  />
+                )}
+
                 {headerText?.trim() && (
                   <p className="mb-1 text-[13px] font-bold leading-snug text-zinc-900">
                     {headerText.trim()}
                   </p>
                 )}
 
-                {/* Body */}
                 {bodyText?.trim() ? (
                   <p className="whitespace-pre-wrap text-[12.5px] leading-[1.4] text-zinc-900">
                     {renderBodyWithVariables(bodyText.trim())}
@@ -131,7 +147,6 @@ export function WaMessagePreview({
                   </p>
                 )}
 
-                {/* Footer */}
                 {footerText?.trim() && (
                   <p className="mt-1 text-[11px] leading-snug text-zinc-500">
                     {footerText.trim()}
@@ -150,17 +165,8 @@ export function WaMessagePreview({
                   </p>
                 )}
 
-                {!isCarousel && buttonLabels && buttonLabels.length > 0 && (
-                  <div className="mt-2 flex flex-col gap-1">
-                    {buttonLabels.map((label, i) => (
-                      <div
-                        key={i}
-                        className="rounded-md border border-emerald-800/20 bg-white/70 px-2 py-1 text-center text-[11px] font-medium text-[#075E54]"
-                      >
-                        {label}
-                      </div>
-                    ))}
-                  </div>
+                {!isCarousel && (
+                  <TemplatePreviewButtons buttons={previewButtons} />
                 )}
 
                 <div className="mt-1 flex items-end justify-end gap-0.5">
@@ -182,7 +188,6 @@ export function WaMessagePreview({
               </div>
             </div>
           ) : (
-            /* Empty state inside phone */
             <div className="flex h-full items-center justify-center">
               <p className="rounded-lg bg-white/60 px-3 py-2 text-center text-[11px] text-zinc-500 shadow-sm">
                 {t('templates.create.previewEmpty')}
@@ -191,7 +196,6 @@ export function WaMessagePreview({
           )}
         </div>
 
-        {/* Input bar */}
         <div className="flex h-10 shrink-0 items-center gap-2 bg-[#F0F0F0] px-3">
           <div className="flex-1 rounded-full bg-white px-3 py-1 text-[11px] text-zinc-400">
             {t('templates.create.previewInputHint')}
@@ -208,7 +212,6 @@ export function WaMessagePreview({
         </div>
       </div>
 
-      {/* Caption */}
       <p className="text-muted-foreground max-w-50 text-center text-[11px] leading-snug">
         {t('templates.create.previewCaption')}
       </p>

@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { Image, Video, FileText } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -7,20 +6,14 @@ import {
 } from '@/components/ui/popover';
 import { hydrateTemplate } from '@/lib/template-utils';
 import type { TemplateComponent } from '@/api/templates.api';
+import {
+  TemplatePreviewButtons,
+  TemplatePreviewMedia,
+} from './template-preview-buttons';
 
 interface Props {
   components: TemplateComponent[];
   children: React.ReactNode;
-}
-
-function MediaPlaceholder({ format }: { format: string }) {
-  const Icon =
-    format === 'VIDEO' ? Video : format === 'DOCUMENT' ? FileText : Image;
-  return (
-    <div className="bg-[#f4f4f5] rounded-lg flex items-center justify-center h-28 mb-2">
-      <Icon className="size-8 text-[#a1a1aa]" />
-    </div>
-  );
 }
 
 export function TemplatePreviewPopover({ components, children }: Props) {
@@ -40,6 +33,9 @@ export function TemplatePreviewPopover({ components, children }: Props) {
   const footer = components.find((c) => c.type === 'FOOTER');
   const buttons = components.find((c) => c.type === 'BUTTONS');
   const hydratedBody = hydrateTemplate(components);
+  const handle = header?.example?.header_handle?.[0];
+  const mediaUrl =
+    header?.link || (handle?.startsWith('http') ? handle : undefined);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -60,7 +56,11 @@ export function TemplatePreviewPopover({ components, children }: Props) {
       >
         <div className="rounded-lg bg-[#d9fdd3] p-3 text-sm shadow-sm space-y-1.5">
           {header?.format && header.format !== 'TEXT' && (
-            <MediaPlaceholder format={header.format} />
+            <TemplatePreviewMedia
+              format={header.format}
+              url={mediaUrl}
+              compact
+            />
           )}
           {header?.format === 'TEXT' && header.text && (
             <p className="font-semibold text-[#111b21]">{header.text}</p>
@@ -72,16 +72,7 @@ export function TemplatePreviewPopover({ components, children }: Props) {
             <p className="text-xs text-[#667781]">{footer.text}</p>
           )}
           {buttons?.buttons && buttons.buttons.length > 0 && (
-            <div className="pt-1 flex flex-wrap gap-1">
-              {buttons.buttons.map((btn, i) => (
-                <span
-                  key={i}
-                  className="rounded-full border border-[#00a884] px-2 py-0.5 text-xs text-[#00a884]"
-                >
-                  {btn.text}
-                </span>
-              ))}
-            </div>
+            <TemplatePreviewButtons buttons={buttons.buttons} compact />
           )}
         </div>
       </PopoverContent>
