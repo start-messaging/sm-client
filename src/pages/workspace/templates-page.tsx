@@ -2,13 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  FileText,
+  Image,
   LayoutTemplate,
   Pencil,
   Plus,
   RefreshCw,
   Trash2,
-  Star,
+  Video,
 } from 'lucide-react';
+import { InfoTip } from '@/components/shared/info-tip';
+import { hydrateTemplate } from '@/lib/template-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -91,9 +95,63 @@ function editPath(slug: string, tpl: WaTemplate): string {
   return `/w/${slug}/templates/${tpl.id}/edit`;
 }
 
-function templateBodyPreview(tpl: WaTemplate): string {
-  const body = tpl.components.find((c) => c.type === 'BODY');
-  return body?.text ?? '';
+function templateActions(tpl: WaTemplate): string {
+  const buttons = tpl.buttons?.length
+    ? tpl.buttons
+    : (tpl.components.find((c) => c.type === 'BUTTONS')?.buttons ?? []);
+  if (!buttons.length) return '—';
+  return buttons
+    .map((b) => b.text || b.type.replaceAll('_', ' '))
+    .filter(Boolean)
+    .join(', ');
+}
+
+function TemplateBubble({ tpl }: { tpl: WaTemplate }) {
+  const header = tpl.components.find((c) => c.type === 'HEADER');
+  const footer = tpl.components.find((c) => c.type === 'FOOTER');
+  const buttons = tpl.components.find((c) => c.type === 'BUTTONS');
+  const body = hydrateTemplate(tpl.components);
+  const MediaIcon =
+    header?.format === 'VIDEO'
+      ? Video
+      : header?.format === 'DOCUMENT'
+        ? FileText
+        : Image;
+
+  return (
+    <div className="rounded-lg bg-[#d9fdd3] p-3 text-sm shadow-sm space-y-1.5 min-h-[140px]">
+      {header?.format && header.format !== 'TEXT' && (
+        <div className="bg-white/70 rounded-md flex items-center justify-center h-20">
+          <MediaIcon className="size-7 text-[#a1a1aa]" />
+        </div>
+      )}
+      {header?.format === 'TEXT' && header.text && (
+        <p className="font-semibold text-[#111b21] text-[13px]">{header.text}</p>
+      )}
+      {body ? (
+        <p className="text-[#111b21] whitespace-pre-wrap text-[12px] line-clamp-5">
+          {body}
+        </p>
+      ) : (
+        <p className="text-[12px] italic text-[#667781]">—</p>
+      )}
+      {footer?.text && (
+        <p className="text-[11px] text-[#667781]">{footer.text}</p>
+      )}
+      {buttons?.buttons && buttons.buttons.length > 0 && (
+        <div className="pt-1 flex flex-col gap-1">
+          {buttons.buttons.map((btn, i) => (
+            <span
+              key={i}
+              className="rounded-md border border-[#00a884]/40 bg-white/70 px-2 py-0.5 text-center text-[11px] text-[#00a884]"
+            >
+              {btn.text || btn.type}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Status pill ───────────────────────────────────────────────────────────────
@@ -116,6 +174,28 @@ function StatusPill({ status }: { status: TemplateStatus }) {
 
 // ── Template card ─────────────────────────────────────────────────────────────
 
+function DetailRow({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 py-1">
+      <span className="text-[11px] text-[#71717a] flex items-center gap-1 shrink-0">
+        {label}
+        {hint && <InfoTip content={hint} />}
+      </span>
+      <span className="text-[12px] text-[#18181b] text-right break-all">
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function TemplateCard({
   tpl,
   slug,
@@ -126,63 +206,60 @@ function TemplateCard({
   onDelete: (t: WaTemplate) => void;
 }) {
   const { t } = useTranslation();
-  const preview = templateBodyPreview(tpl);
   const recategorized = wasRecategorized(tpl);
   const pendingCat = hasPendingCategoryChange(tpl);
+  const quality = tpl.qualityScore ?? '—';
+  const analyticsHint = t('templates.list.analyticsHint');
 
   return (
-    <div className="flex flex-col bg-white border border-[#e4e4e7] rounded-[10px] overflow-hidden hover:shadow-sm transition-shadow">
-      {/* Card body */}
-      <div className="flex flex-col gap-2 p-4 flex-1">
-        {/* Name + badges row */}
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-mono text-[13px] font-medium text-[#18181b] truncate leading-snug">
-            {tpl.name}
-          </p>
-          <StatusPill status={tpl.status} />
-        </div>
-
-        {/* Category + language */}
-        <div className="flex items-center gap-1.5">
-          <span className="border border-[#e4e4e7] text-[#71717a] text-[10px] px-[6px] py-px rounded-full">
-            {tpl.category}
-          </span>
-          <span className="text-[10px] text-[#a1a1aa]">{tpl.language}</span>
-          {tpl.qualityScore && (
-            <span
-              className={cn(
-                'flex items-center gap-0.5 text-[10px] font-medium ml-auto',
-                tpl.qualityScore === 'HIGH'
-                  ? 'text-[#16a34a]'
-                  : tpl.qualityScore === 'MEDIUM'
-                    ? 'text-[#d97706]'
-                    : 'text-[#dc2626]',
-              )}
-            >
-              <Star className="size-2.5" />
-              {tpl.qualityScore}
-            </span>
+    <div className="flex flex-col md:flex-row bg-white border border-[#e4e4e7] rounded-[12px] overflow-hidden hover:shadow-sm transition-shadow">
+      <div className="md:w-[280px] shrink-0 p-3 bg-[#ece5dd]">
+        <TemplateBubble tpl={tpl} />
+      </div>
+      <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex flex-col gap-1 p-4 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-mono text-[14px] font-semibold text-[#18181b] truncate">
+              {tpl.name}
+            </p>
+            <StatusPill status={tpl.status} />
+          </div>
+          <DetailRow label={t('templates.table.category')} value={tpl.category} />
+          <DetailRow
+            label={t('templates.list.actions')}
+            value={templateActions(tpl)}
+          />
+          <DetailRow label={t('templates.table.language')} value={tpl.language} />
+          <DetailRow
+            label={t('templates.table.status')}
+            value={t(`templates.status.${tpl.status}`)}
+          />
+          <DetailRow
+            label={t('templates.list.quality')}
+            value={quality}
+            hint={analyticsHint}
+          />
+          <DetailRow
+            label={t('templates.list.delivery')}
+            value="—"
+            hint={analyticsHint}
+          />
+          <DetailRow
+            label={t('templates.list.readRate')}
+            value="—"
+            hint={analyticsHint}
+          />
+          <DetailRow
+            label={t('templates.list.topBlock')}
+            value="—"
+            hint={analyticsHint}
+          />
+          {tpl.status === 'REJECTED' && tpl.rejectionReason && (
+            <p className="text-[11px] text-[#dc2626] pt-1">
+              {rejectionLabel(t, tpl.rejectionReason)}
+            </p>
           )}
         </div>
-
-        {/* Body preview */}
-        {preview ? (
-          <p className="text-[12px] text-[#71717a] line-clamp-2 leading-relaxed flex-1">
-            {preview}
-          </p>
-        ) : (
-          <p className="text-[12px] text-[#a1a1aa] italic flex-1">
-            {t('templates.noBody', 'No body text')}
-          </p>
-        )}
-
-        {/* Rejection reason */}
-        {tpl.status === 'REJECTED' && tpl.rejectionReason && (
-          <p className="text-[11px] text-[#dc2626]">
-            {rejectionLabel(t, tpl.rejectionReason)}
-          </p>
-        )}
-      </div>
 
       {/* Recategorization strip */}
       {(recategorized || pendingCat) && (
@@ -242,6 +319,7 @@ function TemplateCard({
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      </div>
     </div>
   );
 }
@@ -259,6 +337,9 @@ export function TemplatesPage() {
   const [manualSyncing, setManualSyncing] = useState(false);
   const autoSynced = useRef(false);
   const [statusFilter, setStatusFilter] = useState<string>(FILTER_ALL);
+  const [categoryFilter, setCategoryFilter] = useState<string>(FILTER_ALL);
+  const [languageFilter, setLanguageFilter] = useState<string>(FILTER_ALL);
+  const [qualityFilter, setQualityFilter] = useState<string>(FILTER_ALL);
 
   const templates = data?.templates ?? [];
   const recategorized = templates.filter(wasRecategorized);
@@ -268,15 +349,31 @@ export function TemplatesPage() {
     (tpl) => tpl.status === 'APPROVED',
   ).length;
 
+  const languages = useMemo(
+    () => [...new Set(templates.map((tpl) => tpl.language))].sort(),
+    [templates],
+  );
+
   const visible = useMemo(() => {
-    const filtered =
-      statusFilter === FILTER_ALL
-        ? templates
-        : templates.filter((tpl) => tpl.status === statusFilter);
+    const filtered = templates.filter((tpl) => {
+      if (statusFilter !== FILTER_ALL && tpl.status !== statusFilter) {
+        return false;
+      }
+      if (categoryFilter !== FILTER_ALL && tpl.category !== categoryFilter) {
+        return false;
+      }
+      if (languageFilter !== FILTER_ALL && tpl.language !== languageFilter) {
+        return false;
+      }
+      if (qualityFilter !== FILTER_ALL && (tpl.qualityScore ?? '') !== qualityFilter) {
+        return false;
+      }
+      return true;
+    });
     return [...filtered].sort(
       (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status],
     );
-  }, [templates, statusFilter]);
+  }, [templates, statusFilter, categoryFilter, languageFilter, qualityFilter]);
 
   useEffect(() => {
     if (!ws.slug || autoSynced.current || isLoading) return;
@@ -426,28 +523,71 @@ export function TemplatesPage() {
             )}
           </div>
           {templates.length > 0 && (
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 w-40 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={FILTER_ALL}>
-                  {t('templates.yours.filterAll')}
-                </SelectItem>
-                <SelectItem value="APPROVED">
-                  {t('templates.status.APPROVED')}
-                </SelectItem>
-                <SelectItem value="PENDING">
-                  {t('templates.status.PENDING')}
-                </SelectItem>
-                <SelectItem value="REJECTED">
-                  {t('templates.status.REJECTED')}
-                </SelectItem>
-                <SelectItem value="PAUSED">
-                  {t('templates.status.PAUSED')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-8 w-36 text-xs">
+                  <SelectValue placeholder={t('templates.yours.filterCategory')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={FILTER_ALL}>
+                    {t('templates.yours.filterCategory')}
+                  </SelectItem>
+                  <SelectItem value="UTILITY">UTILITY</SelectItem>
+                  <SelectItem value="MARKETING">MARKETING</SelectItem>
+                  <SelectItem value="AUTHENTICATION">AUTHENTICATION</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue placeholder={t('templates.yours.filterLanguage')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={FILTER_ALL}>
+                    {t('templates.yours.filterLanguage')}
+                  </SelectItem>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-8 w-36 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={FILTER_ALL}>
+                    {t('templates.yours.filterAll')}
+                  </SelectItem>
+                  <SelectItem value="APPROVED">
+                    {t('templates.status.APPROVED')}
+                  </SelectItem>
+                  <SelectItem value="PENDING">
+                    {t('templates.status.PENDING')}
+                  </SelectItem>
+                  <SelectItem value="REJECTED">
+                    {t('templates.status.REJECTED')}
+                  </SelectItem>
+                  <SelectItem value="PAUSED">
+                    {t('templates.status.PAUSED')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={qualityFilter} onValueChange={setQualityFilter}>
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue placeholder={t('templates.yours.filterQuality')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={FILTER_ALL}>
+                    {t('templates.yours.filterQuality')}
+                  </SelectItem>
+                  <SelectItem value="HIGH">HIGH</SelectItem>
+                  <SelectItem value="MEDIUM">MEDIUM</SelectItem>
+                  <SelectItem value="LOW">LOW</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
 
@@ -503,11 +643,14 @@ export function TemplatesPage() {
         )}
 
         {!isLoading && visible.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-3">
             {visible.map((tpl) => (
-              <TemplatePreviewPopover key={tpl.id} components={tpl.components}>
-                <TemplateCard tpl={tpl} slug={ws.slug} onDelete={handleDelete} />
-              </TemplatePreviewPopover>
+              <TemplateCard
+                key={tpl.id}
+                tpl={tpl}
+                slug={ws.slug}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}

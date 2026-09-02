@@ -49,3 +49,10 @@ export function useUploadMediaSample(slug: string) {
     mutationFn: (file: File) => templatesApi.uploadMediaSample(slug, file),
   });
 }
+
+/** Upload a sample to Meta's Resumable Upload API — required for media-header create. */
+export function useUploadTemplateMedia(slug: string) {
+  return useMutation({
+    mutationFn: (file: File) => templatesApi.uploadMedia(slug, file),
+  });
+}

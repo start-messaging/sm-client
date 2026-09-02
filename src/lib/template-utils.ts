@@ -24,3 +24,22 @@ export function bodyVariableIndexes(text: string): number[] {
   const matches = [...text.matchAll(/\{\{(\d+)\}\}/g)];
   return [...new Set(matches.map((m) => Number(m[1])))].sort((a, b) => a - b);
 }
+
+export type TemplateVarStyle = 'positional' | 'named';
+
+export function detectVarStyle(text: string): TemplateVarStyle {
+  if (/\{\{[a-z][a-z0-9_]*\}\}/i.test(text) && !/\{\{\d+\}\}/.test(text)) {
+    return 'named';
+  }
+  return 'positional';
+}
+
+export function namedVariableKeys(text: string): string[] {
+  return [
+    ...new Set(
+      [...text.matchAll(/\{\{([a-z][a-z0-9_]*)\}\}/gi)].map((m) =>
+        m[1]!.toLowerCase(),
+      ),
+    ),
+  ];
+}

@@ -18,18 +18,39 @@ export type TemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
  *   URL          → { type, text, url, example?: [string] }
  *   PHONE_NUMBER → { type, text, phone_number }
  */
+export type TemplateButtonType =
+  | 'QUICK_REPLY'
+  | 'URL'
+  | 'PHONE_NUMBER'
+  | 'COPY_CODE'
+  | 'REQUEST_CONTACT_INFO'
+  | 'OTP'
+  | 'FLOW'
+  | 'VOICE_CALL'
+  | 'VIDEO_CALL'
+  | 'CATALOG'
+  | 'MPM'
+  | 'POSTBACK'
+  | 'BOOKING_STATUS'
+  | 'PAYMENT_REQUEST';
+
 export interface TemplateButton {
-  type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER';
+  type: TemplateButtonType;
   text: string;
   /** URL buttons: website URL, may contain one {{1}} variable at the end. */
   url?: string;
   /**
-   * URL buttons: sample for the {{1}} variable (suffix only, e.g. ["summer2023"]).
-   * Single-element array.
+   * URL: sample for the {{1}} suffix. COPY_CODE: offer code sample.
    */
   example?: string[];
   /** PHONE_NUMBER buttons: E.164 phone number. */
   phone_number?: string;
+  flow_id?: string;
+  flow_action?: 'NAVIGATE' | 'DATA_EXCHANGE';
+  navigate_screen?: string;
+  icon?: 'DOCUMENT' | 'PROMOTION' | 'REVIEW';
+  ttl_minutes?: number;
+  otp_type?: 'ONE_TAP' | 'COPY_CODE' | 'ZERO_TAP';
 }
 
 /**
@@ -37,31 +58,28 @@ export interface TemplateButton {
  * Wider type set than the Meta-raw TemplateButton — includes Feature-5A types.
  */
 export interface WaTemplateButton {
-  type:
-    | 'QUICK_REPLY'
-    | 'URL'
-    | 'PHONE_NUMBER'
-    | 'COPY_CODE'
-    | 'REQUEST_CONTACT_INFO'
-    | 'OTP';
+  type: TemplateButtonType;
   text: string;
   url?: string;
   phoneNumber?: string;
   example?: string;
+  flow_id?: string;
+  ttl_minutes?: number;
 }
 
 export interface TemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
   text?: string;
-  format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION';
   /** HEADER component only: publicly accessible media URL when format isn't TEXT. */
   link?: string;
   example?: {
     body_text?: string[][];
     header_text?: string[];
     header_handle?: string[];
+    body_text_named_params?: Array<{ param_name: string; example: string }>;
+    header_text_named_params?: Array<{ param_name: string; example: string }>;
   };
-  /** BUTTONS component only: 1–3 buttons. */
   buttons?: TemplateButton[];
 }
 

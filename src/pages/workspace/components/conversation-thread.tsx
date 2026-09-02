@@ -55,6 +55,9 @@ import { useTemplates } from '@/api/hooks/use-templates';
 import { useMembers } from '@/api/hooks/use-members';
 import { useAuthStore } from '@/stores/auth.store';
 import { toast } from '@/lib/toast';
+import { BlockerBanner } from '@/components/education/blocker-banner';
+import { isApiError } from '@/types/error';
+import { ERROR_CODES } from '@/lib/error-codes';
 import { ROLE_RANK } from '@/types/api';
 import {
   messagesApi,
@@ -64,7 +67,6 @@ import {
 } from '@/api/messages.api';
 import type { WorkspaceRole } from '@/types/api';
 import { cn } from '@/lib/utils';
-import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 import { QuickReplyTypeahead } from '@/components/inbox/quick-reply-typeahead';
 import { useInboxPresence } from '@/api/hooks/use-inbox-presence';
 import type { PresenceViewer } from '@/api/inbox-presence.api';
@@ -459,15 +461,22 @@ function TextComposer({
 
 function bodyPlaceholders(tpl: {
   components: Array<{ type: string; text?: string }>;
-}): number[] {
+}): string[] {
   const body = tpl.components.find((c) => c.type === 'BODY');
   if (!body?.text) return [];
-  const found = new Set<number>();
+  const named = [
+    ...new Set(
+      [...body.text.matchAll(/\{\{([a-z][a-z0-9_]*)\}\}/gi)].map((m) =>
+        m[1]!.toLowerCase(),
+      ),
+    ),
+  ];
+  if (named.length) return named;
+  const found = new Set<string>();
   for (const m of body.text.matchAll(/\{\{(\d+)\}\}/g)) {
-    const n = Number(m[1]);
-    if (Number.isFinite(n) && n > 0) found.add(n);
+    found.add(m[1]!);
   }
-  return [...found].sort((a, b) => a - b);
+  return [...found].sort((a, b) => Number(a) - Number(b));
 }
 
 function TemplateComposer({
@@ -487,10 +496,15 @@ function TemplateComposer({
   );
 
   const [selectedId, setSelectedId] = useState('');
-  const [paramValues, setParamValues] = useState<Record<number, string>>({});
+  const [paramValues, setParamValues] = useState<Record<string, string>>({});
+  const [urlSuffix, setUrlSuffix] = useState('');
+  const [couponCode, setCouponCode] = useState('');
   const [headerMediaFile, setHeaderMediaFile] = useState<File | null>(null);
   const [headerMediaUrl, setHeaderMediaUrl] = useState('');
   const [headerBlobUrl, setHeaderBlobUrl] = useState('');
+  const [paymentBlocker, setPaymentBlocker] = useState<
+    'META_PAYMENT_REQUIRED' | 'META_BILLING_ERROR' | null
+  >(null);
 
   const selected = approvedTemplates.find((tpl) => tpl.id === selectedId);
   const placeholders = selected ? bodyPlaceholders(selected) : [];
@@ -513,14 +527,25 @@ function TemplateComposer({
     .filter((t): t is string => !!t);
 
   // Live preview: substitute only filled values; keep {{n}} as placeholder chips for empty
-  const previewBody = bodyText.replace(/\{\{(\d+)\}\}/g, (match, n: string) => {
-    const val = paramValues[Number(n)];
-    return val?.trim() ? val : match;
-  });
+  const previewBody = bodyText.replace(
+    /\{\{(\d+|[a-z][a-z0-9_]*)\}\}/gi,
+    (match, key: string) => {
+      const val = paramValues[key] ?? paramValues[key.toLowerCase()];
+      return val?.trim() ? val : match;
+    },
+  );
+
+  const sendButtons = selected?.buttons ?? selected?.components.find((c) => c.type === 'BUTTONS')?.buttons ?? [];
+  const dynamicUrlIndex = sendButtons.findIndex(
+    (b) => b.type === 'URL' && /\{\{1\}\}/.test(b.url ?? ''),
+  );
+  const copyCodeIndex = sendButtons.findIndex((b) => b.type === 'COPY_CODE');
 
   function handleSelect(id: string) {
     setSelectedId(id);
     setParamValues({});
+    setUrlSuffix('');
+    setCouponCode('');
     if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
     setHeaderMediaFile(null);
     setHeaderMediaUrl('');
@@ -529,9 +554,30 @@ function TemplateComposer({
 
   function handleSend() {
     if (!selected) return;
-    const hydratedBody = bodyText.replace(/\{\{(\d+)\}\}/g, (_, n: string) =>
-      paramValues[Number(n)]?.trim() ?? '',
+    const hydratedBody = bodyText.replace(
+      /\{\{(\d+|[a-z][a-z0-9_]*)\}\}/gi,
+      (_, key: string) => paramValues[key]?.trim() ?? paramValues[key.toLowerCase()]?.trim() ?? '',
     );
+    const buttonParameters: Array<{
+      index: number;
+      subType: 'url' | 'copy_code' | 'flow';
+      text?: string;
+      couponCode?: string;
+    }> = [];
+    if (dynamicUrlIndex >= 0 && urlSuffix.trim()) {
+      buttonParameters.push({
+        index: dynamicUrlIndex,
+        subType: 'url',
+        text: urlSuffix.trim(),
+      });
+    }
+    if (copyCodeIndex >= 0 && couponCode.trim()) {
+      buttonParameters.push({
+        index: copyCodeIndex,
+        subType: 'copy_code',
+        couponCode: couponCode.trim(),
+      });
+    }
     send.mutate(
       {
         type: 'template',
@@ -544,14 +590,17 @@ function TemplateComposer({
           ? {
               parameters: placeholders.map((n) => ({
                 text: paramValues[n]?.trim() ?? '',
+                ...(/^[a-z]/.test(n) ? { parameter_name: n } : {}),
               })),
             }
           : {}),
+        ...(buttonParameters.length ? { buttonParameters } : {}),
       },
       {
         onSuccess: (msg) => {
           trackOutbound(msg.id);
           toast.success(t('inbox.composer.sentTemplate'));
+          setPaymentBlocker(null);
           setSelectedId('');
           setParamValues({});
           if (headerBlobUrl) URL.revokeObjectURL(headerBlobUrl);
@@ -559,7 +608,20 @@ function TemplateComposer({
           setHeaderMediaUrl('');
           setHeaderBlobUrl('');
         },
-        onError: (err) => toast.error(err),
+        onError: (err) => {
+          if (
+            isApiError(err) &&
+            (err.code === ERROR_CODES.META_PAYMENT_REQUIRED ||
+              err.code === ERROR_CODES.META_BILLING_ERROR)
+          ) {
+            setPaymentBlocker(
+              err.code === ERROR_CODES.META_PAYMENT_REQUIRED
+                ? 'META_PAYMENT_REQUIRED'
+                : 'META_BILLING_ERROR',
+            );
+          }
+          toast.error(err);
+        },
       },
     );
   }
@@ -572,7 +634,10 @@ function TemplateComposer({
     );
   }
 
-  const canSend = !!selected && !send.isPending;
+  const headerReady =
+    !headerMediaFormat || !!headerMediaFile || !!headerMediaUrl.trim();
+  const varsReady = placeholders.every((n) => !!paramValues[n]?.trim());
+  const canSend = !!selected && !send.isPending && headerReady && varsReady;
 
   return (
     <div className="border-t p-3 flex flex-col gap-2">
@@ -597,6 +662,15 @@ function TemplateComposer({
           {t('inbox.composer.sendTemplate')}
         </Button>
       </div>
+      {paymentBlocker && (
+        <BlockerBanner
+          code={paymentBlocker}
+          variant="warning"
+          cta={{
+            href: 'https://business.facebook.com/latest/whatsapp_manager/payment_methods',
+          }}
+        />
+      )}
 
       {selected && placeholders.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -610,13 +684,34 @@ function TemplateComposer({
               onChange={(e) =>
                 setParamValues((prev) => ({ ...prev, [n]: e.target.value }))
               }
-              placeholder={t('inbox.composer.paramPlaceholder', { n })}
+              placeholder={t('inbox.composer.paramPlaceholder', { n: `{{${n}}}` })}
               className="h-8 text-sm"
             />
           ))}
         </div>
       )}
 
+      {selected && dynamicUrlIndex >= 0 && (
+        <Input
+          value={urlSuffix}
+          onChange={(e) => setUrlSuffix(e.target.value)}
+          placeholder={t('inbox.composer.urlSuffix', 'Website link suffix')}
+          className="h-8 text-sm"
+        />
+      )}
+      {selected && copyCodeIndex >= 0 && (
+        <Input
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value)}
+          placeholder={t('inbox.composer.couponCode', 'Offer code to copy')}
+          className="h-8 text-sm"
+        />
+      )}
+      {selected && headerMediaFormat && !headerReady && (
+        <p className="text-xs text-amber-700">
+          {t('inbox.composer.headerMediaRequired')}
+        </p>
+      )}
       {selected && headerMediaFormat && (
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground">

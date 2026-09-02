@@ -336,61 +336,38 @@ function NotConnectedCard({
   );
 }
 
-// ── Payment status card ──────────────────────────────────────────────────────
-
-function PaymentStatusCard({ ready }: { ready: boolean | null }) {
-  if (ready === true) {
-    return (
-      <div className="flex items-center gap-2.5 rounded-[8px] border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-2.5">
-        <CheckCircle2 className="size-4 shrink-0 text-[#16a34a]" />
-        <span className="text-[13px] font-medium text-[#15803d]">
-          Payment method active
-        </span>
-      </div>
-    );
-  }
-
-  if (ready === null) {
-    return (
-      <div className="flex items-center gap-2.5 rounded-[8px] border border-[#fcd34d] bg-[#fefce8] px-4 py-2.5">
-        <AlertTriangle className="size-4 shrink-0 text-[#d97706]" />
-        <span className="text-[13px] text-[#92400e]">
-          Payment status unknown — click Sync to check
-        </span>
-      </div>
-    );
-  }
-
+function MetaPayInstructCard() {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-start gap-4 rounded-[10px] border border-[#fcd34d] bg-white p-5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fef3c7]">
-        <AlertTriangle className="size-5 text-[#d97706]" />
+    <div className="flex items-start gap-4 rounded-[10px] border border-[#e4e4e7] bg-white p-5">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f4f4f5]">
+        <AlertTriangle className="size-5 text-[#52525b]" />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[14px] font-semibold text-[#18181b]">
-          No payment method
+          {t('connect.metaPayChecklist.title')}
         </p>
-        <p className="text-[13px] text-[#71717a] mt-0.5">
-          No payment method on your WhatsApp Business Account. Template messages
-          will fail. Add a payment method in Meta Business Manager.
+        <p className="mt-0.5 text-[13px] leading-relaxed text-[#71717a]">
+          {t('connect.metaPayChecklist.body')}
         </p>
-        <div className="mt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[12px] px-0 gap-1 text-[#18181b]"
-            asChild
+        <p className="mt-1 text-[12px] text-[#a1a1aa]">
+          {t('connect.metaPayChecklist.note')}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 text-[12px]"
+          asChild
+        >
+          <a
+            href="https://business.facebook.com/latest/whatsapp_manager/payment_methods"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <a
-              href="https://business.facebook.com/settings/payment-methods"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Add payment method
-              <ExternalLink className="size-3" />
-            </a>
-          </Button>
-        </div>
+            {t('connect.metaPayChecklist.cta')}
+            <ExternalLink className="ml-1.5 size-3" />
+          </a>
+        </Button>
       </div>
     </div>
   );
@@ -662,9 +639,7 @@ export function ConnectPage() {
         <PinPendingCard onOpen={() => setPinOpen(true)} />
       )}
 
-      {isConnected && (
-        <PaymentStatusCard ready={wabaStatus.metaPaymentReady} />
-      )}
+      {isConnected && <MetaPayInstructCard />}
 
       {isConnected && <WabaHealthCard status={wabaStatus} />}
 

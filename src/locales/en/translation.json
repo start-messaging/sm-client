@@ -9,7 +9,13 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeSystem": "System"
+    "themeSystem": "System",
+    "unsaved": {
+      "title": "Leave without saving?",
+      "body": "You have unsaved changes. If you leave now, they will be lost.",
+      "stay": "Keep editing",
+      "leave": "Leave"
+    }
   },
   "support": {
     "nudge": "Don't be shy — ask your doubt!",
@@ -239,7 +245,7 @@
       "dismiss": "Dismiss"
     },
     "checklist": {
-      "title": "Get set up in 4 steps",
+      "title": "Get set up in 3 steps",
       "stepDone": "Done",
       "stepPending": "To do",
       "stepBlocked": "Blocked"
@@ -247,11 +253,7 @@
     "steps": {
       "connect": {
         "label": "Connect your WhatsApp Business Account",
-        "description": "Use Facebook Login to link your WABA so you can send and receive messages."
-      },
-      "metaPay": {
-        "label": "Add a payment method in WhatsApp Manager",
-        "description": "Meta bills conversation fees directly to your WABA — not to us. Add a card or bank account in Meta's WhatsApp Manager to enable sending."
+        "description": "Use Facebook Login to link your WABA so you can send and receive messages. After connecting, add a payment method in WhatsApp Manager — Meta bills conversations there, not through us."
       },
       "firstTemplate": {
         "label": "Create your first message template",
@@ -259,7 +261,7 @@
       },
       "firstSend": {
         "label": "Send your first message",
-        "description": "Once a template is approved and your Meta payment method is set, you're ready to send."
+        "description": "Once a template is approved, send it from Inbox. If Meta has no payment method on your WABA, the send will fail with instructions to add one in WhatsApp Manager."
       }
     },
     "WABA_NOT_CONNECTED": {
@@ -446,6 +448,9 @@
       "paramsHint": "Fill the variables Meta requires for this template:",
       "paramPlaceholder": "Value for {{n}}",
       "paramRequired": "Enter a value for {{n}} before sending.",
+      "urlSuffix": "Website link suffix (the part after the {{1}})",
+      "couponCode": "Offer code to copy",
+      "headerMediaRequired": "Upload or paste the header media Meta needs for this template.",
       "sentTemplate": "Template submitted to WhatsApp",
       "deliveryFailed": "Message failed to deliver. Check the bubble for Meta’s reason.",
       "tab_interactive": "Interactive",
@@ -630,7 +635,15 @@
       "headerLinkRequired": "A media URL is required for this header type.",
       "body": "Body text",
       "bodyPlaceholder": "Hello {{1}}, your order {{2}} has been confirmed.",
-      "bodyHint": "Use {{1}}, {{2}} … for dynamic variables. Enter sample values below so Meta can review your template. Max 1,024 characters.",
+      "bodyHint": "Use Add variable to insert a placeholder. Enter a sample for each so Meta can review the template. Max 1,024 characters.",
+      "bodyPlaceholderNamed": "Hello {{first_name}}, your order {{order_id}} is confirmed.",
+      "varPositional": "Number ({{1}})",
+      "varNamed": "Name ({{name}})",
+      "addVariable": "Add variable",
+      "mediaHint": "Meta requires a sample file for review. The real media is chosen again when you send.",
+      "mediaUpload": "Upload sample",
+      "mediaReplace": "Replace sample",
+      "mediaSampleRequired": "Upload a sample image, video, or PDF. Meta rejects media headers without one.",
       "bodyRequired": "Body text is required.",
       "sampleValuesTitle": "Sample values (for Meta review)",
       "sampleFor": "Sample for {{n}}",
@@ -647,7 +660,49 @@
       "previewBodyEmpty": "Start typing your body text…",
       "previewEmpty": "Your message will appear here as you type",
       "previewCaption": "Visual only — variables show sample values",
-      "previewInputHint": "Message"
+      "previewInputHint": "Message",
+      "buttons": {
+        "optional": "optional, max 10",
+        "hint": "Quick replies, website, phone, WhatsApp call, offer code, or a WhatsApp Flow.",
+        "buttonN": "Button {{n}}",
+        "remove": "Remove button",
+        "type": "Type",
+        "buttonText": "Button label",
+        "urlStatic": "Static link",
+        "urlDynamic": "Dynamic link",
+        "offerCode": "Offer code",
+        "callActiveDays": "Active for (days)",
+        "callHint": "Turn on calling in WhatsApp Manager, or use Meta's phone number settings API, before customers can tap this button.",
+        "callManagerCta": "Open WhatsApp Manager phone settings",
+        "flowIcon": "Icon",
+        "flowIconDefault": "Default",
+        "flowIconDocument": "Document",
+        "flowIconPromotion": "Promotion",
+        "flowIconReview": "Review",
+        "flowSelect": "WhatsApp Flow",
+        "flowEmpty": "Sync WhatsApp Flows first (Meta Flows page) so you can attach one here.",
+        "catalogHint": "Catalog and multi-product buttons use the product catalog attached to this WhatsApp account in Meta.",
+        "errorText": "Button label is required",
+        "errorUrl": "URL is required",
+        "errorUrlMax": "Meta allows at most 2 website buttons",
+        "errorUrlSample": "Add a sample suffix for the dynamic {{1}} in the URL",
+        "errorPhone": "Phone number is required",
+        "errorPhoneMax": "Meta allows only one call-phone button",
+        "errorOfferCode": "Offer code is required",
+        "errorFlow": "Pick a published WhatsApp Flow",
+        "types": {
+          "QUICK_REPLY": "Custom (quick reply)",
+          "URL": "Visit website",
+          "PHONE_NUMBER": "Call phone number",
+          "VOICE_CALL": "Call on WhatsApp",
+          "VIDEO_CALL": "Video call on WhatsApp",
+          "COPY_CODE": "Copy offer code",
+          "FLOW": "Complete flow",
+          "REQUEST_CONTACT_INFO": "Request contact info",
+          "CATALOG": "View catalog",
+          "MPM": "View multi-product"
+        }
+      }
     },
     "featured": {
       "title": "Start from a sample",
@@ -659,8 +714,11 @@
     "yours": {
       "title": "Your templates",
       "filterAll": "All statuses",
+      "filterCategory": "All categories",
+      "filterLanguage": "All languages",
+      "filterQuality": "All quality",
       "noApproved": "No approved templates yet — campaigns can only send after Meta review.",
-      "emptyFilter": "No templates match this status."
+      "emptyFilter": "No templates match these filters."
     },
     "editor": {
       "back": "All templates",
@@ -692,8 +750,8 @@
     "subtype_carousel": "Carousel",
     "buttons_section_title": "Buttons",
     "add_button": "Add button",
-    "button_limit_hint": "Maximum 3 buttons",
-    "button_mix_warning": "Quick Reply buttons cannot be mixed with URL or Phone buttons",
+    "button_limit_hint": "Maximum 10 buttons",
+    "button_mix_warning": "Keep quick replies together — Meta rejects them when they are mixed between other button types.",
     "lto_expiry_toggle": "Show countdown timer",
     "lto_expiry_hint": "Meta displays a countdown inside WhatsApp.",
     "auth_body_preview": "Your verification code is {{1}}. Do not share it with anyone.",
@@ -703,7 +761,15 @@
     "carousel_card_count": "Number of cards",
     "carousel_button_type": "Button type for all cards",
     "carousel_note": "Card images and body text are configured per-card after Meta approves the template.",
-    "carousel_preview_note": "Carousel template — {{n}} cards"
+    "carousel_preview_note": "Carousel template — {{n}} cards",
+    "list": {
+      "actions": "Actions",
+      "quality": "Quality",
+      "delivery": "Message delivery",
+      "readRate": "Read rate",
+      "topBlock": "Top block reason",
+      "analyticsHint": "Meta fills delivery, read rate, and block reasons after this template has been sent enough times. Quality updates from Meta webhooks."
+    }
   },
   "contacts": {
     "title": "Contacts",
@@ -1162,6 +1228,7 @@
     "TEMPLATE_PENDING_APPROVAL": "This template is still pending Meta review. Wait until it shows Approved.",
     "TEMPLATE_REJECTED": "Meta rejected this template. Check the rejection reason on the Templates page.",
     "TEMPLATE_NOT_FOUND": "That template was not found. Sync from Meta or create it first.",
+    "TEMPLATE_HEADER_MEDIA_REQUIRED": "This template needs a header image, video, or document before it can be sent.",
     "PHONE_QUALITY_LIMIT": "Your phone number has hit a Meta throughput limit. Slow sends until quality recovers.",
     "PHONE_DAILY_LIMIT_REACHED": "WhatsApp messaging limit reached for this number. Try again later.",
     "MESSAGE_UNDELIVERABLE": "WhatsApp could not deliver this message to the recipient number.",

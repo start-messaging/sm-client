@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ImageIcon, Video, FileText } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { ImageIcon, Video, FileText, Upload } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +15,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useCreateTemplate } from '@/api/hooks/use-templates';
+import {
+  useCreateTemplate,
+  useUploadTemplateMedia,
+} from '@/api/hooks/use-templates';
 import { toast } from '@/lib/toast';
 import type {
   TemplateCategory,
@@ -31,6 +34,13 @@ import {
   findContentWarnings,
   type ContentWarning,
 } from '@/lib/template-validation';
+import {
+  detectVarStyle,
+  namedVariableKeys,
+  type TemplateVarStyle,
+} from '@/lib/template-utils';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import { TemplateEditorButtons } from './template-editor-buttons';
 
 const TEMPLATE_NAME_RE = /^[a-z0-9_]{1,512}$/;
@@ -88,7 +98,9 @@ const schema = z.object({
   language: z.string().min(2),
   category: z.enum(['UTILITY', 'MARKETING', 'AUTHENTICATION']),
   bodyText: z.string().min(1, 'templates.create.bodyRequired').max(1024),
-  headerFormat: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']).optional(),
+  headerFormat: z
+    .enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT', 'LOCATION'])
+    .optional(),
   headerText: z.string().max(60).optional(),
   footerText: z.string().max(60).optional(),
 });
@@ -115,10 +127,10 @@ function bodyVariableIndexes(text: string): number[] {
 
 function substituteBodyVariables(
   text: string,
-  samples: Record<number, string>,
+  samples: Record<string, string>,
 ): string {
-  return text.replace(/\{\{([0-9]+)\}\}/g, (match, n) => {
-    const sample = samples[Number(n)]?.trim();
+  return text.replace(/\{\{([0-9]+|[a-z][a-z0-9_]*)\}\}/gi, (match, key) => {
+    const sample = samples[String(key).toLowerCase()]?.trim() ?? samples[key]?.trim();
     return sample || match;
   });
 }
@@ -188,16 +200,25 @@ export function TemplateEditorForm({
   const [subtype, setSubtype] = useState<TemplateSubtype>('standard');
   const [buttons, setButtons] = useState<TemplateButton[]>(seed?.buttons ?? []);
   const [buttonErrors, setButtonErrors] = useState<string[]>([]);
-  const [bodySamples, setBodySamples] = useState<Record<number, string>>(() => {
-    const init: Record<number, string> = {};
+  const [varStyle, setVarStyle] = useState<TemplateVarStyle>(() =>
+    detectVarStyle(seed?.bodyText ?? ''),
+  );
+  const [bodySamples, setBodySamples] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
     seed?.bodySamples?.forEach((v, i) => {
-      init[i + 1] = v;
+      init[String(i + 1)] = v;
     });
     return init;
   });
   const [bodySampleError, setBodySampleError] = useState('');
   const [bodyShapeError, setBodyShapeError] = useState<string | null>(null);
   const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
+  const [headerHandle, setHeaderHandle] = useState<string | undefined>();
+  const [headerFileName, setHeaderFileName] = useState('');
+  const [headerSampleError, setHeaderSampleError] = useState('');
+  const [dirtyExtra, setDirtyExtra] = useState(false);
+  const headerFileRef = useRef<HTMLInputElement>(null);
+  const bodyAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Header type selector state
   const [headerType, setHeaderType] = useState<HeaderType>(() => {
@@ -228,13 +249,14 @@ export function TemplateEditorForm({
     useState<TemplateButton['type']>('QUICK_REPLY');
 
   const createTemplate = useCreateTemplate(slug);
+  const uploadTemplateMedia = useUploadTemplateMedia(slug);
 
   const {
     register,
     handleSubmit,
     setValue,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -246,6 +268,10 @@ export function TemplateEditorForm({
       headerText: seed?.headerText ?? '',
       footerText: seed?.footerText ?? '',
     },
+  });
+
+  const bodyField = register('bodyText', {
+    onChange: (e) => handleBodyChange(e.target.value),
   });
 
   const language = useWatch({ control, name: 'language' });
@@ -271,12 +297,14 @@ export function TemplateEditorForm({
     setBodyShapeError(error);
   }
 
-  const bodyVariables = useMemo(
-    () =>
-      bodyVariableIndexes(
-        subtype === 'authentication' ? AUTH_BODY : (bodyText ?? ''),
-      ),
-    [bodyText, subtype],
+  const bodyVarKeys = useMemo(() => {
+    const text = subtype === 'authentication' ? AUTH_BODY : (bodyText ?? '');
+    if (varStyle === 'named') return namedVariableKeys(text);
+    return bodyVariableIndexes(text).map(String);
+  }, [bodyText, subtype, varStyle]);
+
+  const blocker = useUnsavedChanges(
+    (isDirty || dirtyExtra) && !createTemplate.isPending,
   );
 
   const previewBodyText = useMemo(() => {
@@ -286,44 +314,73 @@ export function TemplateEditorForm({
 
   const previewHeaderText = headerFormat === 'TEXT' ? headerText : undefined;
 
-  function updateBodySample(index: number, value: string) {
-    setBodySamples((prev) => ({ ...prev, [index]: value }));
+  function updateBodySample(key: string, value: string) {
+    setDirtyExtra(true);
+    setBodySamples((prev) => ({ ...prev, [key]: value }));
     setBodySampleError('');
+  }
+
+  function insertVariable() {
+    const el = bodyAreaRef.current;
+    const current = bodyText ?? '';
+    let token: string;
+    if (varStyle === 'named') {
+      const next = namedVariableKeys(current).length + 1;
+      token = `{{var_${next}}}`;
+    } else {
+      const next = (bodyVariableIndexes(current).at(-1) ?? 0) + 1;
+      token = `{{${next}}}`;
+    }
+    if (!el) {
+      setValue('bodyText', `${current}${token}`, { shouldDirty: true });
+      return;
+    }
+    const start = el.selectionStart ?? current.length;
+    const end = el.selectionEnd ?? current.length;
+    const next = `${current.slice(0, start)}${token}${current.slice(end)}`;
+    setValue('bodyText', next, { shouldDirty: true });
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange(pos, pos);
+    });
   }
 
   function validateButtons(): string[] {
     const urlCount = buttons.filter((b) => b.type === 'URL').length;
     const phoneCount = buttons.filter((b) => b.type === 'PHONE_NUMBER').length;
+    const fixed = new Set([
+      'COPY_CODE',
+      'REQUEST_CONTACT_INFO',
+      'CATALOG',
+      'MPM',
+    ]);
     let seenUrl = 0;
     let seenPhone = 0;
     return buttons.map((b) => {
-      if (!b.text.trim())
-        return t(
-          'templates.create.buttons.errorText',
-          'Button label is required',
-        );
+      if (!fixed.has(b.type) && !b.text.trim())
+        return t('templates.create.buttons.errorText');
       if (b.type === 'URL') {
         seenUrl += 1;
         if (urlCount > 2 && seenUrl > 2)
-          return t(
-            'templates.create.buttons.errorUrlMax',
-            'Meta allows at most 2 website buttons',
-          );
-        if (!b.url?.trim())
-          return t('templates.create.buttons.errorUrl', 'URL is required');
+          return t('templates.create.buttons.errorUrlMax');
+        if (!b.url?.trim()) return t('templates.create.buttons.errorUrl');
+        if (/\{\{1\}\}/.test(b.url) && !b.example?.[0]?.trim()) {
+          return t('templates.create.buttons.errorUrlSample');
+        }
       }
       if (b.type === 'PHONE_NUMBER') {
         seenPhone += 1;
         if (phoneCount > 1 && seenPhone > 1)
-          return t(
-            'templates.create.buttons.errorPhoneMax',
-            'Meta allows only one call button',
-          );
+          return t('templates.create.buttons.errorPhoneMax');
         if (!b.phone_number?.trim())
-          return t(
-            'templates.create.buttons.errorPhone',
-            'Phone number is required',
-          );
+          return t('templates.create.buttons.errorPhone');
+      }
+      if (b.type === 'COPY_CODE' && !b.example?.[0]?.trim()) {
+        return t('templates.create.buttons.errorOfferCode');
+      }
+      if (b.type === 'FLOW' && !b.flow_id?.trim()) {
+        return t('templates.create.buttons.errorFlow');
       }
       return '';
     });
@@ -351,15 +408,15 @@ export function TemplateEditorForm({
       }
     }
 
+    if (headerType === 'MEDIA' && !headerHandle) {
+      setHeaderSampleError(t('templates.create.mediaSampleRequired'));
+      return;
+    }
+
     if (subtype !== 'authentication') {
-      const missingSample = bodyVariables.some((n) => !bodySamples[n]?.trim());
+      const missingSample = bodyVarKeys.some((n) => !bodySamples[n]?.trim());
       if (missingSample) {
-        setBodySampleError(
-          t(
-            'templates.create.sampleRequired',
-            'A sample value is required for every {{n}} variable in the body',
-          ),
-        );
+        setBodySampleError(t('templates.create.sampleRequired'));
         return;
       }
     }
@@ -380,10 +437,10 @@ export function TemplateEditorForm({
         });
       }
     } else if (v.headerFormat) {
-      // IMAGE / VIDEO / DOCUMENT — no sample handle needed
       components.push({
         type: 'HEADER',
         format: v.headerFormat,
+        example: headerHandle ? { header_handle: [headerHandle] } : undefined,
       });
     }
 
@@ -394,10 +451,18 @@ export function TemplateEditorForm({
         type: 'BODY',
         text: v.bodyText,
       };
-      if (bodyVariables.length > 0) {
-        bodyComponent.example = {
-          body_text: [bodyVariables.map((n) => bodySamples[n]?.trim() ?? '')],
-        };
+      if (bodyVarKeys.length > 0) {
+        bodyComponent.example =
+          varStyle === 'named'
+            ? {
+                body_text_named_params: bodyVarKeys.map((name) => ({
+                  param_name: name,
+                  example: bodySamples[name]?.trim() ?? '',
+                })),
+              }
+            : {
+                body_text: [bodyVarKeys.map((n) => bodySamples[n]?.trim() ?? '')],
+              };
       }
       components.push(bodyComponent);
     }
@@ -413,12 +478,7 @@ export function TemplateEditorForm({
     if (subtype === 'authentication' && authCopyCode) {
       components.push({
         type: 'BUTTONS',
-        buttons: [
-          {
-            type: 'QUICK_REPLY',
-            text: t('templates.auth_copy_code', 'Copy code'),
-          },
-        ],
+        buttons: [{ type: 'OTP', text: t('templates.auth_copy_code'), otp_type: 'COPY_CODE' }],
       });
     } else if (showButtons && buttons.length > 0) {
       const callToAction = buttons.filter((b) => b.type !== 'QUICK_REPLY');
@@ -478,7 +538,7 @@ export function TemplateEditorForm({
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_320px]">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit((values) => onSubmit(values as FormValues))}
         className="flex min-w-0 flex-col gap-4"
       >
         {seed?.banner === 'copyApproved' && (
@@ -651,9 +711,63 @@ export function TemplateEditorForm({
             )}
 
             {headerType === 'MEDIA' && (
-              <p className="text-muted-foreground text-xs">
-                {t('templates.create.mediaHint', 'The actual media is set per campaign send. Meta uses a placeholder during template review.')}
-              </p>
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground text-xs">
+                  {t('templates.create.mediaHint')}
+                </p>
+                <input
+                  ref={headerFileRef}
+                  type="file"
+                  className="hidden"
+                  accept={
+                    mediaFormat === 'IMAGE'
+                      ? 'image/jpeg,image/png,image/webp'
+                      : mediaFormat === 'VIDEO'
+                        ? 'video/mp4,video/3gpp'
+                        : 'application/pdf'
+                  }
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (headerFileRef.current) headerFileRef.current.value = '';
+                    if (!file) return;
+                    setDirtyExtra(true);
+                    setHeaderSampleError('');
+                    uploadTemplateMedia.mutate(file, {
+                      onSuccess: (res) => {
+                        setHeaderHandle(res.handle);
+                        setHeaderFileName(file.name);
+                      },
+                      onError: (err) => toast.error(err),
+                    });
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={uploadTemplateMedia.isPending}
+                    onClick={() => headerFileRef.current?.click()}
+                  >
+                    {uploadTemplateMedia.isPending ? (
+                      <Spinner className="mr-1" />
+                    ) : (
+                      <Upload className="mr-1 size-3" />
+                    )}
+                    {headerFileName
+                      ? t('templates.create.mediaReplace')
+                      : t('templates.create.mediaUpload')}
+                  </Button>
+                  {headerFileName && (
+                    <span className="text-muted-foreground truncate text-xs">
+                      {headerFileName}
+                    </span>
+                  )}
+                </div>
+                {headerSampleError && (
+                  <FieldError errors={[{ message: headerSampleError }]} />
+                )}
+              </div>
             )}
           </div>
         )}
@@ -671,17 +785,55 @@ export function TemplateEditorForm({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <FieldLabel htmlFor="tpl-body">
-              {t('templates.create.body')}
-            </FieldLabel>
+            <div className="flex items-center justify-between gap-2">
+              <FieldLabel htmlFor="tpl-body">
+                {t('templates.create.body')}
+              </FieldLabel>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={varStyle}
+                  onValueChange={(v) => {
+                    setDirtyExtra(true);
+                    setVarStyle(v as TemplateVarStyle);
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-[140px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="positional">
+                      {t('templates.create.varPositional')}
+                    </SelectItem>
+                    <SelectItem value="named">
+                      {t('templates.create.varNamed')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={insertVariable}
+                >
+                  {t('templates.create.addVariable')}
+                </Button>
+              </div>
+            </div>
             <Textarea
               id="tpl-body"
               rows={5}
-              placeholder={t('templates.create.bodyPlaceholder')}
+              placeholder={
+                varStyle === 'named'
+                  ? t('templates.create.bodyPlaceholderNamed')
+                  : t('templates.create.bodyPlaceholder')
+              }
               aria-invalid={!!errors.bodyText || !!bodyShapeError}
-              {...register('bodyText', {
-                onChange: (e) => handleBodyChange(e.target.value),
-              })}
+              {...bodyField}
+              ref={(el) => {
+                bodyField.ref(el);
+                bodyAreaRef.current = el;
+              }}
               onBlur={handleBodyBlur}
             />
             <p className="text-muted-foreground text-xs">
@@ -705,15 +857,15 @@ export function TemplateEditorForm({
               </div>
             ))}
 
-            {bodyVariables.length > 0 && (
+            {bodyVarKeys.length > 0 && (
               <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
                 <p className="text-xs font-semibold">
                   {t('templates.create.sampleValuesTitle')}
                 </p>
-                {bodyVariables.map((n) => (
+                {bodyVarKeys.map((n) => (
                   <div key={n} className="flex flex-col gap-1">
                     <FieldLabel htmlFor={`tpl-sample-${n}`} className="text-xs">
-                      {t('templates.create.sampleFor', 'Sample for {{n}}', {
+                      {t('templates.create.sampleFor', {
                         n: `{{${n}}}`,
                       })}
                     </FieldLabel>
@@ -890,12 +1042,15 @@ export function TemplateEditorForm({
           <TemplateEditorButtons
             value={buttons}
             onChange={(b) => {
+              setDirtyExtra(true);
               setButtons(b);
               setButtonErrors([]);
             }}
             errors={buttonErrors}
           />
         )}
+
+        <UnsavedChangesDialog blocker={blocker} />
 
         <div className="flex justify-end gap-2 pt-2">
           <Button

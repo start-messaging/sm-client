@@ -141,8 +141,14 @@ export interface SendTemplateMessageBody {
   parameters?: Record<string, string>[];
   /** Public URL for the template header media (IMAGE/VIDEO/DOCUMENT). */
   headerMediaUrl?: string;
-  /** Client-only: file to upload server-side to R2 and use as header media. Sent as multipart. */
+  /** Client-only: file uploaded to Meta media, then sent as header id. */
   _headerMediaFile?: File;
+  buttonParameters?: Array<{
+    index: number;
+    subType: 'url' | 'copy_code' | 'flow';
+    text?: string;
+    couponCode?: string;
+  }>;
   /** Client-only: pre-hydrated body for optimistic bubble display. Stripped before API send. */
   _hydratedBody?: string;
 }
@@ -224,6 +230,9 @@ export const messagesApi = {
       form.append('templateName', body.templateName);
       form.append('templateLanguage', body.templateLanguage);
       if (body.parameters?.length) form.append('parameters', JSON.stringify(body.parameters));
+      if (body.buttonParameters?.length) {
+        form.append('buttonParameters', JSON.stringify(body.buttonParameters));
+      }
       form.append('headerFile', body._headerMediaFile);
       return apiPost<WaMessage>(endpoints.messages.send(slug, conversationId), form);
     }

@@ -29,6 +29,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WaMessagePreview } from '@/components/whatsapp/wa-message-preview';
 import { useCurrentWorkspace } from '@/hooks/use-current-workspace';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import { useTemplates } from '@/api/hooks/use-templates';
 import { useContacts } from '@/api/hooks/use-contacts';
 import { useFlows } from '@/api/hooks/use-flows';
@@ -40,7 +42,6 @@ import {
   useUploadCampaignAudienceCsv,
   useLastMarketingSend,
 } from '@/api/hooks/use-campaigns';
-import { useWabaStatus } from '@/api/hooks/use-whatsapp';
 import { parseCsv, readFileAsText } from '@/lib/csv';
 import { toast } from '@/lib/toast';
 import type { Campaign } from '@/api/campaigns.api';
@@ -284,7 +285,6 @@ export function CreateCampaignPage() {
   const { data: tplData } = useTemplates(ws.slug);
   const { data: contactsData } = useContacts(ws.slug);
   const { data: flowsData } = useFlows(ws.slug);
-  const { data: wabaStatus } = useWabaStatus(ws.slug);
   const { data: editCampaign, isLoading: editCampaignLoading } = useCampaign(
     ws.slug,
     editCampaignId,
@@ -319,7 +319,6 @@ export function CreateCampaignPage() {
   // Blob URL for local preview — revoked on cleanup / file change
   const [headerBlobUrl, setHeaderBlobUrl] = useState('');
 
-  const launchBlocked = wabaStatus?.metaPaymentReady === false;
   const listPath = `/w/${ws.slug}/campaigns`;
 
   const approvedTemplates: WaTemplate[] = useMemo(
@@ -344,7 +343,7 @@ export function CreateCampaignPage() {
     handleSubmit,
     setValue,
     trigger,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', templateId: '', audienceIds: [] },
@@ -353,6 +352,28 @@ export function CreateCampaignPage() {
   const templateId = useWatch({ control, name: 'templateId' });
   const campaignName = useWatch({ control, name: 'name' });
   const audienceIds = useWatch({ control, name: 'audienceIds' }) ?? [];
+
+  const extraDirtyKey = JSON.stringify({
+    varMapping,
+    audienceMode,
+    csvFileName,
+    flowId,
+    headerMediaUrl,
+    headerFile: headerMediaFile?.name ?? '',
+  });
+  const initialExtra = useRef<string | null>(null);
+  useEffect(() => {
+    if (isEditMode && !editHydrated) return;
+    if (initialExtra.current === null) initialExtra.current = extraDirtyKey;
+  }, [isEditMode, editHydrated, extraDirtyKey]);
+  const extraDirty =
+    initialExtra.current !== null && extraDirtyKey !== initialExtra.current;
+  const blocker = useUnsavedChanges(
+    (isDirty || extraDirty) &&
+      !createMutation.isPending &&
+      !updateMutation.isPending &&
+      !launchMutation.isPending,
+  );
 
   const selectedTemplate = approvedTemplates.find((x) => x.id === templateId);
   const isMarketingTemplate = selectedTemplate?.category === 'MARKETING';
@@ -649,6 +670,7 @@ export function CreateCampaignPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <UnsavedChangesDialog blocker={blocker} />
       <div>
         <Button variant="ghost" size="sm" className="-ml-2 mb-2" asChild>
           <Link to={listPath}>
@@ -1230,12 +1252,7 @@ export function CreateCampaignPage() {
             </Button>
             <Button
               type="button"
-              disabled={pending || launchBlocked}
-              title={
-                launchBlocked
-                  ? t('education.META_PAYMENT_REQUIRED.title')
-                  : undefined
-              }
+              disabled={pending}
               onClick={() => void handleSubmit(() => submit(true))()}
             >
               {pending && <Spinner className="mr-2 size-4" />}

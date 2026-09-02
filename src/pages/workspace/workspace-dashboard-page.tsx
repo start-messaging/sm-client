@@ -186,7 +186,6 @@ export function WorkspaceDashboardPage() {
   const { data: analytics, isLoading } = useAnalyticsOverview(workspace.slug);
 
   const isConnected = wabaStatus?.status === 'connected';
-  const metaPayReady = wabaStatus?.metaPaymentReady === true;
   const hasApprovedTemplate = (templatesData?.templates ?? []).some(
     (tpl) => tpl.status === 'APPROVED',
   );
@@ -211,23 +210,6 @@ export function WorkspaceDashboardPage() {
         : { label: t('connect.cta'), onClick: () => navigate('connect') },
     },
     {
-      id: 'metaPay',
-      label: t('education.steps.metaPay.label'),
-      description: t('education.steps.metaPay.description'),
-      status: !isConnected ? 'blocked' : metaPayReady ? 'done' : 'pending',
-      cta:
-        isConnected && !metaPayReady
-          ? {
-              label: t('education.META_PAYMENT_REQUIRED.cta'),
-              onClick: () =>
-                window.open(
-                  'https://business.facebook.com/billing_hub/accounts',
-                  '_blank',
-                ),
-            }
-          : undefined,
-    },
-    {
       id: 'firstTemplate',
       label: t('education.steps.firstTemplate.label'),
       description: t('education.steps.firstTemplate.description'),
@@ -248,12 +230,9 @@ export function WorkspaceDashboardPage() {
       id: 'firstSend',
       label: t('education.steps.firstSend.label'),
       description: t('education.steps.firstSend.description'),
-      status:
-        isConnected && metaPayReady && hasApprovedTemplate
-          ? 'pending'
-          : 'blocked',
+      status: isConnected && hasApprovedTemplate ? 'pending' : 'blocked',
       cta:
-        isConnected && metaPayReady && hasApprovedTemplate
+        isConnected && hasApprovedTemplate
           ? { label: t('inbox.title'), onClick: () => navigate('inbox') }
           : undefined,
     },

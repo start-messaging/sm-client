@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, Megaphone, MoreHorizontal, Plus } from 'lucide-react';
+import { Megaphone, MoreHorizontal, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -27,14 +27,10 @@ import {
   usePauseCampaign,
   useResumeCampaign,
 } from '@/api/hooks/use-campaigns';
-import { useWabaStatus } from '@/api/hooks/use-whatsapp';
 import { toast } from '@/lib/toast';
 import { STATUS_PILL } from './components/campaign-status';
 import type { Campaign, CampaignStatus } from '@/api/campaigns.api';
 import { cn } from '@/lib/utils';
-
-const META_MANAGER_URL =
-  'https://business.facebook.com/latest/whatsapp_manager/payment_methods';
 
 type StatusTab = 'ALL' | CampaignStatus;
 
@@ -88,7 +84,6 @@ export function CampaignsPage() {
   const ws = useCurrentWorkspace();
 
   const { data, isLoading } = useCampaigns(ws.slug);
-  const { data: wabaStatus } = useWabaStatus(ws.slug);
 
   const launchMutation = useLaunchCampaign(ws.slug);
   const pauseMutation = usePauseCampaign(ws.slug);
@@ -98,7 +93,6 @@ export function CampaignsPage() {
   const [activeTab, setActiveTab] = useState<StatusTab>('ALL');
 
   const campaigns = data?.campaigns ?? [];
-  const launchBlocked = wabaStatus?.metaPaymentReady === false;
   const createPath = `/w/${ws.slug}/campaigns/new`;
 
   const tabCounts = useMemo(() => {
@@ -167,33 +161,6 @@ export function CampaignsPage() {
           </Link>
         </Button>
       </div>
-
-      {/* Payment blocked banner */}
-      {launchBlocked && (
-        <div className="flex flex-col gap-2 rounded-[10px] border border-[#fcd34d] bg-[#fef9c3] p-4">
-          <p className="text-[13px] font-semibold text-[#92400e]">
-            {t('education.META_PAYMENT_REQUIRED.title')}
-          </p>
-          <p className="text-[12px] text-[#92400e]/80">
-            {t('education.META_PAYMENT_REQUIRED.body')}
-          </p>
-          <p className="text-[11px] text-[#92400e]/60">
-            {t('education.META_PAYMENT_REQUIRED.note')}
-          </p>
-          <div className="mt-1">
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href={META_MANAGER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="mr-1.5 size-3.5" />
-                {t('education.META_PAYMENT_REQUIRED.cta')}
-              </a>
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Loading */}
       {isLoading && (
@@ -380,7 +347,6 @@ export function CampaignsPage() {
                             {(c.status === 'DRAFT' ||
                               c.status === 'SCHEDULED') && (
                               <DropdownMenuItem
-                                disabled={launchBlocked}
                                 onSelect={() => handleLaunch(c.id)}
                               >
                                 {t('campaigns.action.launch')}
@@ -395,7 +361,6 @@ export function CampaignsPage() {
                             )}
                             {c.status === 'PAUSED' && (
                               <DropdownMenuItem
-                                disabled={launchBlocked}
                                 onSelect={() => handleResume(c.id)}
                               >
                                 {t('campaigns.action.resume')}
